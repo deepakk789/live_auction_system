@@ -73,7 +73,12 @@ exports.nextPlayer = async (req, res) => {
     auction.isLive = true;
     await auction.save();
 
+    // 🔴 SOCKET EMIT: new live player
+    const io = req.app.get("io");
+    io.emit("player_live", player);
+
     res.json(player);
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -88,6 +93,62 @@ exports.getUpcomingPlayers = async (req, res) => {
     const players = await Player.find({ status: "UPCOMING" });
 
     res.json(players);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * Organizer updates bid manually
+ */
+exports.updateBid = async (req, res) => {
+  try {
+    const { playerId, amount, bidder } = req.body;
+
+    const player = await Player.findById(playerId);
+    if (!player || player.status !== "LIVE") {
+      return res.status(400).json({ message: "Player not live" });
+    }
+
+    if (amount <= player.currentBid) {
+      return res.status(400).json({ message: "Bid must be higher than current bid" });
+    }
+
+    player.currentBid = amount;
+    player.currentBidder = bidder;
+    await player.save();
+
+    // 🔴 SOCKET EMIT: bid updated
+    const io = req.app.get("io");
+    io.emit("bid_update", player);
+
+    res.json(player);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+/**
+ * Organizer marks player as SOLD
+ */
+exports.markSold = async (req, res) => {
+  try {
+    const { playerId } = req.body;
+
+    const player = await Player.findById(playerId);
+    if (!player) {
+      return res.status(404).json({ message: "Player not found" });
+    }
+
+    player.status = "SOLD";
+    await player.save();
+
+    // 🔴 SOCKET EMIT: player sold
+    const io = req.app.get("io");
+    io.emit("player_sold", player);
+
+    res.json(player);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

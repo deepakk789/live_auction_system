@@ -1,10 +1,12 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const http = require("http");
 
 const auctionRoutes = require("./routes/auctionRoutes");
 
 const app = express();
+const server = http.createServer(app);
 
 // Middleware
 app.use(cors());
@@ -24,9 +26,28 @@ mongoose
   .then(() => console.log("MongoDB Connected"))
   .catch(err => console.error(err));
 
-// Start server (ALWAYS LAST)
-const PORT = 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// Socket.IO setup
+const { Server } = require("socket.io");
+const io = new Server(server, {
+  cors: {
+    origin: "*"
+  }
 });
 
+// Make io accessible in controllers
+app.set("io", io);
+
+// Socket events
+io.on("connection", socket => {
+  console.log("Client connected:", socket.id);
+
+  socket.on("disconnect", () => {
+    console.log("Client disconnected:", socket.id);
+  });
+});
+
+// Start server (ALWAYS LAST)
+const PORT = 5000;
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
