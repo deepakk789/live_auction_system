@@ -79,3 +79,16 @@ exports.nextPlayer = async (req, res) => {
   }
 };
 
+
+/**
+ * Get all UPCOMING players (for manual selection)
+ */
+exports.getUpcomingPlayers = async (req, res) => {
+  try {
+    const players = await Player.find({ status: "UPCOMING" });
+
+    res.json(players);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
