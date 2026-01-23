@@ -21,11 +21,12 @@ app.get("/", (req, res) => {
 // API routes
 app.use("/api/auction", auctionRoutes);
 
-// MongoDB connection
+// MongoDB connection (Atlas)
 mongoose
-  .connect("mongodb://127.0.0.1:27017/auctionDB")
+  .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected"))
-  .catch(err => console.error(err));
+  .catch(err => console.error("Mongo error:", err));
+
 
 // Socket.IO setup
 const { Server } = require("socket.io");
@@ -60,7 +61,8 @@ io.on("connection", (socket) => {
 
 
 // Start server (ALWAYS LAST)
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
