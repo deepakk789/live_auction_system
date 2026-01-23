@@ -6,28 +6,40 @@ const playerSchema = new mongoose.Schema(
       type: String,
       required: true
     },
-    role: {
+
+    photo: {
       type: String,
-      required: true
+      default: ""
     },
-    basePrice: {
+
+    details: {
+      type: Object, // dynamic Excel fields
+      default: {}
+    },
+
+    index: {
       type: Number,
       required: true
     },
-    country: {
-      type: String
-    },
+
     status: {
       type: String,
-      enum: ["UPCOMING", "LIVE", "SOLD", "UNSOLD"],
+      enum: ["UPCOMING", "LIVE", "SOLD"],
       default: "UPCOMING"
     },
+
     currentBid: {
       type: Number,
       default: 0
     },
-    currentBidder: {
+
+    soldTo: {
       type: String,
+      default: null
+    },
+
+    soldPrice: {
+      type: Number,
       default: null
     }
   },

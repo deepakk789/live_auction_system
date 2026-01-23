@@ -1,0 +1,33 @@
+.player-card {
+  background: #0f172a;
+  border-radius: 10px;
+  padding: 20px;
+  width: 280px;
+  margin-top: 20px;
+}
+
+.player-photo img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.player-name {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.player-details {
+  margin-top: 10px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px;
+}
+
+.label {
+  font-weight: bold;
+}

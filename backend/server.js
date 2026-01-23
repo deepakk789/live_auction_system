@@ -38,13 +38,25 @@ const io = new Server(server, {
 app.set("io", io);
 
 // Socket events
-io.on("connection", socket => {
+io.on("connection", (socket) => {
   console.log("Client connected:", socket.id);
+
+  // 🔥 FORWARD PLAYER UPDATES (Organizer → Viewers)
+  socket.on("auction_update", (data) => {
+    // send to everyone EXCEPT sender
+    socket.broadcast.emit("auction_update", data);
+  });
+
+  // 🔥 FORWARD AUCTION STATE (LIVE / BREAK / END)
+  socket.on("auction_state", (state) => {
+    socket.broadcast.emit("auction_state", state);
+  });
 
   socket.on("disconnect", () => {
     console.log("Client disconnected:", socket.id);
   });
 });
+
 
 // Start server (ALWAYS LAST)
 const PORT = 5000;
