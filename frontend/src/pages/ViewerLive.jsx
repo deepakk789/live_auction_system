@@ -82,15 +82,15 @@ function ViewerLive() {
 
     // SOCKET LISTENERS
     socket.on("auction_update", (data) => {
-      if (data.auctionId !== auctionId) return;
       setPlayersState(data);
     });
 
 
-    socket.on("auction_state", (payload) => {
-      if (payload.auctionId !== auctionId) return;
-      setAuctionState(payload.state);
+
+    socket.on("auction_state", (state) => {
+      setAuctionState(state);
     });
+
 
 
     return () => {
@@ -146,7 +146,7 @@ function ViewerLive() {
 
       {/* CURRENT BID */}
       {auctionState === "LIVE" && (
-        <div style={bigBid}>₹ {player.currentBid || 0}</div>
+        <div style={bigBid}>{player.currentBid || 0}</div>
       )}
 
 
@@ -181,14 +181,14 @@ function ViewerLive() {
             color: "#9ca3af"
           }}
         >
-          Base Price: ₹{basePrice}
+          Base Price: {basePrice}
         </p>
 
 
 
         {player.status === "SOLD" && (
           <p style={{ ...badge, background: "#16a34a" }}>
-            SOLD to {player.soldTo} for ₹{player.soldPrice}
+            SOLD to {player.soldTo} for {player.soldPrice}
           </p>
         )}
 

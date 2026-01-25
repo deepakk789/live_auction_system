@@ -38,10 +38,10 @@ function DrinksBreak(readOnly = false) {
             <h2>{team.name}</h2>
 
             <p>
-              <strong>Total Spent:</strong> ₹{totalSpent}
+              <strong>Total Spent:</strong> {totalSpent}
             </p>
             <p>
-              <strong>Remaining Budget:</strong> ₹{team.budget}
+              <strong>Remaining Budget:</strong> {team.budget}
             </p>
 
             {team.players.length === 0 ? (
@@ -58,7 +58,7 @@ function DrinksBreak(readOnly = false) {
                   <tr>
                     <th style={th}>#</th>
                     <th style={th}>Player Name</th>
-                    <th style={th}>Price (₹)</th>
+                    <th style={th}>Price</th>
                   </tr>
                 </thead>
                 <tbody>

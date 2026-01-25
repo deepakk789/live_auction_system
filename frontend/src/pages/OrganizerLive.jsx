@@ -411,7 +411,7 @@ function OrganizerLive() {
           ))}
         </div>
 
-        <h3>₹ {currentPlayer.currentBid}</h3>
+        <h3>{currentPlayer.currentBid}</h3>
 
 
         {bidSteps.map((b) => (
@@ -451,7 +451,7 @@ function OrganizerLive() {
           <option value="">Select Team</option>
           {teams.map((t) => (
             <option key={t.name} value={t.name}>
-              {t.name} (₹{t.budget})
+              {t.name} ({t.budget})
             </option>
           ))}
         </select>
