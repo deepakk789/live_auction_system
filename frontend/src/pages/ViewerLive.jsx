@@ -11,7 +11,6 @@ function ViewerLive() {
   const [auctionState, setAuctionState] = useState("LIVE");
   const [isHydrated, setIsHydrated] = useState(false);
   const [auctionConfig, setAuctionConfig] = useState(null);
-  const [teams, setTeams] = useState([]);
 
 
 
@@ -93,19 +92,11 @@ function ViewerLive() {
       setAuctionState(state);
     });
 
-    socket.on("auction_config", (config) => {
-      setAuctionConfig(config);
-    });
-
-    socket.on("teams_update", (data) => {
-  setTeams(data);
-});
 
 
     return () => {
       socket.off("auction_update");
       socket.off("auction_state");
-      socket.off("auction_config");
     };
   }, []);
 
@@ -132,7 +123,6 @@ function ViewerLive() {
     return (
       <DrinksBreak
         readOnly
-        auctionConfig={auctionConfig}
       />
     );
 

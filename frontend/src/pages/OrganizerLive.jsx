@@ -99,9 +99,6 @@ function OrganizerLive() {
     if (p) setPlayersState(p);
     if (t) setTeams(t);
     if (a) setAuctionState(a);
-    if (c) {
-      socket.emit("auction_config", c);
-    }
 
   }, []);
 
@@ -164,10 +161,6 @@ function OrganizerLive() {
     localStorage.setItem("auctionState", state);
     socket.emit("auction_state", state);
 
-    // SEND CONFIG FOR VIEWERS (CRITICAL)
-    if (state === "BREAK") {
-      socket.emit("auction_config", auctionConfig);
-    }
   };
 
   /* ---------- NAV ---------- */

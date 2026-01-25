@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
 
+function DrinksBreak({ readOnly = false }) {
+  const [teams, setTeams] = useState([]);
 
-function DrinksBreak({ readOnly = false, auctionConfig }) {
-  const teams = auctionConfig?.teams || [];
+  useEffect(() => {
+    const savedTeams = JSON.parse(localStorage.getItem("teamsState")) || [];
+    setTeams(savedTeams);
+  }, []);
 
   if (!teams.length) {
     return <h2 style={{ textAlign: "center" }}>No team data available</h2>;
@@ -69,7 +73,6 @@ function DrinksBreak({ readOnly = false, auctionConfig }) {
     </div>
   );
 }
-
 
 const th = {
   border: "1px solid #374151",
