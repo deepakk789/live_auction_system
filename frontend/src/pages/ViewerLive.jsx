@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import socket from "../services/socket";
 import DrinksBreak from "./DrinksBreak";
 
 
 function ViewerLive() {
+  const { auctionId } = useParams();
   const fallbackPhoto = "https://cdn-icons-png.flaticon.com/512/861/861512.png";
   const [playersState, setPlayersState] = useState(null);
   const [auctionState, setAuctionState] = useState("LIVE");
@@ -80,12 +82,16 @@ function ViewerLive() {
 
     // SOCKET LISTENERS
     socket.on("auction_update", (data) => {
+      if (data.auctionId !== auctionId) return;
       setPlayersState(data);
     });
 
-    socket.on("auction_state", (state) => {
-      setAuctionState(state);
+
+    socket.on("auction_state", (payload) => {
+      if (payload.auctionId !== auctionId) return;
+      setAuctionState(payload.state);
     });
+
 
     return () => {
       socket.off("auction_update");
