@@ -98,15 +98,14 @@ function ViewerLive() {
     });
 
     socket.on("teams_update", (data) => {
-      setTeams(data);
-    });
+  setTeams(data);
+});
 
 
     return () => {
       socket.off("auction_update");
       socket.off("auction_state");
       socket.off("auction_config");
-      socket.off("teams_update");
     };
   }, []);
 
@@ -133,7 +132,7 @@ function ViewerLive() {
     return (
       <DrinksBreak
         readOnly
-        teams={teams}
+        auctionConfig={auctionConfig}
       />
     );
 
