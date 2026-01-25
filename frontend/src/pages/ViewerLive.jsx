@@ -10,8 +10,8 @@ function ViewerLive() {
   const [playersState, setPlayersState] = useState(null);
   const [auctionState, setAuctionState] = useState("LIVE");
   const [isHydrated, setIsHydrated] = useState(false);
-  const [auctionConfig, setAuctionConfig] = useState(null);
 
+  const [selectedFields, setSelectedFields] = useState([]);
 
 
 
@@ -70,8 +70,12 @@ function ViewerLive() {
   useEffect(() => {
     // 🔥 HYDRATE FROM localStorage FIRST
 
-    const ac = JSON.parse(localStorage.getItem("auctionConfig"));
-    if (ac) setAuctionConfig(ac);
+    /* const ac = JSON.parse(localStorage.getItem("auctionConfig"));
+    if (ac) setAuctionConfig(ac); */
+    socket.on("auction_config", (config) => {
+      setSelectedFields(config?.selectedFields || []);
+    });
+
 
     const ps = JSON.parse(localStorage.getItem("playersState"));
     const as = localStorage.getItem("auctionState");
@@ -97,6 +101,7 @@ function ViewerLive() {
     return () => {
       socket.off("auction_update");
       socket.off("auction_state");
+      socket.off("auction_config");
     };
   }, []);
 
@@ -179,7 +184,7 @@ function ViewerLive() {
           ))}
         </div> */}
 
-        <div style={{ marginTop: "10px", color: "#d1d5db" }}>
+        {/* <div style={{ marginTop: "10px", color: "#d1d5db" }}>
           {player.details &&
             Object.entries(player.details).map(([key, value]) => {
               if (!value) return null;
@@ -193,7 +198,17 @@ function ViewerLive() {
                 </p>
               );
             })}
+        </div> */}
+
+        <div style={{ marginTop: "10px", color: "#d1d5db" }}>
+          {selectedFields.map((field) => (
+            <p key={field}>
+              <strong>{field}:</strong>{" "}
+              {player.details?.[field] ?? "-"}
+            </p>
+          ))}
         </div>
+
 
 
         <p

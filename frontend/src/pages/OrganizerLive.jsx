@@ -102,6 +102,15 @@ function OrganizerLive() {
 
   }, []);
 
+  useEffect(() => {
+    if (auctionConfig?.selectedFields?.length) {
+      socket.emit("auction_config", {
+        selectedFields: auctionConfig.selectedFields
+      });
+    }
+  }, [auctionConfig]);
+
+
   /* ---------- ROUTE GUARD ---------- */
   useEffect(() => {
     if (
