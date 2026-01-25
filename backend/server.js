@@ -1,4 +1,4 @@
-require("dotenv").config(); 
+require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -39,6 +39,8 @@ const io = new Server(server, {
 // Make io accessible in controllers
 app.set("io", io);
 
+let lastAuctionConfig = null;
+
 // Socket events
 io.on("connection", (socket) => {
   console.log("Client connected:", socket.id);
@@ -53,6 +55,20 @@ io.on("connection", (socket) => {
   socket.on("auction_state", (state) => {
     socket.broadcast.emit("auction_state", state);
   });
+
+  // 🔥 RECEIVE AUCTION CONFIG FROM ORGANIZER
+  socket.on("auction_config", (config) => {
+    lastAuctionConfig = config; // store latest selectedFields
+    socket.broadcast.emit("auction_config", config); // send to viewers
+  });
+
+  // 🔥 VIEWER REQUESTS CONFIG (late join / refresh)
+  socket.on("request_config", () => {
+    if (lastAuctionConfig) {
+      socket.emit("auction_config", lastAuctionConfig);
+    }
+  });
+
 
   socket.on("disconnect", () => {
     console.log("Client disconnected:", socket.id);
