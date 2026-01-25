@@ -72,16 +72,16 @@ function ViewerLive() {
 
     /* const ac = JSON.parse(localStorage.getItem("auctionConfig"));
     if (ac) setAuctionConfig(ac); */
-    socket.on("auction_config", (config) => {
-      setSelectedFields(config?.selectedFields || []);
-    });
 
 
     const ps = JSON.parse(localStorage.getItem("playersState"));
     const as = localStorage.getItem("auctionState");
 
+    const sf = JSON.parse(localStorage.getItem("selectedFields"));
+
     if (ps) setPlayersState(ps);
     if (as) setAuctionState(as);
+    if (sf) setSelectedFields(sf);
 
     setIsHydrated(true); // ✅ hydration done
 
@@ -90,7 +90,11 @@ function ViewerLive() {
       setPlayersState(data);
     });
 
-
+    socket.on("auction_config", (config) => {
+      const fields = config?.selectedFields || [];
+      setSelectedFields(fields);
+      localStorage.setItem("selectedFields", JSON.stringify(fields)); // 👈 fallback
+    });
 
     socket.on("auction_state", (state) => {
       setAuctionState(state);
