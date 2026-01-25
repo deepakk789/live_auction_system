@@ -170,14 +170,31 @@ function ViewerLive() {
 
 
         <h1>{player.name}</h1>
-        <div style={{ marginTop: "10px", color: "#d1d5db" }}>
+        {/* <div style={{ marginTop: "10px", color: "#d1d5db" }}>
           {auctionConfig?.selectedFields?.map((field) => (
             <p key={field}>
               <strong>{field}:</strong>{" "}
               {player.details?.[field] ?? "-"}
             </p>
           ))}
+        </div> */}
+
+        <div style={{ marginTop: "10px", color: "#d1d5db" }}>
+          {player.details &&
+            Object.entries(player.details).map(([key, value]) => {
+              if (!value) return null;
+
+              // hide photo links
+              if (key.toLowerCase().includes("photo")) return null;
+
+              return (
+                <p key={key}>
+                  <strong>{key}:</strong> {value}
+                </p>
+              );
+            })}
         </div>
+
 
         <p
           style={{
