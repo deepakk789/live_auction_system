@@ -123,7 +123,13 @@ function ViewerLive() {
   const basePrice = getBasePrice(player.details);
 
   if (auctionState === "BREAK") {
-    return <DrinksBreak readOnly />;
+    return (
+      <DrinksBreak
+        readOnly
+        auctionConfig={auctionConfig}
+      />
+    );
+
   }
 
 

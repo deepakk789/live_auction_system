@@ -1,13 +1,8 @@
 import { useEffect, useState } from "react";
 
 
-function DrinksBreak(readOnly = false) {
-  const [teams, setTeams] = useState([]);
-
-  useEffect(() => {
-    const savedTeams = JSON.parse(localStorage.getItem("teamsState")) || [];
-    setTeams(savedTeams);
-  }, []);
+function DrinksBreak({ readOnly = false, auctionConfig }) {
+  const teams = auctionConfig?.teams || [];
 
   if (!teams.length) {
     return <h2 style={{ textAlign: "center" }}>No team data available</h2>;
@@ -37,12 +32,8 @@ function DrinksBreak(readOnly = false) {
           >
             <h2>{team.name}</h2>
 
-            <p>
-              <strong>Total Spent:</strong> {totalSpent}
-            </p>
-            <p>
-              <strong>Remaining Budget:</strong> {team.budget}
-            </p>
+            <p><strong>Total Spent:</strong> {totalSpent}</p>
+            <p><strong>Remaining Budget:</strong> {team.budget}</p>
 
             {team.players.length === 0 ? (
               <p style={{ color: "#9ca3af" }}>No players bought</p>
@@ -78,6 +69,7 @@ function DrinksBreak(readOnly = false) {
     </div>
   );
 }
+
 
 const th = {
   border: "1px solid #374151",
