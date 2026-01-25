@@ -104,10 +104,12 @@ function OrganizerLive() {
 
   useEffect(() => {
     if (auctionConfig?.selectedFields?.length) {
+      console.log("📤 Emitting selectedFields:", auctionConfig.selectedFields);
       socket.emit("auction_config", {
         selectedFields: auctionConfig.selectedFields
       });
     }
+
   }, [auctionConfig]);
 
 
