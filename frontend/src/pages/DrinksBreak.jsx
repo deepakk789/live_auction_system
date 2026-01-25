@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 
 
-function DrinksBreak({ readOnly = false, auctionConfig }) {
-  const teams = auctionConfig?.teams || [];
+function DrinksBreak({ readOnly = false, teams = [] }) {
 
   if (!teams.length) {
     return <h2 style={{ textAlign: "center" }}>No team data available</h2>;

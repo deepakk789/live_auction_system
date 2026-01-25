@@ -98,6 +98,10 @@ function OrganizerLive() {
     if (c) setAuctionConfig(c);
     if (p) setPlayersState(p);
     if (t) setTeams(t);
+    if (t) {
+      socket.emit("teams_update", t);
+    }
+
     if (a) setAuctionState(a);
     if (c) {
       socket.emit("auction_config", c);
@@ -166,7 +170,7 @@ function OrganizerLive() {
 
     // SEND CONFIG FOR VIEWERS (CRITICAL)
     if (state === "BREAK") {
-      socket.emit("auction_config", auctionConfig);
+      socket.emit("auction_config", teams);
     }
   };
 
