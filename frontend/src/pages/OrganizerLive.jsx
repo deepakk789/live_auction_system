@@ -281,6 +281,8 @@ function OrganizerLive() {
     setTeams(teamsCopy);
     persistPlayers(updatedPlayers);
     persistTeams(teamsCopy);
+    socket.emit("teams_update", teamsCopy);
+
     socket.emit("auction_update", updatedPlayers);
     setSelectedTeam("");
   };
@@ -337,6 +339,8 @@ function OrganizerLive() {
     setTeams(teamsCopy);
     setPlayersState(updated);
     persistTeams(teamsCopy);
+    socket.emit("teams_update", teamsCopy);
+    
     persistPlayers(updated);
     socket.emit("auction_update", updated);
   };

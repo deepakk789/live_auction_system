@@ -1,12 +1,29 @@
 import { useEffect, useState } from "react";
+import socket from "../services/socket";
 
 function DrinksBreak({ readOnly = false }) {
   const [teams, setTeams] = useState([]);
 
   useEffect(() => {
-    const savedTeams = JSON.parse(localStorage.getItem("teamsState")) || [];
+    console.log("🍹 DrinksBreak mounted — requesting teams");
+
+    const savedTeams = JSON.parse(localStorage.getItem("teamsState"));
     setTeams(savedTeams);
+
+
+    socket.emit("request_teams");
+
+    socket.on("teams_update", (data) => {
+      console.log("📥 Viewer received teams data:", data);
+      setTeams(data);
+      localStorage.setItem("teamsState", JSON.stringify(data));
+    });
+
+    return () => {
+      socket.off("teams_update");
+    };
   }, []);
+
 
   if (!teams.length) {
     return <h2 style={{ textAlign: "center" }}>No team data available</h2>;
