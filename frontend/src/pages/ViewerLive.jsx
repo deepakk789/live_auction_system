@@ -73,36 +73,53 @@ function ViewerLive() {
     /* const ac = JSON.parse(localStorage.getItem("auctionConfig"));
     if (ac) setAuctionConfig(ac); */
 
+    console.log("👀 Viewer useEffect running");
 
     const ps = JSON.parse(localStorage.getItem("playersState"));
     const as = localStorage.getItem("auctionState");
 
     const sf = JSON.parse(localStorage.getItem("selectedFields"));
 
-    if (ps) setPlayersState(ps);
-    if (as) setAuctionState(as);
-    if (sf) setSelectedFields(sf);
+    if (ps) {
+      console.log("📦 Viewer hydrated playersState from localStorage");
+      setPlayersState(ps);
+    }
+    if (as) {
+      console.log("📦 Viewer hydrated auctionState from localStorage:", as);
+      setAuctionState(as);
+
+    }
+    if (sf){
+      console.log("📦 Viewer hydrated selectedFields from localStorage:", sf);
+      setSelectedFields(sf);
+    }
 
     setIsHydrated(true); // ✅ hydration done
 
     // SOCKET LISTENERS
     socket.on("auction_update", (data) => {
+      console.log("📥 Viewer received auction_update");
       setPlayersState(data);
     });
 
     socket.on("auction_config", (config) => {
+      console.log("📥 Viewer received auction_config:", config);
       const fields = config?.selectedFields || [];
       setSelectedFields(fields);
       localStorage.setItem("selectedFields", JSON.stringify(fields)); // 👈 fallback
     });
 
     socket.on("auction_state", (state) => {
+      console.log("📥 Viewer received auction_state:", state);
       setAuctionState(state);
     });
+
+    socket.emit("request_config");
 
 
 
     return () => {
+      console.log("🧹 Viewer cleaning up socket listeners");
       socket.off("auction_update");
       socket.off("auction_state");
       socket.off("auction_config");
