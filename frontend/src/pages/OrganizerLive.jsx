@@ -99,6 +99,10 @@ function OrganizerLive() {
     if (p) setPlayersState(p);
     if (t) setTeams(t);
     if (a) setAuctionState(a);
+    if (c) {
+      socket.emit("auction_config", c);
+    }
+
   }, []);
 
   /* ---------- ROUTE GUARD ---------- */
@@ -159,6 +163,11 @@ function OrganizerLive() {
     setAuctionState(state);
     localStorage.setItem("auctionState", state);
     socket.emit("auction_state", state);
+
+    // SEND CONFIG FOR VIEWERS (CRITICAL)
+    if (state === "BREAK") {
+      socket.emit("auction_config", auctionConfig);
+    }
   };
 
   /* ---------- NAV ---------- */
@@ -197,7 +206,7 @@ function OrganizerLive() {
 
         const nextBid = Math.max(base, (p.currentBid || base) + amt);
 
-        // 🚫 GLOBAL MAX BID CHECK
+        // GLOBAL MAX BID CHECK
         if (nextBid > limit) return p;
 
         return { ...p, currentBid: nextBid };
@@ -337,7 +346,7 @@ function OrganizerLive() {
         <div style={topBar}>
           <button
             onClick={() => {
-              updateState("BREAK");      // 👈 this controls viewers
+              updateState("BREAK");      // this controls viewers
               navigate("/organizer/teams");
             }}
             style={teamsBtn}

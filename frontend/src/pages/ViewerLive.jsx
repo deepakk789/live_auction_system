@@ -91,11 +91,15 @@ function ViewerLive() {
       setAuctionState(state);
     });
 
+    socket.on("auction_config", (config) => {
+      setAuctionConfig(config);
+    });
 
 
     return () => {
       socket.off("auction_update");
       socket.off("auction_state");
+      socket.off("auction_config");
     };
   }, []);
 
