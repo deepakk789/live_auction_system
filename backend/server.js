@@ -3,6 +3,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const http = require("http");
+let lastTeamsState = null;
 
 const auctionRoutes = require("./routes/auctionRoutes");
 
@@ -68,6 +69,20 @@ io.on("connection", (socket) => {
       socket.emit("auction_config", lastAuctionConfig);
     }
   });
+
+  // 🔥 RECEIVE TEAMS STATE FROM ORGANIZER
+  socket.on("teams_update", (teams) => {
+    lastTeamsState = teams;
+    socket.broadcast.emit("teams_update", teams);
+  });
+
+  // 🔥 VIEWER REQUESTS TEAMS (late join / refresh)
+  socket.on("request_teams", () => {
+    if (lastTeamsState) {
+      socket.emit("teams_update", lastTeamsState);
+    }
+  });
+
 
 
   socket.on("disconnect", () => {
