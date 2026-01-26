@@ -3,12 +3,19 @@ import socket from "../services/socket";
 
 function DrinksBreak({ readOnly = false }) {
   const [teams, setTeams] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     console.log("🍹 DrinksBreak mounted — requesting teams");
 
+    /* const savedTeams = JSON.parse(localStorage.getItem("teamsState"));
+    setTeams(savedTeams); */
+
     const savedTeams = JSON.parse(localStorage.getItem("teamsState"));
-    setTeams(savedTeams);
+    if (Array.isArray(savedTeams)) {
+      setTeams(savedTeams);
+      setLoading(false);//last change
+    }
 
 
     socket.emit("request_teams");
@@ -16,6 +23,7 @@ function DrinksBreak({ readOnly = false }) {
     socket.on("teams_update", (data) => {
       console.log("📥 Viewer received teams data:", data);
       setTeams(data);
+      setLoading(false);
       localStorage.setItem("teamsState", JSON.stringify(data));
     });
 
@@ -25,8 +33,24 @@ function DrinksBreak({ readOnly = false }) {
   }, []);
 
 
+  // if (!Array.isArray(teams) || !teams.length) {
+  //   return <h2 style={{ textAlign: "center" }}>No team data available</h2>;
+  // }
+
+  if (loading) {
+    return (
+      <h2 style={{ textAlign: "center", marginTop: "40px" }}>
+        Loading teams…
+      </h2>
+    );
+  }
+
   if (!teams.length) {
-    return <h2 style={{ textAlign: "center" }}>No team data available</h2>;
+    return (
+      <h2 style={{ textAlign: "center", marginTop: "40px" }}>
+        No team data available
+      </h2>
+    );
   }
 
   return (
