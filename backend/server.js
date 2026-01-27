@@ -4,6 +4,8 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const http = require("http");
 let lastTeamsState = null;
+let lastPlayersState = null;
+let lastAuctionState = "LIVE";
 
 const auctionRoutes = require("./routes/auctionRoutes");
 
@@ -48,12 +50,14 @@ io.on("connection", (socket) => {
 
   // 🔥 FORWARD PLAYER UPDATES (Organizer → Viewers)
   socket.on("auction_update", (data) => {
+    lastPlayersState = data;                     // 🔥 store
     // send to everyone EXCEPT sender
     socket.broadcast.emit("auction_update", data);
   });
 
   // 🔥 FORWARD AUCTION STATE (LIVE / BREAK / END)
   socket.on("auction_state", (state) => {
+    lastAuctionState = state;                    // 🔥 store
     socket.broadcast.emit("auction_state", state);
   });
 
@@ -82,6 +86,26 @@ io.on("connection", (socket) => {
       socket.emit("teams_update", lastTeamsState);
     }
   });
+
+  socket.on("request_auction_state", () => {
+    if (lastPlayersState) {
+      socket.emit("auction_update", lastPlayersState);
+    }
+    if (lastAuctionState) {
+      socket.emit("auction_state", lastAuctionState);
+    }
+  });
+
+  socket.on("sync_full_state", ({ playersState, auctionState, teamsState, auctionConfig }) => {
+    if (playersState) lastPlayersState = playersState;
+    if (auctionState) lastAuctionState = auctionState;
+    if (teamsState) lastTeamsState = teamsState;
+    if (auctionConfig) lastAuctionConfig = auctionConfig;
+
+    console.log("🔁 Full auction state synced from organizer");
+  });
+
+
 
 
 
