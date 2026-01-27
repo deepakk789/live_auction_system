@@ -98,6 +98,7 @@ function OrganizerLive() {
     if (c) setAuctionConfig(c);
     if (p) setPlayersState(p);
     if (t) {
+      setTeams(t);   // 🔥 THIS WAS MISSING
       socket.emit("teams_update", t);
     }
 
@@ -105,7 +106,7 @@ function OrganizerLive() {
 
   }, []);
 
-  
+
   useEffect(() => {
     socket.on("teams_update", (data) => {
       console.log("📥 Organizer received teams_update:", data);
@@ -129,18 +130,20 @@ function OrganizerLive() {
 
   }, [auctionConfig]);
 
-  useEffect(() => {//the new change for refresh viewers state
-    if (!playersState || !auctionConfig) return;
+  useEffect(() => {
+  if (!playersState || !auctionConfig) return;
+  if (!Array.isArray(teams) || teams.length === 0) return; // 🔥 IMPORTANT GUARD
 
-    console.log("📤 Syncing full auction state to server");
+  console.log("📤 Syncing full auction state (with teams)");
 
-    socket.emit("sync_full_state", {
-      playersState,
-      auctionState,
-      teamsState: teams,
-      auctionConfig
-    });
-  }, [playersState, auctionState, teams, auctionConfig]);
+  socket.emit("sync_full_state", {
+    playersState,
+    auctionState,
+    teamsState: teams,
+    auctionConfig
+  });
+}, [playersState, auctionState, teams, auctionConfig]);
+
 
 
 
