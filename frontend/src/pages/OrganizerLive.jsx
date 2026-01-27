@@ -105,6 +105,20 @@ function OrganizerLive() {
 
   }, []);
 
+  
+  useEffect(() => {
+    socket.on("teams_update", (data) => {
+      console.log("📥 Organizer received teams_update:", data);
+      setTeams(data);
+      localStorage.setItem("teamsState", JSON.stringify(data));
+    });
+
+    return () => {
+      socket.off("teams_update");
+    };
+  }, []);
+
+
   useEffect(() => {
     if (auctionConfig?.selectedFields?.length) {
       console.log("📤 Emitting selectedFields:", auctionConfig.selectedFields);

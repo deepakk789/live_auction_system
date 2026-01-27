@@ -3,6 +3,8 @@ import * as XLSX from "xlsx";
 import PlayerCardPreview from "../components/PlayerCardPreview";
 import "../styles/organizer.css";
 import { useNavigate } from "react-router-dom";
+import socket from "../services/socket";
+
 
 function UploadPlayers() {
   const [file, setFile] = useState(null);
@@ -110,6 +112,15 @@ function UploadPlayers() {
 
     // Initialize players list from Excel rows
     const initialPlayers = columns.map((col) => col); // placeholder (next phase will replace)
+
+    // 🔥 RE-SYNC TEAMS BEFORE GOING LIVE
+    const teamsState = JSON.parse(localStorage.getItem("teamsState"));
+    if (Array.isArray(teamsState) && teamsState.length) {
+      socket.emit("teams_update", teamsState);
+    } else {
+      alert("Teams missing. Restart auction setup.");
+      return;
+    }
 
 
     navigate("/organizer/live");
