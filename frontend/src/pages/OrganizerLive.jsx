@@ -18,16 +18,17 @@ function OrganizerLive() {
   const getBasePrice = (details) => {
     if (!details) return 0;
 
-    // Find any field value that matches category keywords
-    const value = Object.values(details).find(
-      (v) =>
-        typeof v === "string" &&
-        (
-          v.toLowerCase().includes("marquee") ||
-          v.toLowerCase().includes("uncapped") ||
-          v.toLowerCase().includes("capped")
-        )
-    );
+    const value = Object.values(details).find((v) => {
+      if (typeof v !== "string") return false;
+
+      const val = v.toLowerCase();
+
+      if (val.includes("marquee")) return true;
+      if (val.includes("uncapped")) return true;
+      if (val.includes("capped") && !val.includes("uncapped")) return true;
+
+      return false;
+    });
 
     if (!value) return 0;
 
@@ -36,10 +37,10 @@ function OrganizerLive() {
     if (v.includes("marquee")) return 50;
     if (v.includes("uncapped")) return 10;
     if (v.includes("capped")) return 20;
-    
 
     return 0;
   };
+
 
 
   const getMaxBid = (details) => {
@@ -130,18 +131,18 @@ function OrganizerLive() {
   }, [auctionConfig]);
 
   useEffect(() => {
-  if (!playersState || !auctionConfig) return;
-  if (!Array.isArray(teams) || teams.length === 0) return; // 🔥 IMPORTANT GUARD
+    if (!playersState || !auctionConfig) return;
+    if (!Array.isArray(teams) || teams.length === 0) return; // 🔥 IMPORTANT GUARD
 
-  console.log("📤 Syncing full auction state (with teams)");
+    console.log("📤 Syncing full auction state (with teams)");
 
-  socket.emit("sync_full_state", {
-    playersState,
-    auctionState,
-    teamsState: teams,
-    auctionConfig
-  });
-}, [playersState, auctionState, teams, auctionConfig]);
+    socket.emit("sync_full_state", {
+      playersState,
+      auctionState,
+      teamsState: teams,
+      auctionConfig
+    });
+  }, [playersState, auctionState, teams, auctionConfig]);
 
 
 
@@ -165,7 +166,7 @@ function OrganizerLive() {
     const player = playersState.players[index];
     const base = getBasePrice(player.details);
 
-    if (!player.currentBid || player.currentBid ===0) {
+    if (!player.currentBid || player.currentBid === 0) {
       const playersCopy = playersState.players.map((p, i) =>
         i === index
           ? { ...p, currentBid: base, status: "LIVE" }
