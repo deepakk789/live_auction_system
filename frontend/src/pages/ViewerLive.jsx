@@ -23,8 +23,9 @@ function ViewerLive() {
         typeof v === "string" &&
         (
           v.toLowerCase().includes("marquee") ||
-          v.toLowerCase().includes("capped") ||
-          v.toLowerCase().includes("uncapped")
+          v.toLowerCase().includes("uncapped") ||
+          v.toLowerCase().includes("capped")
+          
         )
     );
 

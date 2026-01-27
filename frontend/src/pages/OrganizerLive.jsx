@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import socket from "../services/socket";
 import { useNavigate } from "react-router-dom";
 
-
-
 function OrganizerLive() {
   const [setup, setSetup] = useState(null);
   const [auctionConfig, setAuctionConfig] = useState(null);
@@ -26,8 +24,8 @@ function OrganizerLive() {
         typeof v === "string" &&
         (
           v.toLowerCase().includes("marquee") ||
-          v.toLowerCase().includes("capped") ||
-          v.toLowerCase().includes("uncapped")
+          v.toLowerCase().includes("uncapped") ||
+          v.toLowerCase().includes("capped")
         )
     );
 
@@ -36,8 +34,9 @@ function OrganizerLive() {
     const v = value.toLowerCase();
 
     if (v.includes("marquee")) return 50;
-    if (v.includes("capped")) return 20;
     if (v.includes("uncapped")) return 10;
+    if (v.includes("capped")) return 20;
+    
 
     return 0;
   };
@@ -166,7 +165,7 @@ function OrganizerLive() {
     const player = playersState.players[index];
     const base = getBasePrice(player.details);
 
-    if (!player.currentBid || player.currentBid < base) {
+    if (!player.currentBid || player.currentBid ===0) {
       const playersCopy = playersState.players.map((p, i) =>
         i === index
           ? { ...p, currentBid: base, status: "LIVE" }
@@ -280,7 +279,7 @@ function OrganizerLive() {
         i === prev.currentIndex
           ? {
             ...p,
-            currentBid: Math.max(base, p.currentBid - amt)
+            currentBid: Math.max(0, p.currentBid - amt)
           }
           : p
       );
