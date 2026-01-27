@@ -89,7 +89,7 @@ function ViewerLive() {
       setAuctionState(as);
 
     }
-    if (sf){
+    if (sf) {
       console.log("📦 Viewer hydrated selectedFields from localStorage:", sf);
       setSelectedFields(sf);
     }
@@ -115,6 +115,9 @@ function ViewerLive() {
     });
 
     socket.emit("request_config");
+    socket.emit("request_auction_state"); // 🔥 restore players + LIVE/BREAK
+    socket.emit("request_teams");         // 🔥 restore teams if BREAK
+
 
 
 

@@ -97,7 +97,10 @@ function OrganizerLive() {
     if (s) setSetup(s);
     if (c) setAuctionConfig(c);
     if (p) setPlayersState(p);
-    if (t) setTeams(t);
+    if (t) {
+      socket.emit("teams_update", t);
+    }
+
     if (a) setAuctionState(a);
 
   }, []);
@@ -111,6 +114,20 @@ function OrganizerLive() {
     }
 
   }, [auctionConfig]);
+
+  useEffect(() => {//the new change for refresh viewers state
+    if (!playersState || !auctionConfig) return;
+
+    console.log("📤 Syncing full auction state to server");
+
+    socket.emit("sync_full_state", {
+      playersState,
+      auctionState,
+      teamsState: teams,
+      auctionConfig
+    });
+  }, [playersState, auctionState, teams, auctionConfig]);
+
 
 
   /* ---------- ROUTE GUARD ---------- */
@@ -167,12 +184,24 @@ function OrganizerLive() {
     localStorage.setItem("teamsState", JSON.stringify(ts));
 
   /* ---------- AUCTION STATE ---------- */
+  // const updateState = (state) => {
+  //   setAuctionState(state);
+  //   localStorage.setItem("auctionState", state);
+  //   socket.emit("auction_state", state);
+
+  // };
+
   const updateState = (state) => {
     setAuctionState(state);
     localStorage.setItem("auctionState", state);
     socket.emit("auction_state", state);
 
+    if (state === "BREAK") {
+      console.log("📤 Emitting teams on BREAK");
+      socket.emit("teams_update", teams);
+    }
   };
+
 
   /* ---------- NAV ---------- */
   const goNext = () => {
@@ -340,7 +369,7 @@ function OrganizerLive() {
     setPlayersState(updated);
     persistTeams(teamsCopy);
     socket.emit("teams_update", teamsCopy);
-    
+
     persistPlayers(updated);
     socket.emit("auction_update", updated);
   };
