@@ -18,24 +18,26 @@ function ViewerLive() {
   const getBasePrice = (details) => {
     if (!details) return 0;
 
-    const value = Object.values(details).find(
-      (v) =>
-        typeof v === "string" &&
-        (
-          v.toLowerCase().includes("marquee") ||
-          v.toLowerCase().includes("uncapped") ||
-          v.toLowerCase().includes("capped")
-          
-        )
-    );
+    const value = Object.values(details).find((v) => {
+      if (typeof v !== "string") return false;
+
+      const val = v.toLowerCase();
+
+      if (val.includes("marquee")) return true;
+      if (val.includes("uncapped")) return true;
+      if (val.includes("capped") && !val.includes("uncapped")) return true;
+
+      return false;
+    });
 
     if (!value) return 0;
 
     const v = value.toLowerCase();
 
     if (v.includes("marquee")) return 50;
-    if (v.includes("capped")) return 20;
     if (v.includes("uncapped")) return 10;
+    if (v.includes("capped")) return 20;
+    
 
     return 0;
   };
