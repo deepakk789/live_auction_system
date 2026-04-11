@@ -4,7 +4,11 @@ const {
   nextPlayer,
   getUpcomingPlayers,
   updateBid,
-  markSold
+  markSold,
+  initAuction,
+  uploadPlayers,
+  syncState,
+  resetAuction
 } = require("../controllers/auctionController");
 
 const router = express.Router();
@@ -14,5 +18,10 @@ router.post("/next", nextPlayer);
 router.get("/upcoming", getUpcomingPlayers);
 router.post("/bid", updateBid);
 router.post("/sold", markSold);
+
+router.post("/init", initAuction);
+router.post("/upload-players", uploadPlayers);
+router.get("/sync", syncState);
+router.post("/reset", resetAuction);
 
 module.exports = router;

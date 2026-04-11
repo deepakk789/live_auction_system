@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import socket from "../services/socket";
+import socket, { BACKEND_URL } from "../services/socket";
 import { useNavigate } from "react-router-dom";
 
 function OrganizerLive() {
@@ -85,27 +85,28 @@ function OrganizerLive() {
 
   /* ---------- LOAD DATA ---------- */
   useEffect(() => {
-    const s = JSON.parse(localStorage.getItem("auctionSetup"));
-    const c = JSON.parse(localStorage.getItem("auctionConfig"));
-    const p = JSON.parse(localStorage.getItem("playersState"));
-    const t = JSON.parse(localStorage.getItem("teamsState"));
-    const a = localStorage.getItem("auctionState");
-    const storedMaxBid = localStorage.getItem("maxBid");
-    if (storedMaxBid) setMaxBid(Number(storedMaxBid));
-
-
-    if (s) setSetup(s);
-    if (c) setAuctionConfig(c);
-    if (p) setPlayersState(p);
-    if (t) {
-      setTeams(t);   // 🔥 THIS WAS MISSING
-      socket.emit("teams_update", t);
-    }
-
-    if (a) setAuctionState(a);
-
-  }, []);
-
+    const fetchData = async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/auction/sync`);
+        if (!res.ok) throw new Error("Failed to sync");
+        const data = await res.json();
+        
+        if (data.auctionSetup) setSetup(data.auctionSetup);
+        if (data.auctionConfig) setAuctionConfig(data.auctionConfig);
+        if (data.playersState) setPlayersState(data.playersState);
+        if (data.teamsState) {
+          setTeams(data.teamsState);
+          socket.emit("teams_update", data.teamsState);
+        }
+        if (data.auctionState) setAuctionState(data.auctionState);
+        if (data.maxBid != null) setMaxBid(data.maxBid);
+      } catch (err) {
+        console.error("Hydration DB error:", err);
+        navigate("/");
+      }
+    };
+    fetchData();
+  }, [navigate]);
 
   useEffect(() => {
     socket.on("teams_update", (data) => {
@@ -147,16 +148,7 @@ function OrganizerLive() {
 
 
 
-  /* ---------- ROUTE GUARD ---------- */
-  useEffect(() => {
-    if (
-      !localStorage.getItem("auctionSetup") ||
-      !localStorage.getItem("auctionConfig") ||
-      !localStorage.getItem("playersState")
-    ) {
-      navigate("/");
-    }
-  }, [navigate]);
+  // Route guard removed because validation happens during fetch
 
   /* ---------- AUTO BASE PRICE ---------- */
   useEffect(() => {
@@ -176,7 +168,6 @@ function OrganizerLive() {
       const updated = { ...playersState, players: playersCopy };
 
       setPlayersState(updated);
-      localStorage.setItem("playersState", JSON.stringify(updated));
       socket.emit("auction_update", updated);
     }
   }, [playersState?.currentIndex]);
@@ -195,10 +186,8 @@ function OrganizerLive() {
   const bidSteps = setup.bidSteps || [10, 20, 50];
 
   /* ---------- HELPERS ---------- */
-  const persistPlayers = (ps) =>
-    localStorage.setItem("playersState", JSON.stringify(ps));
-  const persistTeams = (ts) =>
-    localStorage.setItem("teamsState", JSON.stringify(ts));
+  const persistPlayers = (ps) => {};
+  const persistTeams = (ts) => {};
 
   /* ---------- AUCTION STATE ---------- */
   // const updateState = (state) => {
@@ -210,7 +199,6 @@ function OrganizerLive() {
 
   const updateState = (state) => {
     setAuctionState(state);
-    localStorage.setItem("auctionState", state);
     socket.emit("auction_state", state);
 
     if (state === "BREAK") {
@@ -263,7 +251,6 @@ function OrganizerLive() {
       });
 
       const updated = { ...prev, players: playersCopy };
-      localStorage.setItem("playersState", JSON.stringify(updated));
       socket.emit("auction_update", updated);
       return updated;
     });
@@ -391,12 +378,23 @@ function OrganizerLive() {
     socket.emit("auction_update", updated);
   };
 
+  const resetFullAuction = async () => {
+    if (window.confirm("Are you SURE you want to permanently delete all auction data and players?")) {
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/auction/reset`, { method: "POST" });
+            if (res.ok) {
+                navigate("/");
+            }
+        } catch(e) { console.error(e) }
+    }
+  };
+
   /* ---------- JSX ---------- */
   return (
     <div style={page}>
       <div style={container}>
         <h1>Organizer Live</h1>
-
+        
         <div style={topBar}>
           <button
             onClick={() => {
@@ -406,6 +404,13 @@ function OrganizerLive() {
             style={teamsBtn}
           >
             Teams
+          </button>
+          
+          <button 
+             onClick={resetFullAuction}
+             style={{...teamsBtn, background: "#dc2626", borderColor: "#991b1b"}}
+          >
+            Reset Auction
           </button>
 
         </div>
@@ -431,7 +436,6 @@ function OrganizerLive() {
               const value = e.target.value === "" ? null : Number(e.target.value);
 
               setMaxBid(value);
-              localStorage.setItem("maxBid", value ?? "");
               socket.emit("max_bid_update", value);
             }}
             style={{

@@ -3,13 +3,13 @@ import * as XLSX from "xlsx";
 import PlayerCardPreview from "../components/PlayerCardPreview";
 import "../styles/organizer.css";
 import { useNavigate } from "react-router-dom";
-import socket from "../services/socket";
-
+import socket, { BACKEND_URL } from "../services/socket";
 
 function UploadPlayers() {
   const [file, setFile] = useState(null);
   const [columns, setColumns] = useState([]);
   const [selectedFields, setSelectedFields] = useState([]);
+  const [parsedPlayers, setParsedPlayers] = useState([]);
   const navigate = useNavigate();
 
   const handleFileChange = (e) => {
@@ -68,13 +68,7 @@ function UploadPlayers() {
       });
 
       // Save players state
-      localStorage.setItem(
-        "playersState",
-        JSON.stringify({
-          currentIndex: 0,
-          players
-        })
-      );
+      setParsedPlayers(players);
 
     };
 
@@ -93,7 +87,7 @@ function UploadPlayers() {
       !col.toLowerCase().includes("photo")
   );
 
-  const proceedToLive = () => {
+  const proceedToLive = async () => {
     if (selectedFields.length === 0) {
       alert("Please select at least one field to show on player card");
       return;
@@ -105,25 +99,23 @@ function UploadPlayers() {
       uploadedFileName: file?.name || ""
     };
 
-    localStorage.setItem(
-      "auctionConfig",
-      JSON.stringify(auctionConfig)
-    );
-
-    // Initialize players list from Excel rows
-    const initialPlayers = columns.map((col) => col); // placeholder (next phase will replace)
-
-    // 🔥 RE-SYNC TEAMS BEFORE GOING LIVE
-    const teamsState = JSON.parse(localStorage.getItem("teamsState"));
-    if (Array.isArray(teamsState) && teamsState.length) {
-      socket.emit("teams_update", teamsState);
-    } else {
-      alert("Teams missing. Restart auction setup.");
-      return;
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/auction/upload-players`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ players: parsedPlayers, auctionConfig })
+      });
+      
+      if (!response.ok) throw new Error("Failed to upload players to DB");
+      
+      // Navigate to live
+      navigate("/organizer/live");
+    } catch (err) {
+      console.error(err);
+      alert("Error saving players: " + err.message);
     }
-
-
-    navigate("/organizer/live");
   };
 
 

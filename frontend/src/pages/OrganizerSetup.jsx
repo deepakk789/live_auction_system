@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/organizer.css";
-
+import { BACKEND_URL } from "../services/socket";
 function OrganizerSetup() {
   const navigate = useNavigate();
 
@@ -31,7 +31,7 @@ function OrganizerSetup() {
     setBidSteps([10, 20, 50]);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     /* ---------- VALIDATION ---------- */
@@ -66,12 +66,26 @@ function OrganizerSetup() {
       players: []
     }));
 
-    /* ---------- SAVE ---------- */
-    localStorage.setItem("auctionSetup", JSON.stringify(auctionSetup));
-    localStorage.setItem("teamsState", JSON.stringify(teamsState));
-
-    /* ---------- NEXT STEP ---------- */
-    navigate("/organizer/upload");
+    /* ---------- SAVE TO DB ---------- */
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/auction/init`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ auctionSetup, teamsState })
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to initialize auction in DB");
+      }
+      
+      /* ---------- NEXT STEP ---------- */
+      navigate("/organizer/upload");
+    } catch (err) {
+      console.error(err);
+      alert("Error setting up auction: " + err.message);
+    }
   };
 
   return (

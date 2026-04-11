@@ -27,6 +27,36 @@ const auctionSchema = new mongoose.Schema(
     selectedFields: {
       type: [String],
       default: []
+    },
+    
+    auctionName: {
+      type: String,
+      default: "Auction"
+    },
+
+    teamCount: {
+      type: Number,
+      default: 2
+    },
+
+    maxBudget: {
+      type: Number,
+      default: 0
+    },
+
+    maxBid: {
+      type: Number,
+      default: null
+    },
+
+    uploadedFileName: {
+      type: String,
+      default: ""
+    },
+
+    columns: {
+      type: [String],
+      default: []
     }
   },
   { timestamps: true }

@@ -3,111 +3,91 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const http = require("http");
-let lastTeamsState = null;
-let lastPlayersState = null;
-let lastAuctionState = "LIVE";
-
-const auctionRoutes = require("./routes/auctionRoutes");
-
-const app = express();
-const server = http.createServer(app);
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-
-// Test route
-app.get("/", (req, res) => {
-  res.send("Auction Backend Running");
-});
-
-// API routes
-app.use("/api/auction", auctionRoutes);
-
-// MongoDB connection (Atlas)
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB Connected"))
-  .catch(err => console.error("Mongo error:", err));
-
-
-// Socket.IO setup
-const { Server } = require("socket.io");
-const io = new Server(server, {
-  cors: {
-    origin: "*"
-  }
-});
-
-// Make io accessible in controllers
-app.set("io", io);
-
-let lastAuctionConfig = null;
+// MongoDB Models
+const Auction = require("./models/Auction");
+const Player = require("./models/player");
+const Team = require("./models/Team");
 
 // Socket events
 io.on("connection", (socket) => {
   console.log("Client connected:", socket.id);
 
-  // 🔥 FORWARD PLAYER UPDATES (Organizer → Viewers)
-  socket.on("auction_update", (data) => {
-    lastPlayersState = data;                     // 🔥 store
-    // send to everyone EXCEPT sender
+  // 🔥 FORWARD PLAYER UPDATES
+  socket.on("auction_update", async (data) => {
     socket.broadcast.emit("auction_update", data);
+    
+    // Async DB update
+    try {
+      await Auction.updateOne({}, { currentPlayerIndex: data.currentIndex });
+      if (data.players && data.players.length > 0) {
+        const ops = data.players.map(p => ({
+          updateOne: {
+            filter: { index: p.index !== undefined ? p.index : p.id },
+            update: { $set: { status: p.status, currentBid: p.currentBid, soldTo: p.soldTo, soldPrice: p.soldPrice } }
+          }
+        }));
+        await Player.bulkWrite(ops);
+      }
+    } catch (err) {
+      console.error("DB Sync Error (auction_update):", err.message);
+    }
   });
 
-  // 🔥 FORWARD AUCTION STATE (LIVE / BREAK / END)
-  socket.on("auction_state", (state) => {
-    lastAuctionState = state;                    // 🔥 store
+  // 🔥 FORWARD AUCTION STATE
+  socket.on("auction_state", async (state) => {
     socket.broadcast.emit("auction_state", state);
-  });
-
-  // 🔥 RECEIVE AUCTION CONFIG FROM ORGANIZER
-  socket.on("auction_config", (config) => {
-    lastAuctionConfig = config; // store latest selectedFields
-    socket.broadcast.emit("auction_config", config); // send to viewers
-  });
-
-  // 🔥 VIEWER REQUESTS CONFIG (late join / refresh)
-  socket.on("request_config", () => {
-    if (lastAuctionConfig) {
-      socket.emit("auction_config", lastAuctionConfig);
+    try {
+      await Auction.updateOne({}, { state });
+    } catch (err) {
+      console.error(err);
     }
   });
 
-  // 🔥 RECEIVE TEAMS STATE FROM ORGANIZER
-  socket.on("teams_update", (teams) => {
-    lastTeamsState = teams;
+  // 🔥 RECEIVE AUCTION CONFIG
+  socket.on("auction_config", async (config) => {
+    socket.broadcast.emit("auction_config", config);
+    try {
+      if (config.selectedFields) {
+        await Auction.updateOne({}, { selectedFields: config.selectedFields });
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  });
+
+  // 🔥 RECEIVE TEAMS STATE
+  socket.on("teams_update", async (teams) => {
     socket.broadcast.emit("teams_update", teams);
-  });
-
-  // 🔥 VIEWER REQUESTS TEAMS (late join / refresh)
-  socket.on("request_teams", () => {
-    if (lastTeamsState) {
-      socket.emit("teams_update", lastTeamsState);
+    try {
+      if (teams && teams.length > 0) {
+        const ops = teams.map(t => ({
+          updateOne: {
+            filter: { name: t.name },
+            update: { $set: { budget: t.budget, players: t.players } },
+            upsert: true
+          }
+        }));
+        await Team.bulkWrite(ops);
+      }
+    } catch (err) {
+      console.error(err);
     }
   });
 
-  socket.on("request_auction_state", () => {
-    if (lastPlayersState) {
-      socket.emit("auction_update", lastPlayersState);
-    }
-    if (lastAuctionState) {
-      socket.emit("auction_state", lastAuctionState);
+  socket.on("max_bid_update", async (value) => {
+    socket.broadcast.emit("max_bid_update", value);
+    try {
+      await Auction.updateOne({}, { maxBid: value });
+    } catch (err) {
+      console.error(err);
     }
   });
 
-  socket.on("sync_full_state", ({ playersState, auctionState, teamsState, auctionConfig }) => {
-    if (playersState) lastPlayersState = playersState;
-    if (auctionState) lastAuctionState = auctionState;
-    if (teamsState) lastTeamsState = teamsState;
-    if (auctionConfig) lastAuctionConfig = auctionConfig;
-
+  socket.on("sync_full_state", async ({ playersState, auctionState, teamsState, auctionConfig }) => {
+    // This event might not be needed much if OrganizerLive hydrated from DB,
+    // but just broadcast if the Organizer still emits it.
     console.log("🔁 Full auction state synced from organizer");
   });
-
-
-
-
 
   socket.on("disconnect", () => {
     console.log("Client disconnected:", socket.id);

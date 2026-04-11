@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import socket from "../services/socket";
+import { useParams, useNavigate } from "react-router-dom";
+import socket, { BACKEND_URL } from "../services/socket";
 import DrinksBreak from "./DrinksBreak";
-
 
 function ViewerLive() {
   const { auctionId } = useParams();
+  const navigate = useNavigate();
   const fallbackPhoto = "https://cdn-icons-png.flaticon.com/512/861/861512.png";
   const [playersState, setPlayersState] = useState(null);
   const [auctionState, setAuctionState] = useState("LIVE");
@@ -13,124 +13,84 @@ function ViewerLive() {
 
   const [selectedFields, setSelectedFields] = useState([]);
 
-
-
   const getBasePrice = (details) => {
     if (!details) return 0;
-
     const value = Object.values(details).find((v) => {
       if (typeof v !== "string") return false;
-
       const val = v.toLowerCase();
-
       if (val.includes("marquee")) return true;
       if (val.includes("uncapped")) return true;
       if (val.includes("capped") && !val.includes("uncapped")) return true;
-
       return false;
     });
 
     if (!value) return 0;
-
     const v = value.toLowerCase();
-
     if (v.includes("marquee")) return 50;
     if (v.includes("uncapped")) return 10;
     if (v.includes("capped")) return 20;
-    
 
     return 0;
   };
 
-
-
   const getPlayerPhoto = (details) => {
     if (!details) return null;
-
     const driveLink = Object.values(details).find(
-      (val) =>
-        typeof val === "string" &&
-        val.includes("drive.google.com")
+      (val) => typeof val === "string" && val.includes("drive.google.com")
     );
-
     if (!driveLink) return null;
-
     let match = driveLink.match(/id=([^&]+)/);
-    if (match) {
-      return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
-    }
-
+    if (match) return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
     match = driveLink.match(/\/d\/([^/]+)/);
-    if (match) {
-      return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
-    }
-
+    if (match) return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
     return null;
   };
 
-
   /* ---------- SOCKET LISTENERS (REAL TIME) ---------- */
   useEffect(() => {
-    // 🔥 HYDRATE FROM localStorage FIRST
-
-    /* const ac = JSON.parse(localStorage.getItem("auctionConfig"));
-    if (ac) setAuctionConfig(ac); */
-
-    console.log("👀 Viewer useEffect running");
-
-    const ps = JSON.parse(localStorage.getItem("playersState"));
-    const as = localStorage.getItem("auctionState");
-
-    const sf = JSON.parse(localStorage.getItem("selectedFields"));
-
-    if (ps) {
-      console.log("📦 Viewer hydrated playersState from localStorage");
-      setPlayersState(ps);
-    }
-    if (as) {
-      console.log("📦 Viewer hydrated auctionState from localStorage:", as);
-      setAuctionState(as);
-
-    }
-    if (sf) {
-      console.log("📦 Viewer hydrated selectedFields from localStorage:", sf);
-      setSelectedFields(sf);
-    }
-
-    setIsHydrated(true); // ✅ hydration done
+    const fetchData = async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/auction/sync`);
+        if (!res.ok) throw new Error("Failed to sync");
+        const data = await res.json();
+        
+        if (data.playersState) setPlayersState(data.playersState);
+        if (data.auctionState) setAuctionState(data.auctionState);
+        if (data.auctionConfig?.selectedFields) setSelectedFields(data.auctionConfig.selectedFields);
+        
+        setIsHydrated(true);
+      } catch (err) {
+        console.error("Hydration DB error:", err);
+      }
+    };
+    fetchData();
 
     // SOCKET LISTENERS
     socket.on("auction_update", (data) => {
-      console.log("📥 Viewer received auction_update");
       setPlayersState(data);
     });
 
     socket.on("auction_config", (config) => {
-      console.log("📥 Viewer received auction_config:", config);
       const fields = config?.selectedFields || [];
       setSelectedFields(fields);
-      localStorage.setItem("selectedFields", JSON.stringify(fields)); // 👈 fallback
     });
 
     socket.on("auction_state", (state) => {
-      console.log("📥 Viewer received auction_state:", state);
       setAuctionState(state);
     });
-
-    socket.emit("request_config");
-    socket.emit("request_auction_state"); // 🔥 restore players + LIVE/BREAK
-    socket.emit("request_teams");         // 🔥 restore teams if BREAK
-
-
-
+    
+    socket.on("auction_reset", () => {
+       alert("Auction was completely reset by the Organizer.");
+       navigate("/");
+    });
 
     return () => {
-      console.log("🧹 Viewer cleaning up socket listeners");
       socket.off("auction_update");
       socket.off("auction_state");
       socket.off("auction_config");
+      socket.off("auction_reset");
     };
-  }, []);
+  }, [navigate]);
 
 
   if (!isHydrated) {
