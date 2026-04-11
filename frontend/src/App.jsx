@@ -5,6 +5,7 @@ import UploadPlayers from "./pages/UploadPlayers";
 import OrganizerLive from "./pages/OrganizerLive";
 import ViewerLive from "./pages/ViewerLive";
 import DrinksBreak from "./pages/DrinksBreak";
+import Dashboard from "./pages/Dashboard";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/" element={<OrganizerSetup />} />
         <Route path="/organizer/upload" element={<UploadPlayers />} />
         <Route path="/organizer/live" element={<OrganizerLive />} />
+        <Route path="/organizer/analytics" element={<Dashboard />} />
         <Route path="/viewer/:auctionId" element={<ViewerLive />} />
         <Route path="/break/:auctionId" element={<DrinksBreak />} />
         <Route path="/organizer/teams" element={<DrinksBreak />} />

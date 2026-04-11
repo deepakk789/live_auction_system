@@ -406,9 +406,16 @@ function OrganizerLive() {
             Teams
           </button>
           
+          <button
+            onClick={() => navigate("/organizer/analytics")}
+            style={{...teamsBtn, background: "#3b82f6", borderColor: "#2563eb", marginLeft: "10px", flex: 1}}
+          >
+            📊 Analytics
+          </button>
+          
           <button 
              onClick={resetFullAuction}
-             style={{...teamsBtn, background: "#dc2626", borderColor: "#991b1b"}}
+             style={{...teamsBtn, background: "#dc2626", borderColor: "#991b1b", marginLeft: "10px"}}
           >
             Reset Auction
           </button>
