@@ -3,6 +3,22 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const http = require("http");
+const { Server } = require("socket.io");
+const auctionRoutes = require("./routes/auctionRoutes");
+
+const app = express();
+app.use(cors());
+app.use(express.json({ limit: '50mb' }));
+
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: "*" } });
+
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB connected"))
+  .catch((err) => console.error("MongoDB connection error:", err));
+
+app.use("/api/auction", auctionRoutes);
+
 // MongoDB Models
 const Auction = require("./models/Auction");
 const Player = require("./models/player");
