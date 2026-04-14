@@ -10,6 +10,8 @@ function ViewerLive() {
   const [playersState, setPlayersState] = useState(null);
   const [auctionState, setAuctionState] = useState("LIVE");
   const [isHydrated, setIsHydrated] = useState(false);
+  const [teamsState, setTeamsState] = useState([]);
+  const [showAnalytics, setShowAnalytics] = useState(false);
 
   const [selectedFields, setSelectedFields] = useState([]);
 
@@ -57,6 +59,7 @@ function ViewerLive() {
         if (data.playersState) setPlayersState(data.playersState);
         if (data.auctionState) setAuctionState(data.auctionState);
         if (data.auctionConfig?.selectedFields) setSelectedFields(data.auctionConfig.selectedFields);
+        if (data.teamsState) setTeamsState(data.teamsState);
         
         setIsHydrated(true);
       } catch (err) {
@@ -84,11 +87,16 @@ function ViewerLive() {
        navigate("/");
     });
 
+    socket.on("teams_update", (teams) => {
+       setTeamsState(teams);
+    });
+
     return () => {
       socket.off("auction_update");
       socket.off("auction_state");
       socket.off("auction_config");
       socket.off("auction_reset");
+      socket.off("teams_update");
     };
   }, [navigate]);
 
@@ -124,22 +132,13 @@ function ViewerLive() {
   return (
 
     <div style={page}>
-      {/* AUCTION STATE */}
-      <div
-        style={{
-          ...stateBanner,
-          background:
-            auctionState === "LIVE"
-              ? "#16a34a"
-              : auctionState === "BREAK"
-                ? "#facc15"
-                : "#374151",
-          color: auctionState === "BREAK" ? "#000" : "#fff"
-        }}
-      >
-        {auctionState === "LIVE" && "🔴 LIVE AUCTION"}
-        {auctionState === "BREAK" && "🟡 DRINKS BREAK"}
-        {auctionState === "ENDED" && "⚫ AUCTION ENDED"}
+      {/* AUCTION STATE REMOVED - GLOBAL LAYOUT HANDLES IT */}
+      
+      {/* Top action bar */}
+      <div style={{ position: 'absolute', top: '20px', right: '30px' }}>
+         <button onClick={() => setShowAnalytics(true)} style={analyticsBtn}>
+            📊 View Auction Analytics
+         </button>
       </div>
 
       {/* CURRENT BID */}
@@ -150,15 +149,28 @@ function ViewerLive() {
 
       {/* PLAYER CARD */}
       <div style={card}>
-        <img
-          src={getPlayerPhoto(player.details) || fallbackPhoto}
-          alt="player"
-          style={photo}
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = fallbackPhoto;
-          }}
-        />
+        <div className="stamp-container">
+          <img
+            src={getPlayerPhoto(player.details) || fallbackPhoto}
+            alt="player"
+            style={photo}
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = fallbackPhoto;
+            }}
+          />
+          {player.status === "SOLD" && (
+            <div className="stamp-overlay stamp-sold">
+              <h2>SOLD</h2>
+              <p>TO {player.soldTo}</p>
+            </div>
+          )}
+          {player.status === "UNSOLD" && (
+            <div className="stamp-overlay stamp-unsold">
+              <h2>UNSOLD</h2>
+            </div>
+          )}
+        </div>
 
 
         <h1>{player.name}</h1>
@@ -223,6 +235,43 @@ function ViewerLive() {
           </p>
         )}
       </div>
+
+      {showAnalytics && (
+        <div style={modalOverlay} onClick={() => setShowAnalytics(false)}>
+          <div style={modalContent} onClick={e => e.stopPropagation()}>
+             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{ margin: 0, color: '#60a5fa' }}>Auction Analytics</h2>
+                <button onClick={() => setShowAnalytics(false)} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '24px', cursor: 'pointer' }}>×</button>
+             </div>
+             
+             {teamsState.length === 0 ? (
+                <p>No teams configured.</p>
+             ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', textAlign: 'left' }}>
+                   {teamsState.map(team => (
+                      <div key={team.name} style={{ background: '#1f2937', padding: '15px', borderRadius: '8px', border: '1px solid #374151' }}>
+                         <h3 style={{ marginTop: 0, borderBottom: '1px solid #4b5563', paddingBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
+                            {team.name}
+                            <span style={{ color: '#10b981' }}>{team.budget} Left</span>
+                         </h3>
+                         <div style={{ maxHeight: '150px', overflowY: 'auto' }}>
+                            {team.players.length === 0 ? (
+                               <p style={{ color: '#9ca3af', fontSize: '14px' }}>No players signed yet.</p>
+                            ) : (
+                               <ul style={{ margin: 0, paddingLeft: '20px', color: '#d1d5db', fontSize: '14px' }}>
+                                  {team.players.map((p, i) => (
+                                     <li key={i}>{p.name} <span style={{ color: '#9ca3af' }}>({p.price})</span></li>
+                                  ))}
+                               </ul>
+                            )}
+                         </div>
+                      </div>
+                   ))}
+                </div>
+             )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -235,19 +284,43 @@ const page = {
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
-  justifyContent: "center"
+  justifyContent: "center",
+  position: "relative"
 };
 
-const stateBanner = {
-  position: "fixed",
-  top: 0,
-  width: "100%",
-  padding: "16px",
-  fontSize: "22px",
+const analyticsBtn = {
+  background: "#3b82f6",
+  color: "#fff",
+  border: "none",
+  padding: "10px 20px",
+  borderRadius: "8px",
   fontWeight: "bold",
-  textAlign: "center",
-  zIndex: 10
+  cursor: "pointer",
+  boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+  transition: "all 0.3s ease",
 };
+
+const modalOverlay = {
+  position: "fixed",
+  top: 0, left: 0, right: 0, bottom: 0,
+  background: "rgba(0,0,0,0.8)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  zIndex: 1000,
+  padding: "20px"
+}
+
+const modalContent = {
+  background: "#111827",
+  border: "1px solid #374151",
+  borderRadius: "16px",
+  padding: "30px",
+  width: "100%",
+  maxWidth: "800px",
+  maxHeight: "80vh",
+  overflowY: "auto"
+}
 
 const bigBid = {
   fontSize: "72px",

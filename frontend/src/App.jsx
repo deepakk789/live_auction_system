@@ -24,10 +24,9 @@ function App() {
           <Route path="/organizer/live" element={<OrganizerLive />} />
           <Route path="/organizer/analytics" element={<Dashboard />} />
           <Route path="/organizer/teams" element={<DrinksBreak />} />
+          <Route path="/viewer/:auctionId" element={<ViewerLive />} />
+          <Route path="/break/:auctionId" element={<DrinksBreak />} />
         </Route>
-
-        <Route path="/viewer/:auctionId" element={<ViewerLive />} />
-        <Route path="/break/:auctionId" element={<DrinksBreak />} />
       </Routes>
     </BrowserRouter>
   );

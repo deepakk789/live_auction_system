@@ -463,15 +463,28 @@ function OrganizerLive() {
 
         <hr />
 
-        <img
-          src={getPlayerPhoto(currentPlayer.details) || fallbackPhoto}
-          alt="player"
-          style={{ width: "300px", borderRadius: "8px" }}
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = fallbackPhoto;
-          }}
-        />
+        <div className="stamp-container">
+          <img
+            src={getPlayerPhoto(currentPlayer.details) || fallbackPhoto}
+            alt="player"
+            style={{ width: "300px", borderRadius: "8px" }}
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = fallbackPhoto;
+            }}
+          />
+          {currentPlayer.status === "SOLD" && (
+            <div className="stamp-overlay stamp-sold">
+              <h2>SOLD</h2>
+              <p>TO {currentPlayer.soldTo}</p>
+            </div>
+          )}
+          {currentPlayer.status === "UNSOLD" && (
+            <div className="stamp-overlay stamp-unsold">
+              <h2>UNSOLD</h2>
+            </div>
+          )}
+        </div>
 
 
         <h2>{currentPlayer.name}</h2>
