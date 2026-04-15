@@ -2,6 +2,13 @@ const mongoose = require("mongoose");
 
 const playerSchema = new mongoose.Schema(
   {
+    auctionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Auction",
+      required: true,
+      index: true
+    },
+
     name: {
       type: String,
       required: true
@@ -24,7 +31,7 @@ const playerSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["UPCOMING", "LIVE", "SOLD"],
+      enum: ["UPCOMING", "LIVE", "SOLD", "UNSOLD"],
       default: "UPCOMING"
     },
 

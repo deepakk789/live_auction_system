@@ -1,41 +1,58 @@
 import { useEffect, useState } from "react";
-import socket from "../services/socket";
+import { useParams } from "react-router-dom";
+import socket, { BACKEND_URL } from "../services/socket";
 
 function DrinksBreak({ readOnly = false }) {
+  const params = useParams();
+  const auctionId = params.auctionId;
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log("🍹 DrinksBreak mounted — requesting teams");
-
-    /* const savedTeams = JSON.parse(localStorage.getItem("teamsState"));
-    setTeams(savedTeams); */
-
-    const savedTeams = JSON.parse(localStorage.getItem("teamsState"));
-    if (Array.isArray(savedTeams)) {
-      setTeams(savedTeams);
-      setLoading(false);//last change
+    // Join socket room if we have an auctionId
+    if (auctionId) {
+      socket.emit("join_auction", { auctionId });
     }
 
+    // Fetch teams from DB for this auction
+    const fetchTeams = async () => {
+      if (auctionId) {
+        try {
+          const res = await fetch(`${BACKEND_URL}/api/auction/${auctionId}/sync`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.teamsState) {
+              setTeams(data.teamsState);
+              setLoading(false);
+              return;
+            }
+          }
+        } catch (err) {
+          console.error("DrinksBreak fetch error:", err);
+        }
+      }
 
-    socket.emit("request_teams");
+      // Fallback to localStorage
+      const savedTeams = JSON.parse(localStorage.getItem("teamsState"));
+      if (Array.isArray(savedTeams)) {
+        setTeams(savedTeams);
+      }
+      setLoading(false);
+    };
+    fetchTeams();
 
     socket.on("teams_update", (data) => {
-      console.log("📥 Viewer received teams data:", data);
       setTeams(data);
       setLoading(false);
-      localStorage.setItem("teamsState", JSON.stringify(data));
     });
 
     return () => {
       socket.off("teams_update");
+      if (auctionId) {
+        socket.emit("leave_auction", { auctionId });
+      }
     };
-  }, []);
-
-
-  // if (!Array.isArray(teams) || !teams.length) {
-  //   return <h2 style={{ textAlign: "center" }}>No team data available</h2>;
-  // }
+  }, [auctionId]);
 
   if (loading) {
     return (

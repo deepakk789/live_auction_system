@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { BACKEND_URL } from "../services/socket";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   BarChart,
   Bar,
@@ -18,6 +18,7 @@ import {
 const COLORS = ["#16a34a", "#f97316", "#3b82f6", "#eab308", "#8b5cf6"];
 
 function Dashboard() {
+  const { auctionId } = useParams();
   const [teams, setTeams] = useState([]);
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,7 +27,7 @@ function Dashboard() {
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
-        const res = await fetch(`${BACKEND_URL}/api/auction/sync`);
+        const res = await fetch(`${BACKEND_URL}/api/auction/${auctionId}/sync`);
         if (!res.ok) throw new Error("Failed to fetch analytics");
         const data = await res.json();
         
@@ -39,7 +40,7 @@ function Dashboard() {
       }
     };
     fetchAnalytics();
-  }, []);
+  }, [auctionId]);
 
   if (loading) return <h2 style={{ textAlign: "center", marginTop: "40px", color: "white" }}>Loading Analytics...</h2>;
 

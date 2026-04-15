@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 
-export const BACKEND_URL = "https://live-auction-system-hslw.onrender.com";
+export const BACKEND_URL = "http://localhost:5000";
 
 const socket = io(BACKEND_URL, {
   transports: ["websocket"],

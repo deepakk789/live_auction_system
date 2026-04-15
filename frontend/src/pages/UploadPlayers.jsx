@@ -2,10 +2,11 @@ import { useState } from "react";
 import * as XLSX from "xlsx";
 import PlayerCardPreview from "../components/PlayerCardPreview";
 import "../styles/organizer.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import socket, { BACKEND_URL } from "../services/socket";
 
 function UploadPlayers() {
+  const { auctionId } = useParams();
   const [file, setFile] = useState(null);
   const [columns, setColumns] = useState([]);
   const [selectedFields, setSelectedFields] = useState([]);
@@ -100,26 +101,25 @@ function UploadPlayers() {
     };
 
     try {
+      const token = localStorage.getItem("authToken");
       const response = await fetch(`${BACKEND_URL}/api/auction/upload-players`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({ players: parsedPlayers, auctionConfig })
+        body: JSON.stringify({ players: parsedPlayers, auctionConfig, auctionId })
       });
       
       if (!response.ok) throw new Error("Failed to upload players to DB");
       
-      // Navigate to live
-      navigate("/organizer/live");
+      // Navigate to live with auctionId
+      navigate(`/organizer/${auctionId}/live`);
     } catch (err) {
       console.error(err);
       alert("Error saving players: " + err.message);
     }
   };
-
-
-
 
   return (
     <div className="setup-container">
