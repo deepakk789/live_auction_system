@@ -17,6 +17,7 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
+app.set("io", io);
 app.use("/api/auction", auctionRoutes);
 
 // MongoDB Models
@@ -99,10 +100,8 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("sync_full_state", async ({ playersState, auctionState, teamsState, auctionConfig }) => {
-    // This event might not be needed much if OrganizerLive hydrated from DB,
-    // but just broadcast if the Organizer still emits it.
-    console.log("🔁 Full auction state synced from organizer");
+  socket.on("sync_full_state", async (data) => {
+    socket.broadcast.emit("sync_full_state", data);
   });
 
   socket.on("disconnect", () => {

@@ -50,7 +50,7 @@ function ViewerLive() {
 
   /* ---------- SOCKET LISTENERS (REAL TIME) ---------- */
   useEffect(() => {
-    const fetchData = async () => {
+    const syncFromServer = async () => {
       try {
         const res = await fetch(`${BACKEND_URL}/api/auction/sync`);
         if (!res.ok) throw new Error("Failed to sync");
@@ -66,9 +66,14 @@ function ViewerLive() {
         console.error("Hydration DB error:", err);
       }
     };
-    fetchData();
+    syncFromServer();
 
-    // SOCKET LISTENERS
+    const handleReconnect = () => {
+      syncFromServer();
+    };
+
+    socket.on("connect", handleReconnect);
+
     socket.on("auction_update", (data) => {
       setPlayersState(data);
     });
@@ -91,12 +96,21 @@ function ViewerLive() {
        setTeamsState(teams);
     });
 
+    socket.on("sync_full_state", (data) => {
+      if (data.playersState) setPlayersState(data.playersState);
+      if (data.auctionState) setAuctionState(data.auctionState);
+      if (data.auctionConfig?.selectedFields) setSelectedFields(data.auctionConfig.selectedFields);
+      if (data.teamsState) setTeamsState(data.teamsState);
+    });
+
     return () => {
+      socket.off("connect", handleReconnect);
       socket.off("auction_update");
       socket.off("auction_state");
       socket.off("auction_config");
       socket.off("auction_reset");
       socket.off("teams_update");
+      socket.off("sync_full_state");
     };
   }, [navigate]);
 

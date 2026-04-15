@@ -9,7 +9,6 @@ function Layout() {
   const [auctionState, setAuctionState] = useState(null);
 
   useEffect(() => {
-    // Initial fetch to see if auction is running
     const checkStatus = async () => {
       try {
         const res = await fetch(`${BACKEND_URL}/api/auction/sync`);
@@ -23,11 +22,18 @@ function Layout() {
     };
     checkStatus();
 
+    const handleReconnect = () => {
+      checkStatus();
+    };
+
+    socket.on("connect", handleReconnect);
+
     socket.on("auction_state", (state) => {
       setAuctionState(state);
     });
 
     return () => {
+      socket.off("connect", handleReconnect);
       socket.off("auction_state");
     };
   }, []);
