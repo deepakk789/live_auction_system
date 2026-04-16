@@ -2,44 +2,16 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { Activity, Archive, Plus, Shield, LogOut, Radio } from "lucide-react";
 import { useEffect, useState } from "react";
 import socket, { BACKEND_URL } from "../services/socket";
+import { useAuth } from "../context/AuthContext";
 import "../styles/layout.css";
 import "../styles/design-system.css";
 
 function Layout() {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [liveAuctionCount, setLiveAuctionCount] = useState(0);
-  
-  // Auth State
-  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Validate session — auto-login if token is valid
-    const validateSession = async () => {
-      const token = localStorage.getItem("authToken");
-      if (!token) return;
-
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/auth/me`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data.user);
-          localStorage.setItem("authUser", JSON.stringify(data.user));
-        } else {
-          // Token invalid/expired — clear
-          localStorage.removeItem("authToken");
-          localStorage.removeItem("authUser");
-          setUser(null);
-        }
-      } catch (err) {
-        console.error("Session validation error:", err);
-        // Keep existing localStorage data on network error
-        const storedUser = localStorage.getItem("authUser");
-        if (storedUser) setUser(JSON.parse(storedUser));
-      }
-    };
-    validateSession();
 
     // Count live auctions
     const fetchLiveCount = async () => {
@@ -65,9 +37,7 @@ function Layout() {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("authUser");
-    setUser(null);
+    logout();
     navigate("/login");
   };
 

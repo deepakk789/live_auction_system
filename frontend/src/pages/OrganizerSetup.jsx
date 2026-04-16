@@ -45,6 +45,21 @@ function OrganizerSetup() {
     setTeams(newTeams);
   };
 
+  const handleNumBidOptionsChange = (e) => {
+    const count = Number(e.target.value);
+    const newBidSteps = [...bidSteps];
+    while(newBidSteps.length < count) {
+      newBidSteps.push(newBidSteps[newBidSteps.length - 1] ? newBidSteps[newBidSteps.length - 1] * 2 : 10);
+    }
+    setBidSteps(newBidSteps.slice(0, count));
+  };
+  
+  const handleBidStepChange = (index, value) => {
+     const updated = [...bidSteps];
+     updated[index] = Number(value);
+     setBidSteps(updated);
+  };
+
   const handleTeamNameChange = (index, value) => {
     const updated = [...teams];
     updated[index] = value;
@@ -268,18 +283,33 @@ function OrganizerSetup() {
             </div>
 
             <div style={{ marginBottom: "30px" }}>
-              <label style={styles.label}>Bid Increments (comma separated)</label>
-              <input
-                className="input-premium"
-                type="text"
-                value={bidSteps.join(", ")}
-                onChange={(e) => {
-                  const arr = e.target.value.split(",").map(s => Number(s.trim())).filter(n => !isNaN(n) && n > 0);
-                  setBidSteps(arr);
-                }}
+              <label style={styles.label}>Number of Quick-Bid Options ({bidSteps.length})</label>
+              <input 
+                type="range" 
+                min="1" max="6" 
+                value={bidSteps.length} 
+                onChange={handleNumBidOptionsChange} 
+                style={{ width: "100%", accentColor: "#3b82f6", marginBottom: "15px" }}
               />
-              <p style={{ fontSize: "0.8rem", color: "#64748b", marginTop: "5px" }}>
-                These generate the quick-bid buttons (+10, +20, etc).
+              
+              <label style={styles.label}>Set Bid Increments</label>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: "10px" }}>
+                {bidSteps.map((stepVal, index) => (
+                  <div key={index} style={{ position: "relative" }}>
+                    <span style={{...styles.currencySymbol, color: "#10b981"}}>+</span>
+                    <input
+                      className="input-premium"
+                      type="number"
+                      value={stepVal || ""}
+                      onChange={(e) => handleBidStepChange(index, e.target.value)}
+                      style={{ paddingLeft: "30px", width: "100%", boxSizing: "border-box" }}
+                      min="1"
+                    />
+                  </div>
+                ))}
+              </div>
+              <p style={{ fontSize: "0.8rem", color: "#64748b", marginTop: "10px" }}>
+                These generate the quick bid buttons on the live control panel.
               </p>
             </div>
 

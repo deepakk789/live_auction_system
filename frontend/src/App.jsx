@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
 
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
@@ -16,7 +17,8 @@ import ResetPassword from "./pages/ResetPassword";
 
 function App() {
   return (
-    <BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
       <Routes>
         <Route element={<Layout />}>
           <Route path="/"                                element={<Home />} />
@@ -44,6 +46,7 @@ function App() {
         </Route>
       </Routes>
     </BrowserRouter>
+  </AuthProvider>
   );
 }
 

@@ -288,7 +288,8 @@ function OrganizerLive() {
 
   const increaseBid = (amt) => {
     if (!playersState || playersState.players[playersState.currentIndex].status === "SOLD") return;
-    const limit = maxBid ?? Infinity;
+    const maxAvailableBudget = teams.length > 0 ? Math.max(...teams.map(t => t.budget)) : Infinity;
+    const limit = Math.min(maxBid ?? Infinity, maxAvailableBudget);
     setPlayersState((prev) => {
       const base = getBasePrice(prev.players[prev.currentIndex].details);
       const playersCopy = prev.players.map((p, i) => {
@@ -464,7 +465,7 @@ function OrganizerLive() {
                   +{amt}
                 </button>
               ))}
-              <button className="btn-glass" style={{ width: "60px", color: "#ef4444" }} onClick={() => decreaseBid(bidSteps[0])} disabled={!hasLock}>
+              <button className="btn-glass" style={{ flex: 1, color: "#ef4444" }} onClick={() => decreaseBid(bidSteps[0])} disabled={!hasLock}>
                 -{bidSteps[0]}
               </button>
             </div>
@@ -476,9 +477,9 @@ function OrganizerLive() {
               disabled={!hasLock || currentPlayer.status === "SOLD"}
               style={{ fontSize: "1.1rem", cursor: "pointer", background: selectedTeam ? "rgba(59,130,246,0.2)" : "" }}
             >
-              <option value="">-- SELECT TEAM --</option>
+              <option value="" style={{ color: "#0f172a", background: "#f8fafc" }}>-- SELECT TEAM --</option>
               {teams.map(t => (
-                <option key={t.name} value={t.name}>{t.name} (₹{t.budget})</option>
+                <option key={t.name} value={t.name} style={{ color: "#0f172a", background: "#f8fafc" }}>{t.name} (₹{t.budget})</option>
               ))}
             </select>
 

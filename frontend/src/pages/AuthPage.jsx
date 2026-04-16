@@ -1,18 +1,21 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { BACKEND_URL } from "../services/socket";
-import { Shield, Mail, ArrowLeft, LogIn, UserPlus } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { Shield, Mail, ArrowLeft, LogIn, UserPlus, Eye, EyeOff } from "lucide-react";
 import "../styles/design-system.css";
 
 function AuthPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { login, register } = useAuth();
   const isRegisterParam = location.pathname === "/register";
 
   const [isRegister, setIsRegister] = useState(isRegisterParam);
-  const [formData, setFormData] = useState({ username: "", email: "", password: "" });
+  const [formData, setFormData] = useState({ username: "", email: "", password: "", confirmPassword: "" });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Forgot password state
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -23,30 +26,31 @@ function AuthPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+
+    // Client-side validation
+    if (isRegister) {
+      if (formData.username.trim().length < 3) {
+        return setError("Username must be at least 3 characters.");
+      }
+      if (formData.password.length < 6) {
+        return setError("Password must be at least 6 characters.");
+      }
+      if (formData.password !== formData.confirmPassword) {
+        return setError("Passwords do not match.");
+      }
+    }
+
     setLoading(true);
 
-    const endpoint = isRegister ? "/api/auth/register" : "/api/auth/login";
-
     try {
-      const res = await fetch(`${BACKEND_URL}${endpoint}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Authentication failed");
+      if (isRegister) {
+        await register(formData.username, formData.email, formData.password);
+      } else {
+        await login(formData.email, formData.password);
       }
-
-      localStorage.setItem("authToken", data.token);
-      localStorage.setItem("authUser", JSON.stringify(data.user));
-
       navigate("/");
-      window.location.reload();
-
     } catch (err) {
-      setError(err.message);
+      setError(err.message === "Failed to fetch" ? "Backend unavailable" : err.message);
     } finally {
       setLoading(false);
     }
@@ -71,7 +75,7 @@ function AuthPage() {
 
       setForgotMsg({ type: "success", text: data.message });
     } catch (err) {
-      setForgotMsg({ type: "error", text: err.message });
+      setForgotMsg({ type: "error", text: err.stack ? "Backend unavailable" : err.message });
     } finally {
       setForgotLoading(false);
     }
@@ -188,16 +192,42 @@ function AuthPage() {
                 </span>
               )}
             </div>
-            <input
-              className="input-premium"
-              type="password"
-              name="password"
-              placeholder="••••••••"
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
+            <div style={{ position: "relative" }}>
+              <input
+                className="input-premium"
+                type={showPassword ? "text" : "password"}
+                name="password"
+                placeholder="••••••••"
+                value={formData.password}
+                onChange={handleChange}
+                style={{ width: "100%", paddingRight: "40px" }}
+                required
+              />
+              <button
+                type="button"
+                style={styles.eyeIcon}
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex="-1"
+              >
+                {showPassword ? <EyeOff size={18} color="#9ca3af" /> : <Eye size={18} color="#9ca3af" />}
+              </button>
+            </div>
           </div>
+
+          {isRegister && (
+            <div>
+              <label style={styles.label}>Confirm Password</label>
+              <input
+                className="input-premium"
+                type={showPassword ? "text" : "password"}
+                name="confirmPassword"
+                placeholder="••••••••"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          )}
 
           <button className="btn-premium" type="submit" disabled={loading} style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "10px", marginTop: "10px" }}>
              {loading ? <div className="spinner-small"></div> : (isRegister ? <><UserPlus size={20}/> Register</> : <><LogIn size={20}/> Sign In</>)}
@@ -212,7 +242,7 @@ function AuthPage() {
               onClick={() => {
                 setIsRegister(!isRegister);
                 setError(null);
-                setFormData({ username: "", email: "", password: "" });
+                setFormData({ username: "", email: "", password: "", confirmPassword: "" });
               }}
             >
               {isRegister ? "Sign In" : "Register Now"}
@@ -280,6 +310,19 @@ const styles = {
     background: "rgba(16, 185, 129, 0.1)",
     border: "1px solid #10b981",
     color: "#10b981"
+  },
+  eyeIcon: {
+    position: "absolute",
+    right: "12px",
+    top: "50%",
+    transform: "translateY(-50%)",
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    padding: 0,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center"
   }
 };
 

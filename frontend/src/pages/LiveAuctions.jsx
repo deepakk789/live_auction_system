@@ -556,7 +556,9 @@ const styles = {
     cursor: "pointer",
     transition: "all 0.25s ease",
     backdropFilter: "blur(10px)",
-    boxShadow: "0 4px 20px rgba(0,0,0,0.2)"
+    boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
+    display: "flex",
+    flexDirection: "column"
   },
   cardHeader: {
     display: "flex",
@@ -616,7 +618,8 @@ const styles = {
   },
   cardFooter: {
     borderTop: "1px solid rgba(255,255,255,0.06)",
-    paddingTop: "16px"
+    paddingTop: "16px",
+    marginTop: "auto"
   },
   watchBtn: {
     background: "linear-gradient(135deg, #059669, #10b981)",
