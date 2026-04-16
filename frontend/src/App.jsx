@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 import { AuthProvider } from "./context/AuthContext";
 
 import Layout from "./components/Layout";
@@ -15,11 +16,12 @@ import Dashboard from "./pages/Dashboard";
 import AuthPage from "./pages/AuthPage";
 import ResetPassword from "./pages/ResetPassword";
 
-function App() {
+function AnimatedRoutes() {
+  const location = useLocation();
+
   return (
-    <AuthProvider>
-      <BrowserRouter>
-      <Routes>
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
         <Route element={<Layout />}>
           <Route path="/"                                element={<Home />} />
           <Route path="/login"                           element={<AuthPage />} />
@@ -45,8 +47,17 @@ function App() {
           <Route path="/break/:auctionId"                element={<DrinksBreak />} />
         </Route>
       </Routes>
-    </BrowserRouter>
-  </AuthProvider>
+    </AnimatePresence>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <AnimatedRoutes />
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 

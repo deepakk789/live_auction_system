@@ -3,6 +3,7 @@ import { Activity, Archive, Plus, Shield, LogOut, Radio } from "lucide-react";
 import { useEffect, useState } from "react";
 import socket, { BACKEND_URL } from "../services/socket";
 import { useAuth } from "../context/AuthContext";
+import ProfileDropdown from "./ProfileDropdown";
 import "../styles/layout.css";
 import "../styles/design-system.css";
 
@@ -110,35 +111,14 @@ function Layout() {
           
           <div style={{ display: "flex", gap: "15px", alignItems: "center" }}>
             {user ? (
-              <>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", background: "rgba(255,255,255,0.05)", padding: "4px 16px 4px 4px", borderRadius: "30px", border: "1px solid rgba(255,255,255,0.1)" }}>
-                  <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold" }}>
-                    {user.username.charAt(0).toUpperCase()}
-                  </div>
-                  <span style={{ fontWeight: 600, fontSize: "0.95rem" }}>{user.username}</span>
-                </div>
-                <button 
-                  onClick={handleLogout}
-                  className="btn-glass"
-                  style={{ padding: "8px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", width: "40px", height: "40px" }}
-                  title="Logout"
-                >
-                  <LogOut size={18} color="#ef4444" />
-                </button>
-              </>
+              <ProfileDropdown />
             ) : (
               <>
                 <button 
-                  className="btn-glass"
+                  className="btn-premium"
                   onClick={() => navigate("/login")}
                 >
                   Sign In
-                </button>
-                <button 
-                  className="btn-premium"
-                  onClick={() => navigate("/register")}
-                >
-                  Register
                 </button>
               </>
             )}

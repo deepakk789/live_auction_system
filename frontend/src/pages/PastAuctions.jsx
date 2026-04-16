@@ -1,7 +1,10 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Archive, Search, SlidersHorizontal, ArrowUpDown, BarChart2, Users, Wallet, X, Trophy, Calendar } from "lucide-react";
+import { motion } from "framer-motion";
 import { BACKEND_URL } from "../services/socket";
+import PageTransition from "../components/PageTransition";
+import SkeletonLoader from "../components/SkeletonLoader";
 
 function PastAuctions() {
   const navigate = useNavigate();
@@ -71,7 +74,8 @@ function PastAuctions() {
   const clearFilters = () => { setSearchQuery(""); setSortBy("date_desc"); setDateFrom(""); setDateTo(""); };
 
   return (
-    <div style={styles.container} className="animate-fade-in">
+    <PageTransition>
+    <div style={styles.container}>
       {/* ── Header ── */}
       <div style={styles.header}>
         <div>
@@ -190,9 +194,8 @@ function PastAuctions() {
 
       {/* ── Content ── */}
       {loading ? (
-        <div style={styles.emptyState}>
-          <div style={styles.spinner} />
-          <p style={{ color: "#9ca3af", marginTop: "20px" }}>Loading past auctions…</p>
+        <div style={{ marginTop: "20px" }}>
+          <SkeletonLoader variant="card" count={3} />
         </div>
       ) : filteredAuctions.length === 0 ? (
         <div style={styles.emptyState}>
@@ -207,18 +210,31 @@ function PastAuctions() {
           </p>
         </div>
       ) : (
-        <div style={styles.grid}>
+        <motion.div
+          style={styles.grid}
+          initial="hidden"
+          animate="show"
+          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08 } } }}
+        >
           {filteredAuctions.map((auction, index) => (
-            <PastAuctionCard
+            <motion.div
               key={auction._id}
-              auction={auction}
-              rank={index + 1}
-              onClick={() => navigate(`/past/${auction._id}/analytics`)}
-            />
+              variants={{
+                hidden: { opacity: 0, y: 20, scale: 0.97 },
+                show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", damping: 20 } },
+              }}
+            >
+              <PastAuctionCard
+                auction={auction}
+                rank={index + 1}
+                onClick={() => navigate(`/past/${auction._id}/analytics`)}
+              />
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       )}
     </div>
+    </PageTransition>
   );
 }
 

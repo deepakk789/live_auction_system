@@ -1,7 +1,16 @@
 import { useEffect, useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import socket, { BACKEND_URL } from "../services/socket";
 import { useNavigate, useParams } from "react-router-dom";
-import { Copy, Check, Lock, Unlock, Trophy, User } from "lucide-react";
+import { Copy, Check, Lock, Unlock, Trophy, User, Wallet, TrendingUp } from "lucide-react";
+import AnimatedCounter from "../components/AnimatedCounter";
+import SkeletonLoader from "../components/SkeletonLoader";
+import PageTransition from "../components/PageTransition";
+
+/* ── Sidebar accent colours ── */
+const TEAM_COLORS = [
+  "#3b82f6","#8b5cf6","#10b981","#f59e0b","#ef4444","#ec4899","#14b8a6","#6366f1",
+];
 
 function OrganizerLive() {
   const { auctionId } = useParams();
@@ -15,6 +24,7 @@ function OrganizerLive() {
   const [codeCopied, setCodeCopied] = useState(false);
   const [maxBid, setMaxBid] = useState(null);
   const [biddingMode, setBiddingMode] = useState("OFFLINE");
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
 
   // Lock System
   const [hasLock, setHasLock] = useState(false);
@@ -24,6 +34,7 @@ function OrganizerLive() {
 
   const navigate = useNavigate();
   const stateRef = useRef({ prevIndex: 0 });
+  const fallbackPhoto = "https://cdn-icons-png.flaticon.com/512/861/861512.png";
 
   const getBasePrice = (details) => {
     if (!details) return 0;
@@ -86,7 +97,6 @@ function OrganizerLive() {
           socket.emit("organizer_lock_change", { auctionId, activeOrganizer: user._id });
         } else {
           setHasLock(false);
-          // Sync state will give us the active organizer
         }
       } catch (err) {
         console.error(err);
@@ -138,8 +148,7 @@ function OrganizerLive() {
         if (data.maxBid != null) setMaxBid(data.maxBid);
         if (data.auctionCode) setAuctionCode(data.auctionCode);
         if (data.biddingMode) setBiddingMode(data.biddingMode);
-        
-        // Always respect server's activeOrganizer initially
+
         if (data.activeOrganizer) {
           setActiveOrganizerInfo(data.activeOrganizer);
           setHasLock(currentUser && data.activeOrganizer === currentUser._id);
@@ -160,7 +169,7 @@ function OrganizerLive() {
     });
 
     socket.on("teams_update", (data) => {
-      if (!hasLock) setTeams(data); // only non-lock holders accept state changes blindly
+      if (!hasLock) setTeams(data);
     });
 
     socket.on("auction_update", (data) => {
@@ -183,26 +192,25 @@ function OrganizerLive() {
   /* ---------- VIEWER ONLINE BIDDING HANDLER ---------- */
   useEffect(() => {
     const handleViewerBid = ({ teamName, amount }) => {
-      if (!hasLock) return; // Only the active organizer processes viewer bids to avoid race conditions
+      if (!hasLock) return;
       if (!playersState) return;
 
       const { players, currentIndex } = playersState;
       const player = players[currentIndex];
-      
+
       if (player.status === "SOLD") return;
 
       setPlayersState(prev => {
         const p = prev.players[prev.currentIndex];
         const newBid = Math.max(amount, p.currentBid || 0);
 
-        const playersCopy = prev.players.map((pl, i) => 
+        const playersCopy = prev.players.map((pl, i) =>
           i === prev.currentIndex ? { ...pl, currentBid: newBid } : pl
         );
         const updated = { ...prev, players: playersCopy };
-        
-        // Select the team that bid automatically so organizer can just click SOLD
+
         setSelectedTeam(teamName);
-        
+
         socket.emit("auction_update", { ...updated, auctionId });
         return updated;
       });
@@ -231,7 +239,7 @@ function OrganizerLive() {
 
     const index = playersState.currentIndex;
     if (index !== stateRef.current.prevIndex) {
-      setSelectedTeam(""); // Reset selected team on player change
+      setSelectedTeam("");
       stateRef.current.prevIndex = index;
     }
 
@@ -250,7 +258,16 @@ function OrganizerLive() {
   }, [playersState?.currentIndex, hasLock]);
 
   /* ---------- AUCTION LOGIC ---------- */
-  const updateState = async (state) => {
+  const updateState = async (state, skipConfirm = false) => {
+    if (auctionState === "ENDED") {
+      alert("This auction has ended. You cannot change its state.");
+      return;
+    }
+    if (state === "ENDED" && !skipConfirm) {
+      setShowEndConfirm(true);
+      return;
+    }
+
     setAuctionState(state);
     socket.emit("auction_state", { auctionId, state });
 
@@ -287,6 +304,7 @@ function OrganizerLive() {
   };
 
   const increaseBid = (amt) => {
+    if (auctionState === "ENDED") return;
     if (!playersState || playersState.players[playersState.currentIndex].status === "SOLD") return;
     const maxAvailableBudget = teams.length > 0 ? Math.max(...teams.map(t => t.budget)) : Infinity;
     const limit = Math.min(maxBid ?? Infinity, maxAvailableBudget);
@@ -305,6 +323,7 @@ function OrganizerLive() {
   };
 
   const decreaseBid = (amt) => {
+    if (auctionState === "ENDED") return;
     if (!playersState || playersState.players[playersState.currentIndex].status === "SOLD") return;
     setPlayersState((prev) => {
       const playersCopy = prev.players.map((p, i) =>
@@ -317,10 +336,11 @@ function OrganizerLive() {
   };
 
   const sellPlayer = () => {
+    if (auctionState === "ENDED") return alert("Cannot sell players in an ended auction.");
     if (!selectedTeam) return alert("Please select a team");
     const player = playersState.players[playersState.currentIndex];
     const teamIndex = teams.findIndex((t) => t.name === selectedTeam);
-    
+
     if (teamIndex === -1) return alert("Invalid team");
     const price = player.currentBid;
     if (!price || price <= 0) return alert("Start bidding first");
@@ -337,13 +357,14 @@ function OrganizerLive() {
     const updatedPlayers = { ...playersState, players: playersCopy };
     setPlayersState(updatedPlayers);
     setTeams(teamsCopy);
-    
+
     socket.emit("teams_update", { auctionId, teams: teamsCopy });
     socket.emit("auction_update", { ...updatedPlayers, auctionId });
     setSelectedTeam("");
   };
 
   const markUnsold = () => {
+    if (auctionState === "ENDED") return;
     const player = playersState.players[playersState.currentIndex];
     const base = getBasePrice(player.details);
     const playersCopy = playersState.players.map((p, i) =>
@@ -355,6 +376,7 @@ function OrganizerLive() {
   };
 
   const undoSold = () => {
+    if (auctionState === "ENDED") return alert("Cannot undo in an ended auction.");
     const player = playersState.players[playersState.currentIndex];
     if (player.status !== "SOLD") return;
 
@@ -378,7 +400,14 @@ function OrganizerLive() {
 
   /* ---------- RENDER ---------- */
   if (lockLoading || !setup || !auctionConfig || !playersState) {
-    return <div style={{ minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center" }}><div className="spinner"></div></div>;
+    return (
+      <PageTransition>
+        <div style={{ padding: "40px", maxWidth: "1400px", margin: "0 auto" }}>
+          <SkeletonLoader variant="card" count={2} />
+          <div style={{ marginTop: "20px" }}><SkeletonLoader variant="row" count={4} /></div>
+        </div>
+      </PageTransition>
+    );
   }
 
   const { players, currentIndex } = playersState;
@@ -386,171 +415,326 @@ function OrganizerLive() {
   const bidSteps = setup.bidSteps || [10, 20, 50];
 
   return (
-    <div style={styles.layout} className="animate-fade-in">
-      
-      {/* HEADER / TOPBAR */}
-      <div className="glass-panel" style={styles.header}>
-        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-          <h1 style={{ margin: 0, fontSize: "1.8rem", fontWeight: 800 }}>Organizer Board</h1>
-          
-          <div className="glass-card" style={styles.codeBubble} onClick={copyCode}>
-            <span style={{ fontSize: "10px", color: "#94a3b8" }}>CODE</span>
-            <span style={{ fontFamily: "monospace", fontWeight: "bold", fontSize: "1.2rem", color: "#60a5fa" }}>{auctionCode}</span>
-            {codeCopied ? <Check size={14} color="#10b981"/> : <Copy size={14} color="#94a3b8"/>}
-          </div>
-          
-          <div style={styles.lockBadge}>
-            {hasLock ? <Lock size={16} color="#10b981"/> : <Unlock size={16} color="#ef4444"/>}
-            <span style={{ fontSize: "0.85rem", fontWeight: 600, color: hasLock ? "#10b981" : "#ef4444" }}>
-              {hasLock ? "Edit Access" : "Read Only"}
-            </span>
-          </div>
-        </div>
+    <PageTransition>
+      <div style={styles.layout}>
 
-        <div style={{ display: "flex", gap: "10px" }}>
-          <button className="btn-glass" onClick={() => { updateState("BREAK"); navigate(`/organizer/${auctionId}/teams`); }}>Teams Setup</button>
-          <button className="btn-glass" onClick={() => navigate(`/organizer/${auctionId}/analytics`)}>📊 Analytics</button>
-        </div>
-      </div>
+        {/* HEADER / TOPBAR */}
+        <motion.div className="glass-panel" style={styles.header} initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+            <h1 style={{ margin: 0, fontSize: "1.8rem", fontWeight: 800 }}>Organizer Board</h1>
 
-      <div style={styles.mainGrid}>
-        
-        {/* LEFT COLUMN: PLAYER CARD & BIDDING */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-          
+            <motion.div className="glass-card" style={styles.codeBubble} onClick={copyCode} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <span style={{ fontSize: "10px", color: "#94a3b8" }}>CODE</span>
+              <span style={{ fontFamily: "monospace", fontWeight: "bold", fontSize: "1.2rem", color: "#60a5fa" }}>{auctionCode}</span>
+              <AnimatePresence mode="wait">
+                {codeCopied ? (
+                  <motion.div key="check" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}><Check size={14} color="#10b981"/></motion.div>
+                ) : (
+                  <motion.div key="copy" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}><Copy size={14} color="#94a3b8"/></motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+
+            <div style={styles.lockBadge}>
+              {hasLock ? <Lock size={16} color="#10b981"/> : <Unlock size={16} color="#ef4444"/>}
+              <span style={{ fontSize: "0.85rem", fontWeight: 600, color: hasLock ? "#10b981" : "#ef4444" }}>
+                {hasLock ? "Edit Access" : "Read Only"}
+              </span>
+            </div>
+          </div>
+
           <div style={{ display: "flex", gap: "10px" }}>
-            <button className={`btn-premium ${auctionState === "LIVE" ? "active" : ""}`} onClick={() => updateState("LIVE")} disabled={!hasLock} style={{flex: 1, filter: auctionState !== "LIVE" ? "grayscale(100%)" : "none"}}>LIVE</button>
-            <button className={`btn-glass ${auctionState === "BREAK" ? "active" : ""}`} onClick={() => updateState("BREAK")} disabled={!hasLock} style={{flex: 1}}>BREAK</button>
-            <button className={`btn-glass ${auctionState === "ENDED" ? "active" : ""}`} onClick={() => updateState("ENDED")} disabled={!hasLock} style={{flex: 1}}>END</button>
+            <motion.button className="btn-glass" onClick={() => navigate(`/organizer/${auctionId}/teams`)} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>Teams Setup</motion.button>
+            <motion.button className="btn-glass" onClick={() => navigate(`/organizer/${auctionId}/analytics`)} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>📊 Analytics</motion.button>
           </div>
+        </motion.div>
 
-          <div className="glass-panel" style={styles.playerCard}>
-            <div style={styles.imageWrapper}>
-               <img src={getPlayerPhoto(currentPlayer.details) || fallbackPhoto} alt="Player" style={styles.photo} />
-               {currentPlayer.status === "SOLD" && <div className="stamp-overlay stamp-sold"><h2>SOLD</h2></div>}
-               {currentPlayer.status === "UNSOLD" && <div className="stamp-overlay stamp-unsold"><h2>UNSOLD</h2></div>}
-            </div>
-            
-            <h2 style={{ fontSize: "2.5rem", margin: "20px 0 10px", fontWeight: 900 }}>{currentPlayer.name}</h2>
-            
-            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "10px", marginBottom: "20px" }}>
-              {auctionConfig.selectedFields.map(f => {
-                 if (currentPlayer.details[f]) {
-                   return <span key={f} style={styles.badge}>{f.toUpperCase()}: {currentPlayer.details[f]}</span>
-                 }
-                 return null;
-              })}
-            </div>
-            
-            <div className="glass-card" style={styles.bidDisplay}>
-              <span style={{ fontSize: "1rem", color: "#9ca3af" }}>CURRENT BID</span>
-              <div className="text-gradient" style={{ fontSize: "4rem", fontWeight: 900, lineHeight: 1 }}>
-                ₹{(currentPlayer.currentBid || getBasePrice(currentPlayer.details)).toLocaleString()}
-              </div>
-            </div>
-          </div>
+        <div style={styles.mainGrid}>
 
-          {/* BIDDING CONTROLS */}
-          <div className="glass-panel" style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "15px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3 style={{ margin: 0 }}>Controls {biddingMode === "ONLINE" && <span style={{ color: "#3b82f6", fontSize: "0.8rem", marginLeft: "10px" }}>(Online Ops Available)</span>}</h3>
-              <div style={{ fontSize: "0.85rem", color: "#94a3b8" }}>
-                Base: ₹{getBasePrice(currentPlayer.details)}
-              </div>
-            </div>
+          {/* LEFT COLUMN: PLAYER CARD & BIDDING */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
 
-            <div style={{ display: "flex", gap: "10px" }}>
-              {bidSteps.map(amt => (
-                <button key={amt} className="btn-glass" style={{ flex: 1, padding: "15px 0", fontSize: "1.2rem", color: "#10b981", borderColor: "rgba(16,185,129,0.3)" }} onClick={() => increaseBid(amt)} disabled={!hasLock}>
-                  +{amt}
-                </button>
+            {/* State buttons */}
+            <motion.div style={{ display: "flex", gap: "10px" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>
+              {[
+                { label: "LIVE", value: "LIVE", color: "linear-gradient(135deg, #2563eb, #7c3aed)" },
+                { label: "BREAK", value: "BREAK" },
+                { label: "END", value: "ENDED" },
+              ].map(btn => (
+                <motion.button
+                  key={btn.value}
+                  className={btn.value === "LIVE" && auctionState === "LIVE" ? "btn-premium" : "btn-glass"}
+                  onClick={() => updateState(btn.value)}
+                  disabled={!hasLock}
+                  style={{
+                    flex: 1,
+                    filter: btn.value === "LIVE" && auctionState !== "LIVE" ? "grayscale(100%)" : "none",
+                    opacity: auctionState === btn.value ? 1 : 0.7,
+                    border: auctionState === btn.value ? "1px solid rgba(59,130,246,0.5)" : undefined,
+                  }}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  {btn.label}
+                </motion.button>
               ))}
-              <button className="btn-glass" style={{ flex: 1, color: "#ef4444" }} onClick={() => decreaseBid(bidSteps[0])} disabled={!hasLock}>
-                -{bidSteps[0]}
-              </button>
-            </div>
+            </motion.div>
 
-            <select 
-              className="input-premium" 
-              value={selectedTeam} 
-              onChange={e => setSelectedTeam(e.target.value)}
-              disabled={!hasLock || currentPlayer.status === "SOLD"}
-              style={{ fontSize: "1.1rem", cursor: "pointer", background: selectedTeam ? "rgba(59,130,246,0.2)" : "" }}
+            {/* Player Card */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentIndex}
+                className="glass-panel"
+                style={styles.playerCard}
+                initial={{ opacity: 0, y: 30, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.97 }}
+                transition={{ type: "spring", damping: 22, stiffness: 200 }}
+              >
+                <motion.div
+                  style={styles.imageWrapper}
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.1, type: "spring" }}
+                >
+                  <img src={getPlayerPhoto(currentPlayer.details) || fallbackPhoto} alt="Player" style={styles.photo} />
+                  <AnimatePresence>
+                    {currentPlayer.status === "SOLD" && (
+                      <motion.div className="stamp-overlay stamp-sold" initial={{ scale: 3, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", damping: 12 }}>
+                        <h2>SOLD</h2>
+                      </motion.div>
+                    )}
+                    {currentPlayer.status === "UNSOLD" && (
+                      <motion.div className="stamp-overlay stamp-unsold" initial={{ scale: 3, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", damping: 12 }}>
+                        <h2>UNSOLD</h2>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+
+                <motion.h2 style={{ fontSize: "2.5rem", margin: "20px 0 10px", fontWeight: 900 }} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+                  {currentPlayer.name}
+                </motion.h2>
+
+                <motion.div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "10px", marginBottom: "20px" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }}>
+                  {auctionConfig.selectedFields.map(f => {
+                     if (currentPlayer.details[f]) {
+                       return <span key={f} style={styles.badge}>{f.toUpperCase()}: {currentPlayer.details[f]}</span>;
+                     }
+                     return null;
+                  })}
+                </motion.div>
+
+                <motion.div className="glass-card" style={styles.bidDisplay} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }}>
+                  <span style={{ fontSize: "1rem", color: "#9ca3af" }}>CURRENT BID</span>
+                  <AnimatedCounter
+                    value={currentPlayer.currentBid || getBasePrice(currentPlayer.details)}
+                    prefix="₹"
+                    fontSize="4rem"
+                    fontWeight="900"
+                    highlight
+                    className="text-gradient"
+                    style={{ lineHeight: 1 }}
+                  />
+                </motion.div>
+              </motion.div>
+            </AnimatePresence>
+
+            {/* BIDDING CONTROLS */}
+            <motion.div className="glass-panel" style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "15px" }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <h3 style={{ margin: 0 }}>Controls {biddingMode === "ONLINE" && <span style={{ color: "#3b82f6", fontSize: "0.8rem", marginLeft: "10px" }}>(Online Ops Available)</span>}</h3>
+                <div style={{ fontSize: "0.85rem", color: "#94a3b8" }}>
+                  Base: ₹{getBasePrice(currentPlayer.details)}
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px" }}>
+                {bidSteps.map(amt => (
+                  <motion.button key={amt} className="btn-glass" style={{ flex: 1, padding: "15px 0", fontSize: "1.2rem", color: "#10b981", borderColor: "rgba(16,185,129,0.3)" }} onClick={() => increaseBid(amt)} disabled={!hasLock} whileHover={{ scale: 1.06, y: -2 }} whileTap={{ scale: 0.94 }}>
+                    +{amt}
+                  </motion.button>
+                ))}
+                <motion.button className="btn-glass" style={{ flex: 1, color: "#ef4444" }} onClick={() => decreaseBid(bidSteps[0])} disabled={!hasLock} whileHover={{ scale: 1.06, y: -2 }} whileTap={{ scale: 0.94 }}>
+                  -{bidSteps[0]}
+                </motion.button>
+              </div>
+
+              <select
+                className="input-premium"
+                value={selectedTeam}
+                onChange={e => setSelectedTeam(e.target.value)}
+                disabled={!hasLock || currentPlayer.status === "SOLD"}
+                style={{ fontSize: "1.1rem", cursor: "pointer", background: selectedTeam ? "rgba(59,130,246,0.2)" : "" }}
+              >
+                <option value="" style={{ color: "#0f172a", background: "#f8fafc" }}>-- SELECT TEAM --</option>
+                {teams.map(t => (
+                  <option key={t.name} value={t.name} style={{ color: "#0f172a", background: "#f8fafc" }}>{t.name} (₹{t.budget})</option>
+                ))}
+              </select>
+
+              <div style={{ display: "flex", gap: "10px" }}>
+                {currentPlayer.status === "SOLD" ? (
+                  <motion.button className="btn-glass" style={{ flex: 1, background: "rgba(239, 68, 68, 0.1)", color: "#ef4444" }} onClick={undoSold} disabled={!hasLock || auctionState === "ENDED"} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                    Undo Sold
+                  </motion.button>
+                ) : (
+                  <>
+                    <motion.button className="btn-premium" style={{ flex: 2, background: "linear-gradient(135deg, #059669, #10b981)", boxShadow: "0 4px 15px rgba(16, 185, 129, 0.3)" }} onClick={sellPlayer} disabled={!hasLock || auctionState === "ENDED"} whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.97 }}>
+                      SELL PLAYER
+                    </motion.button>
+                    <motion.button className="btn-glass" style={{ flex: 1, color: "#facc15", borderColor: "rgba(250,204,21,0.3)" }} onClick={markUnsold} disabled={!hasLock || auctionState === "ENDED"} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                      UNSOLD
+                    </motion.button>
+                  </>
+                )}
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: "10px" }}>
+                <motion.button className="btn-glass" onClick={goPrev} disabled={!hasLock || currentIndex === 0} whileHover={{ x: -3 }} whileTap={{ scale: 0.95 }}>← Prev</motion.button>
+                <span style={{ color: "#94a3b8", alignSelf: "center", fontWeight: "bold" }}>{currentIndex + 1} / {players.length}</span>
+                <motion.button className="btn-glass" onClick={goNext} disabled={!hasLock || currentIndex === players.length - 1} whileHover={{ x: 3 }} whileTap={{ scale: 0.95 }}>Next →</motion.button>
+              </div>
+            </motion.div>
+          </div>
+
+
+          {/* RIGHT COLUMN: TEAMS */}
+          <motion.div
+            style={{ display: "flex", flexDirection: "column", gap: "15px", height: "calc(100vh - 140px)", overflowY: "auto", paddingRight: "10px" }}
+            initial="hidden"
+            animate="show"
+            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.07, delayChildren: 0.2 } } }}
+          >
+            {teams.map((team, idx) => {
+              const isSelected = selectedTeam === team.name;
+              const color = TEAM_COLORS[idx % TEAM_COLORS.length];
+              const totalSpent = team.players.reduce((s, p) => s + p.price, 0);
+              const totalBudget = totalSpent + team.budget;
+              const remainingPercent = totalBudget > 0 ? (team.budget / totalBudget) * 100 : 100;
+
+              return (
+                <motion.div
+                  key={team.name}
+                  className="glass-card"
+                  style={{
+                    padding: "20px",
+                    borderLeft: `3px solid ${color}`,
+                    border: isSelected ? `2px solid ${color}` : undefined,
+                    cursor: hasLock ? "pointer" : "default",
+                  }}
+                  variants={{
+                    hidden: { opacity: 0, x: 30 },
+                    show: { opacity: 1, x: 0, transition: { type: "spring", damping: 20 } },
+                  }}
+                  whileHover={{ x: -4, transition: { duration: 0.2 } }}
+                  animate={isSelected ? { scale: 1.02 } : { scale: 1 }}
+                  onClick={() => { if (hasLock && currentPlayer.status !== "SOLD") setSelectedTeam(team.name); }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                    <h3 style={{ margin: 0 }}>{team.name}</h3>
+                    <AnimatedCounter value={team.budget} prefix="₹" fontSize="1rem" fontWeight="700" color="#10b981" highlight />
+                  </div>
+
+                  {/* Budget bar */}
+                  <div style={styles.progressBarBg}>
+                    <motion.div
+                      style={{ height: "100%", borderRadius: "3px", background: `linear-gradient(90deg, ${color}, ${color}88)` }}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(100, Math.max(0, remainingPercent))}%` }}
+                      transition={{ duration: 1, ease: "easeOut" }}
+                    />
+                  </div>
+
+                  <div style={{ fontSize: "0.8rem", color: "#94a3b8", display: "flex", justifyContent: "space-between", marginTop: "10px" }}>
+                    <span>{team.players.length} Players</span>
+                    <span>Spent: ₹{totalSpent.toLocaleString()}</span>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+
+        </div>
+
+        {/* READ ONLY OVERLAY IF NO LOCK */}
+        <AnimatePresence>
+          {!hasLock && (
+            <motion.div
+              style={styles.overlayContainer}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
             >
-              <option value="" style={{ color: "#0f172a", background: "#f8fafc" }}>-- SELECT TEAM --</option>
-              {teams.map(t => (
-                <option key={t.name} value={t.name} style={{ color: "#0f172a", background: "#f8fafc" }}>{t.name} (₹{t.budget})</option>
-              ))}
-            </select>
+              <motion.div
+                className="glass-panel"
+                style={styles.overlayCard}
+                initial={{ scale: 0.85, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", damping: 20 }}
+              >
+                <Lock size={48} color="#ef4444" style={{ marginBottom: "20px" }} />
+                <h2 style={{ margin: "0 0 10px" }}>Auction Locked</h2>
+                <p style={{ color: "#94a3b8", textAlign: "center", marginBottom: "20px", maxWidth: "300px" }}>
+                  Another organizer is currently managing changes. You are in View-Only mode.
+                </p>
+                <motion.button className="btn-glass" onClick={() => window.location.reload()} whileHover={{ scale: 1.05 }}>Refresh Status</motion.button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-            <div style={{ display: "flex", gap: "10px" }}>
-              {currentPlayer.status === "SOLD" ? (
-                <button className="btn-glass" style={{ flex: 1, background: "rgba(239, 68, 68, 0.1)", color: "#ef4444" }} onClick={undoSold} disabled={!hasLock}>
-                  Undo Sold
-                </button>
-              ) : (
-                <>
-                  <button className="btn-premium" style={{ flex: 2, background: "linear-gradient(135deg, #059669, #10b981)", boxShadow: "0 4px 15px rgba(16, 185, 129, 0.3)" }} onClick={sellPlayer} disabled={!hasLock}>
-                    SELL PLAYER
-                  </button>
-                  <button className="btn-glass" style={{ flex: 1, color: "#facc15", borderColor: "rgba(250,204,21,0.3)" }} onClick={markUnsold} disabled={!hasLock}>
-                    UNSOLD
-                  </button>
-                </>
-              )}
-            </div>
-
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: "10px" }}>
-              <button className="btn-glass" onClick={goPrev} disabled={!hasLock || currentIndex === 0}>← Prev</button>
-              <span style={{ color: "#94a3b8", alignSelf: "center", fontWeight: "bold" }}>{currentIndex + 1} / {players.length}</span>
-              <button className="btn-glass" onClick={goNext} disabled={!hasLock || currentIndex === players.length - 1}>Next →</button>
-            </div>
-          </div>
-        </div>
-
-
-        {/* RIGHT COLUMN: TEAMS */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "15px", height: "calc(100vh - 140px)", overflowY: "auto", paddingRight: "10px" }}>
-          {teams.map(team => {
-            const isSelected = selectedTeam === team.name;
-            const remainingPercent = (team.budget / (setup.maxBudget || 1)) * 100;
-            return (
-              <div key={team.name} className="glass-card" style={{ padding: "20px", border: isSelected ? "2px solid #3b82f6" : "1px solid rgba(255,255,255,0.1)", transform: isSelected ? "scale(1.02)" : "scale(1)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                  <h3 style={{ margin: 0 }}>{team.name}</h3>
-                  <span style={{ fontWeight: "bold", color: "#10b981" }}>₹{team.budget.toLocaleString()}</span>
+        {/* END AUCTION CONFIRMATION MODAL */}
+        <AnimatePresence>
+          {showEndConfirm && (
+            <motion.div
+              style={styles.overlayContainer}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <motion.div
+                className="glass-panel"
+                style={{ ...styles.overlayCard, border: "1px solid rgba(239, 68, 68, 0.4)", boxShadow: "0 20px 50px rgba(239, 68, 68, 0.2)" }}
+                initial={{ scale: 0.85, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.85, opacity: 0, y: 20 }}
+                transition={{ type: "spring", damping: 20 }}
+              >
+                <div style={{ padding: "15px", background: "rgba(239, 68, 68, 0.1)", borderRadius: "50%", marginBottom: "20px" }}>
+                   <Trophy size={40} color="#ef4444" />
                 </div>
-                
-                <div style={styles.progressBarBg}>
-                  <div style={{...styles.progressBarFill, width: `${Math.min(100, Math.max(0, remainingPercent))}%`}}></div>
+                <h2 style={{ margin: "0 0 10px", fontSize: "1.8rem" }}>End Auction?</h2>
+                <p style={{ color: "#94a3b8", textAlign: "center", marginBottom: "30px", maxWidth: "350px", lineHeight: 1.6 }}>
+                  Are you absolutely sure you want to end this auction? 
+                  <br/><br/>
+                  <span style={{ color: "#ef4444", fontWeight: "bold" }}>This action is final and cannot be undone.</span>
+                </p>
+                <div style={{ display: "flex", gap: "15px", width: "100%" }}>
+                  <motion.button 
+                    className="btn-glass" 
+                    style={{ flex: 1 }} 
+                    onClick={() => setShowEndConfirm(false)}
+                    whileHover={{ scale: 1.03 }}
+                  >
+                    Cancel
+                  </motion.button>
+                  <motion.button 
+                    className="btn-premium" 
+                    style={{ flex: 1, background: "linear-gradient(135deg, #dc2626, #991b1b)", boxShadow: "0 4px 15px rgba(220, 38, 38, 0.4)" }} 
+                    onClick={() => { setShowEndConfirm(false); updateState("ENDED", true); }}
+                    whileHover={{ scale: 1.03 }}
+                  >
+                    Yes, End It
+                  </motion.button>
                 </div>
-                
-                <div style={{ fontSize: "0.8rem", color: "#94a3b8", display: "flex", justifyContent: "space-between", marginTop: "10px" }}>
-                  <span>{team.players.length} Players</span>
-                  <span>Spent: ₹{(setup.maxBudget - team.budget).toLocaleString()}</span>
-                </div>
-              </div>
-            )
-          })}
-        </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
       </div>
-
-      {/* READ ONLY OVERLAY IF NO LOCK */}
-      {!hasLock && (
-        <div style={styles.overlayContainer}>
-          <div className="glass-panel" style={styles.overlayCard}>
-            <Lock size={48} color="#ef4444" style={{ marginBottom: "20px" }} />
-            <h2 style={{ margin: "0 0 10px" }}>Auction Locked</h2>
-            <p style={{ color: "#94a3b8", textAlign: "center", marginBottom: "20px", maxWidth: "300px" }}>
-              Another organizer is currently managing changes. You are in View-Only mode.
-            </p>
-            <button className="btn-glass" onClick={() => window.location.reload()}>Refresh Status</button>
-          </div>
-        </div>
-      )}
-
-    </div>
+    </PageTransition>
   );
 }
 
@@ -625,6 +809,7 @@ const styles = {
     padding: "20px 40px",
     display: "inline-flex",
     flexDirection: "column",
+    alignItems: "center",
     marginTop: "10px"
   },
   progressBarBg: {
@@ -633,13 +818,8 @@ const styles = {
     borderRadius: "3px",
     overflow: "hidden"
   },
-  progressBarFill: {
-    height: "100%",
-    background: "linear-gradient(90deg, #10b981, #34d399)",
-    transition: "width 0.4s ease-out"
-  },
   overlayContainer: {
-    position: "absolute",
+    position: "fixed",
     top: 0, left: 0, right: 0, bottom: 0,
     background: "rgba(11, 17, 32, 0.7)",
     backdropFilter: "blur(4px)",

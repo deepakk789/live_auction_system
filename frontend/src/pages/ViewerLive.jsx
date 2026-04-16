@@ -1,14 +1,23 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { Copy, Check, Users, Activity, ExternalLink, Zap, Wallet, TrendingUp, Trophy } from "lucide-react";
 import socket, { BACKEND_URL } from "../services/socket";
+import AnimatedCounter from "../components/AnimatedCounter";
+import SkeletonLoader from "../components/SkeletonLoader";
+import PageTransition from "../components/PageTransition";
 import DrinksBreak from "./DrinksBreak";
-import { Copy, Check, Users, Activity, ExternalLink, Zap } from "lucide-react";
+
+/* ── Team sidebar colours ── */
+const SIDEBAR_COLORS = [
+  "#3b82f6","#8b5cf6","#10b981","#f59e0b","#ef4444","#ec4899","#14b8a6","#6366f1",
+];
 
 function ViewerLive() {
   const { auctionId } = useParams();
   const navigate = useNavigate();
   const fallbackPhoto = "https://cdn-icons-png.flaticon.com/512/861/861512.png";
-  
+
   const [playersState, setPlayersState] = useState(null);
   const [auctionState, setAuctionState] = useState("LIVE");
   const [teams, setTeams] = useState([]);
@@ -16,13 +25,13 @@ function ViewerLive() {
   const [selectedFields, setSelectedFields] = useState([]);
   const [biddingMode, setBiddingMode] = useState("OFFLINE");
   const [bidSteps, setBidSteps] = useState([10, 20, 50]);
-  
+
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [representingTeam, setRepresentingTeam] = useState("");
   const [loading, setLoading] = useState(true);
+  const [expandedTeam, setExpandedTeam] = useState(null);
 
   const getBasePrice = (details) => {
-    if (!details) return 0;
     const value = Object.values(details).find((v) => {
       if (typeof v !== "string") return false;
       const val = v.toLowerCase();
@@ -93,49 +102,76 @@ function ViewerLive() {
   const handleSubmitBid = (amt) => {
     if (!representingTeam) return alert("Select your team first");
     if (!playersState) return;
-    
+
     const player = playersState.players[playersState.currentIndex];
     if (player.status === "SOLD") return;
 
     const teamState = teams.find(t => t.name === representingTeam);
     const newBid = Math.max(getBasePrice(player.details), (player.currentBid || 0) + amt);
-    
+
     if (teamState && teamState.budget < newBid) {
       return alert("Your team does not have enough budget for this bid.");
     }
 
-    // Emit to room (organizer will process it and sync state)
     socket.emit("viewer_bid", { auctionId, teamName: representingTeam, amount: newBid });
   };
 
 
   /* ---------- RENDER ---------- */
-  if (loading) return <div className="spinner" style={{ margin: "100px auto" }}></div>;
-  if (!playersState || !playersState.players?.length) return <div style={styles.container}><h3>Waiting for organizer to start...</h3></div>;
+  if (loading) {
+    return (
+      <PageTransition>
+        <div style={styles.container}>
+          <SkeletonLoader variant="card" count={2} />
+        </div>
+      </PageTransition>
+    );
+  }
+  if (!playersState || !playersState.players?.length) {
+    return (
+      <PageTransition>
+        <div style={styles.container}>
+          <motion.div className="glass-panel" style={styles.waitingState} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: "spring" }}>
+            <motion.div animate={{ rotate: [0, 360] }} transition={{ repeat: Infinity, duration: 3, ease: "linear" }} style={{ display: "inline-block" }}>
+              <Activity size={48} color="#3b82f6" />
+            </motion.div>
+            <h3 style={{ margin: "20px 0 8px", fontSize: "1.4rem" }}>Waiting for Organizer</h3>
+            <p style={{ color: "#64748b" }}>The auction hasn't started yet. Hang tight!</p>
+          </motion.div>
+        </div>
+      </PageTransition>
+    );
+  }
 
   if (auctionState === "BREAK") {
     return (
-      <div style={styles.container}>
-        <div className="glass-panel" style={{ padding: "20px", display: "flex", justifyContent: "space-between", marginBottom: "30px" }}>
-          <h2>{auctionName || "Auction"} - Drinks Break  🍹</h2>
-          <button className="btn-glass" onClick={() => navigate(`/analytics/${auctionId}`)}>View Full Analytics</button>
+      <PageTransition>
+        <div style={styles.container}>
+          <motion.div className="glass-panel" style={{ padding: "20px 30px", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "30px" }} initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
+            <h2 style={{ margin: 0, display: "flex", alignItems: "center", gap: "10px" }}>{auctionName || "Auction"} - Drinks Break 🍹</h2>
+          </motion.div>
+          <DrinksBreak readOnly />
         </div>
-        <DrinksBreak readOnly />
-      </div>
+      </PageTransition>
     );
   }
 
   if (auctionState === "ENDED") {
     return (
-      <div style={styles.container}>
-        <div className="glass-card" style={{ padding: "60px", textAlign: "center" }}>
-          <h1>Auction Ended 🏁</h1>
-          <p style={{ color: "#94a3b8", marginBottom: "30px" }}>The auction has been officially concluded by the organizer.</p>
-          <button className="btn-premium" onClick={() => navigate(`/past/${auctionId}/analytics`)}>
-            View Final Results
-          </button>
+      <PageTransition>
+        <div style={styles.container}>
+          <motion.div className="glass-card" style={{ padding: "60px", textAlign: "center" }} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: "spring" }}>
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1, rotate: [0, 10, -10, 0] }} transition={{ delay: 0.3, type: "spring" }}>
+              <Trophy size={64} color="#f59e0b" />
+            </motion.div>
+            <h1 style={{ marginTop: "20px" }}>Auction Ended 🏁</h1>
+            <p style={{ color: "#94a3b8", marginBottom: "30px" }}>The auction has been officially concluded by the organizer.</p>
+            <motion.button className="btn-premium" onClick={() => navigate(`/past/${auctionId}/analytics`)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}>
+              View Final Results
+            </motion.button>
+          </motion.div>
         </div>
-      </div>
+      </PageTransition>
     );
   }
 
@@ -145,122 +181,241 @@ function ViewerLive() {
   const currentBid = currentPlayer.currentBid || base;
 
   return (
-    <div style={styles.container} className="animate-fade-in">
-      
-      {/* HEADER */}
-      <div className="glass-panel" style={styles.header}>
-        <h2 style={{ margin: 0, display: "flex", alignItems: "center", gap: "10px" }}>
-          <Activity size={24} color="#3b82f6"/> 
-          {auctionName || "Live Auction"}
-        </h2>
-        <div style={{ display: "flex", gap: "15px", alignItems: "center" }}>
-          {biddingMode === "ONLINE" && (
-            <div style={styles.onlineBadge}>
-              <Zap size={14}/> ONLINE BIDDING
-            </div>
-          )}
-          <button className="btn-glass" onClick={() => setShowAnalytics(true)}>
-            <ExternalLink size={16} /> Leaderboard
-          </button>
-        </div>
-      </div>
+    <PageTransition>
+      <div style={styles.container}>
 
-      <div style={styles.mainGrid}>
-        
-        {/* PLAYER DISPLAY */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-          <div className="glass-panel" style={styles.playerCard}>
-            <div style={styles.imageWrapper}>
-              <img src={getPlayerPhoto(currentPlayer.details) || fallbackPhoto} alt="Player" style={styles.photo} />
-              {currentPlayer.status === "SOLD" && <div className="stamp-overlay stamp-sold"><h2>SOLD!</h2><p>to {currentPlayer.soldTo}</p></div>}
-              {currentPlayer.status === "UNSOLD" && <div className="stamp-overlay stamp-unsold"><h2>UNSOLD</h2></div>}
-            </div>
-
-            <h1 style={{ fontSize: "3rem", fontWeight: 900, margin: "20px 0 10px", lineHeight: 1.1 }}>{currentPlayer.name}</h1>
-            
-            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "10px", marginBottom: "30px" }}>
-              {selectedFields.map(f => {
-                if (currentPlayer.details[f]) {
-                  return <span key={f} style={styles.badge}>{f.toUpperCase()}: {currentPlayer.details[f]}</span>
-                }
-                return null;
-              })}
-            </div>
-
-            <div className="glass-card" style={styles.bidDisplay}>
-              <span style={{ fontSize: "1.2rem", color: "#9ca3af", letterSpacing: "2px" }}>CURRENT BID</span>
-              <div className="text-gradient" style={{ fontSize: "6rem", fontWeight: 900, lineHeight: 1 }}>
-                ₹{currentBid.toLocaleString()}
-              </div>
-            </div>
+        {/* HEADER */}
+        <motion.div className="glass-panel" style={styles.header} initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
+          <h2 style={{ margin: 0, display: "flex", alignItems: "center", gap: "10px" }}>
+            <Activity size={24} color="#3b82f6"/>
+            {auctionName || "Live Auction"}
+          </h2>
+          <div style={{ display: "flex", gap: "15px", alignItems: "center" }}>
+            {biddingMode === "ONLINE" && (
+              <motion.div style={styles.onlineBadge} animate={{ boxShadow: ["0 0 0 0 rgba(59,130,246,0.4)", "0 0 0 8px rgba(59,130,246,0)", "0 0 0 0 rgba(59,130,246,0)"] }} transition={{ repeat: Infinity, duration: 2 }}>
+                <Zap size={14}/> ONLINE BIDDING
+              </motion.div>
+            )}
+            <button className="btn-glass" onClick={() => setShowAnalytics(true)}>
+              <ExternalLink size={16} /> Leaderboard
+            </button>
           </div>
+        </motion.div>
 
-          {/* ONLINE BIDDING PANEL */}
-          {biddingMode === "ONLINE" && currentPlayer.status !== "SOLD" && (
-            <div className="glass-card stagger-1" style={{ padding: "30px", border: "2px solid rgba(59,130,246,0.3)" }}>
-              <h3 style={{ margin: "0 0 20px", display: "flex", alignItems: "center", gap: "8px" }}>
-                <Zap color="#3b82f6"/> Bid from your Device
-              </h3>
-              
-              <div style={{ marginBottom: "20px" }}>
-                <label style={{ display: "block", color: "#94a3b8", marginBottom: "8px", fontSize: "0.9rem" }}>Are you representing a team?</label>
-                <select 
-                  className="input-premium" 
-                  value={representingTeam} 
-                  onChange={e => setRepresentingTeam(e.target.value)}
+        <div style={styles.mainGrid}>
+
+          {/* PLAYER DISPLAY */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentIndex}
+                className="glass-panel"
+                style={styles.playerCard}
+                initial={{ opacity: 0, y: 30, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.97 }}
+                transition={{ type: "spring", damping: 22, stiffness: 200 }}
+              >
+                {/* Player image */}
+                <motion.div
+                  style={styles.imageWrapper}
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.15, type: "spring" }}
                 >
-                  <option value="">-- I am just a viewer --</option>
-                  {teams.map(t => (
-                    <option key={t.name} value={t.name}>{t.name} (Budget: ₹{t.budget})</option>
-                  ))}
-                </select>
-              </div>
+                  <img src={getPlayerPhoto(currentPlayer.details) || fallbackPhoto} alt="Player" style={styles.photo} />
+                  <AnimatePresence>
+                    {currentPlayer.status === "SOLD" && (
+                      <motion.div className="stamp-overlay stamp-sold" initial={{ scale: 3, opacity: 0, rotate: -30 }} animate={{ scale: 1, opacity: 1, rotate: -15 }} transition={{ type: "spring", damping: 12 }}>
+                        <h2>SOLD!</h2>
+                        <p>to {currentPlayer.soldTo}</p>
+                      </motion.div>
+                    )}
+                    {currentPlayer.status === "UNSOLD" && (
+                      <motion.div className="stamp-overlay stamp-unsold" initial={{ scale: 3, opacity: 0, rotate: -30 }} animate={{ scale: 1, opacity: 1, rotate: -15 }} transition={{ type: "spring", damping: 12 }}>
+                        <h2>UNSOLD</h2>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
 
-              <div style={{ display: "flex", gap: "10px", opacity: representingTeam ? 1 : 0.4, pointerEvents: representingTeam ? "auto" : "none" }}>
-                {bidSteps.map(amt => (
-                  <button 
-                    key={amt} 
-                    className="btn-premium" 
-                    style={{ flex: 1, padding: "20px 0", fontSize: "1.5rem" }}
-                    onClick={() => handleSubmitBid(amt)}
+                <motion.h1
+                  style={{ fontSize: "3rem", fontWeight: 900, margin: "20px 0 10px", lineHeight: 1.1 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  {currentPlayer.name}
+                </motion.h1>
+
+                <motion.div
+                  style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "10px", marginBottom: "30px" }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  {selectedFields.map(f => {
+                    if (currentPlayer.details[f]) {
+                      return <span key={f} style={styles.badge}>{f.toUpperCase()}: {currentPlayer.details[f]}</span>;
+                    }
+                    return null;
+                  })}
+                </motion.div>
+
+                {/* Bid Display */}
+                <motion.div
+                  className="glass-card"
+                  style={styles.bidDisplay}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.35 }}
+                >
+                  <span style={{ fontSize: "1.2rem", color: "#9ca3af", letterSpacing: "2px" }}>CURRENT BID</span>
+                  <AnimatedCounter
+                    value={currentBid}
+                    prefix="₹"
+                    fontSize="5rem"
+                    fontWeight="900"
+                    highlight
+                    className="text-gradient"
+                    style={{ lineHeight: 1 }}
+                  />
+                </motion.div>
+
+                {/* Player progress */}
+                <motion.div style={{ color: "#64748b", fontSize: "0.9rem", marginTop: "10px" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
+                  Player {currentIndex + 1} of {players.length}
+                </motion.div>
+              </motion.div>
+            </AnimatePresence>
+
+            {/* ONLINE BIDDING PANEL */}
+            {biddingMode === "ONLINE" && currentPlayer.status !== "SOLD" && (
+              <motion.div
+                className="glass-card"
+                style={{ padding: "30px", border: "2px solid rgba(59,130,246,0.3)" }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <h3 style={{ margin: "0 0 20px", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Zap color="#3b82f6"/> Bid from your Device
+                </h3>
+
+                <div style={{ marginBottom: "20px" }}>
+                  <label style={{ display: "block", color: "#94a3b8", marginBottom: "8px", fontSize: "0.9rem" }}>Are you representing a team?</label>
+                  <select
+                    className="input-premium"
+                    value={representingTeam}
+                    onChange={e => setRepresentingTeam(e.target.value)}
                   >
-                    + {amt}
-                  </button>
-                ))}
-              </div>
-              {!representingTeam && <p style={{ color: "#facc15", fontSize: "0.85rem", marginTop: "15px", textAlign: "center" }}>Select your team to place bids.</p>}
-            </div>
-          )}
-        </div>
+                    <option value="">-- I am just a viewer --</option>
+                    {teams.map(t => (
+                      <option key={t.name} value={t.name}>{t.name} (Budget: ₹{t.budget})</option>
+                    ))}
+                  </select>
+                </div>
 
-
-        {/* TEAMS SIDEBAR */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-          {teams.map(team => (
-            <div key={team.name} className="glass-card" style={{ padding: "20px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
-                <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: 800 }}>{team.name}</h3>
-                <span style={{ color: "#10b981", fontWeight: 700, fontSize: "1.2rem" }}>₹{team.budget.toLocaleString()}</span>
-              </div>
-              
-              {team.players.length === 0 ? (
-                <p style={{ color: "#64748b", margin: 0, fontSize: "0.9rem" }}>No players bought yet</p>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  {team.players.map((p, idx) => (
-                    <div key={idx} style={{ display: "flex", justifyContent: "space-between", background: "rgba(255,255,255,0.05)", padding: "8px 12px", borderRadius: "6px", fontSize: "0.85rem" }}>
-                      <span style={{ fontWeight: 600 }}>{p.name}</span>
-                      <span style={{ color: "#9ca3af" }}>₹{p.price}</span>
-                    </div>
+                <div style={{ display: "flex", gap: "10px", opacity: representingTeam ? 1 : 0.4, pointerEvents: representingTeam ? "auto" : "none" }}>
+                  {bidSteps.map(amt => (
+                    <motion.button
+                      key={amt}
+                      className="btn-premium"
+                      style={{ flex: 1, padding: "20px 0", fontSize: "1.5rem" }}
+                      onClick={() => handleSubmitBid(amt)}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      + {amt}
+                    </motion.button>
                   ))}
                 </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
+                {!representingTeam && <p style={{ color: "#facc15", fontSize: "0.85rem", marginTop: "15px", textAlign: "center" }}>Select your team to place bids.</p>}
+              </motion.div>
+            )}
+          </div>
 
-    </div>
+
+          {/* TEAMS SIDEBAR */}
+          <motion.div
+            style={{ display: "flex", flexDirection: "column", gap: "15px" }}
+            initial="hidden"
+            animate="show"
+            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08, delayChildren: 0.3 } } }}
+          >
+            {teams.map((team, idx) => {
+              const color = SIDEBAR_COLORS[idx % SIDEBAR_COLORS.length];
+              const totalSpent = team.players.reduce((s, p) => s + p.price, 0);
+              const totalBudget = totalSpent + team.budget;
+              const pct = totalBudget > 0 ? (team.budget / totalBudget) * 100 : 100;
+
+              return (
+                <motion.div
+                  key={team.name}
+                  className="glass-card"
+                  style={{ padding: "20px", borderLeft: `3px solid ${color}` }}
+                  variants={{
+                    hidden: { opacity: 0, x: 30 },
+                    show: { opacity: 1, x: 0, transition: { type: "spring", damping: 20 } },
+                  }}
+                  whileHover={{ x: -4, transition: { duration: 0.2 } }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                    <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 800 }}>{team.name}</h3>
+                    <AnimatedCounter value={team.budget} prefix="₹" fontSize="1.1rem" fontWeight="700" color="#10b981" highlight />
+                  </div>
+
+                  {/* Budget bar */}
+                  <div style={{ height: "5px", background: "rgba(255,255,255,0.08)", borderRadius: "3px", overflow: "hidden" }}>
+                    <motion.div
+                      style={{ height: "100%", borderRadius: "3px", background: `linear-gradient(90deg, ${color}, ${color}88)` }}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${pct}%` }}
+                      transition={{ duration: 1, ease: "easeOut" }}
+                    />
+                  </div>
+
+                  {/* Summary Stats */}
+                  <div style={{ fontSize: "0.8rem", color: "#94a3b8", display: "flex", justifyContent: "space-between", margin: "10px 0" }}>
+                    <span>{team.players.length} Players</span>
+                    <span>Spent: ₹{totalSpent.toLocaleString()}</span>
+                  </div>
+
+                  {team.players.length > 0 && (
+                    <button 
+                      className="btn-glass" 
+                      style={{ width: "100%", padding: "6px", fontSize: "0.8rem", marginTop: "4px", background: "rgba(255,255,255,0.02)" }}
+                      onClick={() => setExpandedTeam(expandedTeam === team.name ? null : team.name)}
+                    >
+                      {expandedTeam === team.name ? "Hide Players" : "View Players"}
+                    </button>
+                  )}
+
+                  <AnimatePresence>
+                    {expandedTeam === team.name && team.players.length > 0 && (
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                        animate={{ opacity: 1, height: "auto", marginTop: 10 }}
+                        exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                        style={{ display: "flex", flexDirection: "column", gap: "6px", overflow: "hidden" }}
+                      >
+                        {team.players.map((p, pidx) => (
+                          <div key={pidx} style={{ display: "flex", justifyContent: "space-between", background: "rgba(255,255,255,0.03)", padding: "6px 10px", borderRadius: "6px", fontSize: "0.85rem" }}>
+                            <span style={{ fontWeight: 600 }}>{p.name}</span>
+                            <span style={{ color: "#9ca3af" }}>₹{p.price}</span>
+                          </div>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        </div>
+
+      </div>
+    </PageTransition>
   );
 }
 
@@ -332,8 +487,20 @@ const styles = {
     padding: "30px 60px",
     display: "inline-flex",
     flexDirection: "column",
+    alignItems: "center",
     marginTop: "20px"
-  }
+  },
+  waitingState: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "80px 40px",
+    margin: "60px auto",
+    maxWidth: "500px",
+    borderRadius: "24px",
+    textAlign: "center",
+  },
 };
 
 export default ViewerLive;

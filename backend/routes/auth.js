@@ -226,4 +226,21 @@ router.post("/reset-password", async (req, res, next) => {
   }
 });
 
+// GET USER STATS (auctions organized)
+router.get("/stats", protect, async (req, res, next) => {
+  try {
+    const Auction = require("../models/Auction");
+    const organizedCount = await Auction.countDocuments({ 
+      $or: [
+        { organizer: req.user._id }, 
+        { coOrganizers: req.user._id }
+      ] 
+    });
+    res.json({ organizedCount });
+  } catch (error) {
+    console.error("Stats Error:", error);
+    next(error);
+  }
+});
+
 module.exports = router;

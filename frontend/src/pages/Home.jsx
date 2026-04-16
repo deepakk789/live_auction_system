@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Zap, Activity, Users, ShieldCheck, Trophy, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
 import "../styles/design-system.css";
+import PageTransition from "../components/PageTransition";
 
 function Home() {
   const navigate = useNavigate();
@@ -16,7 +17,8 @@ function Home() {
   }, []);
 
   return (
-    <div style={styles.container} className="animate-fade-in">
+    <PageTransition>
+    <div style={styles.container}>
       
       {/* Background Glow Orbs */}
       <div style={styles.glowOrbRight} />
@@ -96,6 +98,7 @@ function Home() {
         </div>
       </div>
     </div>
+    </PageTransition>
   );
 }
 

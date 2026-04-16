@@ -1,7 +1,10 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Activity, Search, SlidersHorizontal, ArrowUpDown, Radio, Users, Wallet, X, Hash, Copy, Check } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { BACKEND_URL } from "../services/socket";
+import PageTransition from "../components/PageTransition";
+import SkeletonLoader from "../components/SkeletonLoader";
 
 function LiveAuctions() {
   const navigate = useNavigate();
@@ -107,7 +110,8 @@ function LiveAuctions() {
   const hasActiveFilters = searchQuery || sortBy !== "date_desc" || filterState !== "ALL";
 
   return (
-    <div style={styles.container} className="animate-fade-in">
+    <PageTransition>
+    <div style={styles.container}>
       {/* ── Header ── */}
       <div style={styles.header}>
         <div>
@@ -211,9 +215,8 @@ function LiveAuctions() {
 
       {/* ── Content ── */}
       {loading ? (
-        <div style={styles.emptyState}>
-          <div style={styles.spinner} />
-          <p style={{ color: "#9ca3af", marginTop: "20px" }}>Fetching live auctions…</p>
+        <div style={{ marginTop: "20px" }}>
+          <SkeletonLoader variant="card" count={3} />
         </div>
       ) : filteredAuctions.length === 0 ? (
         <div style={styles.emptyState}>
@@ -233,18 +236,31 @@ function LiveAuctions() {
           )}
         </div>
       ) : (
-        <div style={styles.grid}>
+        <motion.div
+          style={styles.grid}
+          initial="hidden"
+          animate="show"
+          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08 } } }}
+        >
           {filteredAuctions.map(auction => (
-            <AuctionCard
+            <motion.div
               key={auction._id}
-              auction={auction}
-              isOrganizer={currentUser && auction.organizer && (currentUser.id === auction.organizer._id || currentUser.id === auction.organizer)}
-              onClick={() => handleAuctionClick(auction)}
-            />
+              variants={{
+                hidden: { opacity: 0, y: 20, scale: 0.97 },
+                show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", damping: 20 } },
+              }}
+            >
+              <AuctionCard
+                auction={auction}
+                isOrganizer={currentUser && auction.organizer && (currentUser.id === auction.organizer._id || currentUser.id === auction.organizer)}
+                onClick={() => handleAuctionClick(auction)}
+              />
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       )}
     </div>
+    </PageTransition>
   );
 }
 
