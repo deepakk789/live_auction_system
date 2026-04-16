@@ -9,8 +9,13 @@ const { sendResetEmail } = require("../utils/emailService");
 // It's good practice to have a JWT_SECRET in env, otherwise fallback for local dev
 const JWT_SECRET = process.env.JWT_SECRET || "supersecretauctionkey2026";
 
+// Email format validator
+function isValidEmail(email) {
+  return /^\S+@\S+\.\S+$/.test(email);
+}
+
 // REGISTER
-router.post("/register", async (req, res) => {
+router.post("/register", async (req, res, next) => {
   try {
     const { username, email, password } = req.body;
 
@@ -19,21 +24,44 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ error: "Please provide all required fields." });
     }
 
+    if (username.trim().length < 3) {
+      return res.status(400).json({ error: "Username must be at least 3 characters." });
+    }
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ error: "Please enter a valid email address." });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: "Password must be at least 6 characters." });
+    }
+
     // Check if user exists
     const existingUser = await User.findOne({ 
-      $or: [{ email: email.toLowerCase() }, { username }] 
+      $or: [{ email: email.toLowerCase() }, { username: username.trim() }] 
     });
 
     if (existingUser) {
-      return res.status(400).json({ error: "Username or email already in use." });
+      if (existingUser.email === email.toLowerCase()) {
+        return res.status(400).json({ error: "An account with this email already exists." });
+      }
+      return res.status(400).json({ error: "This username is already taken." });
     }
 
-    // Create user
-    const user = new User({ username, email, password });
+    // Create user (password hashed via pre-save hook)
+    const user = new User({ 
+      username: username.trim(), 
+      email: email.toLowerCase().trim(), 
+      password 
+    });
     await user.save();
 
     // Generate Token
-    const token = jwt.sign({ userId: user._id, username: user.username }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign(
+      { userId: user._id, username: user.username }, 
+      JWT_SECRET, 
+      { expiresIn: '7d' }
+    );
 
     res.status(201).json({ 
       message: "Registration successful", 
@@ -42,12 +70,27 @@ router.post("/register", async (req, res) => {
     });
   } catch (error) {
     console.error("Register Error:", error);
-    res.status(500).json({ error: "Server error during registration" });
+
+    // Handle Mongoose duplicate key error
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      return res.status(400).json({ 
+        error: `An account with this ${field} already exists.` 
+      });
+    }
+
+    // Handle Mongoose validation errors
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(e => e.message);
+      return res.status(400).json({ error: messages[0] });
+    }
+
+    next(error);
   }
 });
 
 // LOGIN
-router.post("/login", async (req, res) => {
+router.post("/login", async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
@@ -55,20 +98,28 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ error: "Please provide email and password." });
     }
 
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ error: "Please enter a valid email address." });
+    }
+
     // Find User by email only
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user) {
-      return res.status(401).json({ error: "Invalid credentials." });
+      return res.status(401).json({ error: "No account found with this email." });
     }
 
     // Compare Password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(401).json({ error: "Invalid credentials." });
+      return res.status(401).json({ error: "Incorrect password. Please try again." });
     }
 
     // Generate Token
-    const token = jwt.sign({ userId: user._id, username: user.username }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign(
+      { userId: user._id, username: user.username }, 
+      JWT_SECRET, 
+      { expiresIn: '7d' }
+    );
 
     res.json({
       message: "Login successful",
@@ -78,12 +129,12 @@ router.post("/login", async (req, res) => {
 
   } catch (error) {
     console.error("Login Error:", error);
-    res.status(500).json({ error: "Server error during login" });
+    next(error);
   }
 });
 
 // GET CURRENT USER (auto-login / token validation)
-router.get("/me", protect, async (req, res) => {
+router.get("/me", protect, async (req, res, next) => {
   try {
     res.json({
       user: {
@@ -94,12 +145,12 @@ router.get("/me", protect, async (req, res) => {
     });
   } catch (error) {
     console.error("Me Error:", error);
-    res.status(500).json({ error: "Server error" });
+    next(error);
   }
 });
 
 // FORGOT PASSWORD — sends reset email
-router.post("/forgot-password", async (req, res) => {
+router.post("/forgot-password", async (req, res, next) => {
   try {
     const { email } = req.body;
 
@@ -107,7 +158,11 @@ router.post("/forgot-password", async (req, res) => {
       return res.status(400).json({ error: "Please provide your email address." });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ error: "Please enter a valid email address." });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
 
     if (!user) {
       // Don't reveal whether user exists — always show success
@@ -124,7 +179,7 @@ router.post("/forgot-password", async (req, res) => {
     try {
       await sendResetEmail(user.email, resetToken);
     } catch (emailErr) {
-      console.error("Email send error:", emailErr);
+      console.error("Email send error:", emailErr.message);
       // Don't fail the request — token is saved; user can retry
     }
 
@@ -132,12 +187,12 @@ router.post("/forgot-password", async (req, res) => {
 
   } catch (error) {
     console.error("Forgot Password Error:", error);
-    res.status(500).json({ error: "Server error" });
+    next(error);
   }
 });
 
 // RESET PASSWORD — validates token and updates password
-router.post("/reset-password", async (req, res) => {
+router.post("/reset-password", async (req, res, next) => {
   try {
     const { token, newPassword } = req.body;
 
@@ -155,7 +210,7 @@ router.post("/reset-password", async (req, res) => {
     });
 
     if (!user) {
-      return res.status(400).json({ error: "Invalid or expired reset token." });
+      return res.status(400).json({ error: "Invalid or expired reset token. Please request a new one." });
     }
 
     user.password = newPassword;
@@ -167,7 +222,7 @@ router.post("/reset-password", async (req, res) => {
 
   } catch (error) {
     console.error("Reset Password Error:", error);
-    res.status(500).json({ error: "Server error" });
+    next(error);
   }
 });
 

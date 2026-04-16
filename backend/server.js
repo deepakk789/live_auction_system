@@ -18,11 +18,22 @@ const io = new Server(server, { cors: { origin: "*" } });
 app.set("io", io);
 
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch((err) => console.error("❌ MongoDB connection error:", err));
+
+// Health check endpoint — verify backend is reachable
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
 
 app.use("/api/auction", auctionRoutes);
 app.use("/api/auth", authRoutes);
+
+// Global error handler (Express 5 compatible)
+app.use((err, req, res, next) => {
+  console.error("Unhandled error:", err.stack || err.message);
+  res.status(err.status || 500).json({ error: err.message || "Internal server error" });
+});
 
 // MongoDB Models
 const Auction = require("./models/Auction");
@@ -176,5 +187,15 @@ io.on("connection", (socket) => {
 // Start server (ALWAYS LAST)
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`   Health: http://localhost:${PORT}/api/health`);
+});
+
+server.on("error", (err) => {
+  if (err.code === "EADDRINUSE") {
+    console.error(`❌ Port ${PORT} is already in use. Please close the conflicting process.`);
+    process.exit(1);
+  } else {
+    console.error("❌ Server runtime error:", err);
+  }
 });
