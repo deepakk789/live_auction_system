@@ -1,6 +1,7 @@
 const Player = require("../models/player");
 const Auction = require("../models/Auction");
 const Team = require("../models/Team");
+const User = require("../models/User");
 
 /**
  * Set auction mode: RANDOM or MANUAL
@@ -170,18 +171,29 @@ exports.initAuction = async (req, res) => {
       maxBudget: auctionSetup.maxBudget,
       bidSteps: auctionSetup.bidSteps || [10, 20, 50],
       biddingMode: auctionSetup.biddingMode || "OFFLINE",
-      state: "LIVE",
+      state: "UPCOMING",
       currentPlayerIndex: 0,
       organizer: req.user._id
     });
 
     // Create Teams scoped to this auction
-    const createdTeams = await Team.insertMany(teamsState.map(t => ({
-      name: t.name,
-      budget: t.budget,
-      players: t.players || [],
-      auctionId: auction._id
-    })));
+    const teamOps = await Promise.all(teamsState.map(async (t) => {
+      let managerId = null;
+      if (t.managerUsername) {
+        const user = await User.findOne({ username: new RegExp(`^${t.managerUsername}$`, "i") });
+        if (user) managerId = user._id;
+      }
+      return {
+        name: t.name,
+        budget: t.budget,
+        players: t.players || [],
+        auctionId: auction._id,
+        managerUsername: t.managerUsername || null,
+        manager: managerId
+      };
+    }));
+    
+    const createdTeams = await Team.insertMany(teamOps);
 
     res.json({
       message: "Auction created successfully",
@@ -466,7 +478,6 @@ exports.getAuctionByCode = async (req, res) => {
 /**
  * ADD CO-ORGANIZER
  */
-const User = require("../models/User"); // Ensure User model is loaded
 
 exports.addCoOrganizer = async (req, res) => {
   try {

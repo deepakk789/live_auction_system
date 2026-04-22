@@ -1,44 +1,89 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Archive, Search, SlidersHorizontal, ArrowUpDown, BarChart2, Users, Wallet, X, Trophy, Calendar } from "lucide-react";
-import { motion } from "framer-motion";
+import { Activity, Search, SlidersHorizontal, ArrowUpDown, Radio, Users, Wallet, X, Hash, Copy, Check } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { BACKEND_URL } from "../services/socket";
 import PageTransition from "../components/PageTransition";
 import SkeletonLoader from "../components/SkeletonLoader";
 import BorderGlow from "../components/BorderGlow";
+import { Calendar } from "lucide-react";
 
-function PastAuctions() {
+function UpcomingAuctions() {
   const navigate = useNavigate();
   const [auctions, setAuctions] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Current user
+  const [currentUser, setCurrentUser] = useState(null);
+
   // Controls
   const [searchQuery, setSearchQuery] = useState("");
+  const [codeQuery, setCodeQuery] = useState("");
   const [sortBy, setSortBy] = useState("date_desc");
+  const [filterState, setFilterState] = useState("ALL");
   const [showFilters, setShowFilters] = useState(false);
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
 
   useEffect(() => {
-    const fetchPastAuctions = async () => {
+    const storedUser = localStorage.getItem("authUser");
+    if (storedUser) setCurrentUser(JSON.parse(storedUser));
+
+    const fetchLiveAuctions = async () => {
       try {
         const res = await fetch(`${BACKEND_URL}/api/auction/list`);
         if (!res.ok) throw new Error("Failed to fetch auctions");
         const data = await res.json();
-        // Only ENDED auctions
-        setAuctions(data.filter(a => a.state === "ENDED"));
+        setAuctions(data.filter(a => a.state === "UPCOMING"));
       } catch (err) {
-        console.error("PastAuctions fetch error:", err);
+        console.error("UpcomingAuctions fetch error:", err);
         setAuctions([]);
       } finally {
         setLoading(false);
       }
     };
-    fetchPastAuctions();
+    fetchLiveAuctions();
   }, []);
+
+  // Smart navigation: organizer → organizer page, else → viewer page
+  const handleAuctionClick = (auction) => {
+    const isOrganizer = currentUser && auction.organizer &&
+      (currentUser.id === auction.organizer._id || currentUser.id === auction.organizer);
+
+    if (isOrganizer) {
+      navigate(`/organizer/${auction._id}/live`);
+    } else {
+      navigate(`/viewer/${auction._id}`);
+    }
+  };
+
+  // Rejoin by code
+  const handleCodeSearch = async () => {
+    if (!codeQuery.trim()) return;
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/auction/code/${codeQuery.trim().toUpperCase()}`);
+      if (!res.ok) {
+        alert("No auction found with that code.");
+        return;
+      }
+      const auction = await res.json();
+      
+      if (auction.state === "ENDED") {
+        navigate(`/past/${auction._id}/analytics`);
+      } else {
+        handleAuctionClick(auction);
+      }
+    } catch (err) {
+      console.error("Code search error:", err);
+      alert("Error searching for auction.");
+    }
+  };
 
   const filteredAuctions = useMemo(() => {
     let list = [...auctions];
+
+    if (filterState !== "ALL") {
+      list = list.filter(a => a.state === filterState);
+    }
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -46,18 +91,6 @@ function PastAuctions() {
         (a.auctionName || "").toLowerCase().includes(q) ||
         (a.auctionCode || "").toLowerCase().includes(q)
       );
-    }
-
-    // Date range filter
-    if (dateFrom) {
-      const from = new Date(dateFrom);
-      from.setHours(0, 0, 0, 0);
-      list = list.filter(a => new Date(a.endedAt || a.createdAt) >= from);
-    }
-    if (dateTo) {
-      const to = new Date(dateTo);
-      to.setHours(23, 59, 59, 999);
-      list = list.filter(a => new Date(a.endedAt || a.createdAt) <= to);
     }
 
     list.sort((a, b) => {
@@ -69,10 +102,14 @@ function PastAuctions() {
     });
 
     return list;
-  }, [auctions, searchQuery, sortBy, dateFrom, dateTo]);
+  }, [auctions, searchQuery, sortBy, filterState]);
 
-  const hasActiveFilters = searchQuery || sortBy !== "date_desc" || dateFrom || dateTo;
-  const clearFilters = () => { setSearchQuery(""); setSortBy("date_desc"); setDateFrom(""); setDateTo(""); };
+  const clearFilters = () => {
+    setSearchQuery("");
+    setSortBy("date_desc");
+    setFilterState("ALL");
+  };
+  const hasActiveFilters = searchQuery || sortBy !== "date_desc" || filterState !== "ALL";
 
   return (
     <PageTransition>
@@ -81,17 +118,34 @@ function PastAuctions() {
       <div style={styles.header}>
         <div>
           <h1 style={styles.title}>
-            <Archive size={28} color="#8b5cf6" style={{ marginRight: "12px", verticalAlign: "middle" }} />
-            Past Auctions
+            <Calendar size={28} color="#3b82f6" style={{ marginRight: "12px", verticalAlign: "middle" }} />
+            Upcoming Auctions
           </h1>
-          <p style={styles.subtitle}>Browse completed auctions and explore their full analytics.</p>
+          <p style={styles.subtitle}>View auctions that are approved and waiting to begin.</p>
         </div>
-        <div style={styles.totalCount}>
-          <Trophy size={16} color="#8b5cf6" />
+        <div style={{...styles.liveCount, background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.3)", color: "#3b82f6"}}>
           <span style={{ fontWeight: 700, fontSize: "0.9rem" }}>
-            {filteredAuctions.length} Completed
+            {filteredAuctions.length} Upcoming
           </span>
         </div>
+      </div>
+
+      {/* ── Rejoin by Code ── */}
+      <div style={styles.rejoinBar}>
+        <Hash size={18} color="#6b7280" />
+        <input
+          id="code-search"
+          style={styles.codeInput}
+          type="text"
+          placeholder="Enter auction code to rejoin…"
+          value={codeQuery}
+          onChange={e => setCodeQuery(e.target.value.toUpperCase())}
+          maxLength={6}
+          onKeyDown={e => e.key === "Enter" && handleCodeSearch()}
+        />
+        <button style={styles.codeBtn} onClick={handleCodeSearch}>
+          Join
+        </button>
       </div>
 
       {/* ── Search & Controls ── */}
@@ -99,7 +153,7 @@ function PastAuctions() {
         <div style={styles.searchWrapper}>
           <Search size={16} color="#6b7280" style={styles.searchIcon} />
           <input
-            id="past-search"
+            id="live-search"
             style={styles.searchInput}
             type="text"
             placeholder="Search by name or code…"
@@ -113,7 +167,7 @@ function PastAuctions() {
 
         <div style={{ position: "relative" }}>
           <button
-            id="past-sort-btn"
+            id="sort-btn"
             style={styles.iconBtn}
             onClick={() => {
               const opts = ["date_desc","date_asc","name_asc","name_desc"];
@@ -130,13 +184,13 @@ function PastAuctions() {
         </div>
 
         <button
-          id="past-filter-btn"
+          id="filter-btn"
           style={{ ...styles.iconBtn, ...(showFilters ? styles.iconBtnActive : {}) }}
           onClick={() => setShowFilters(v => !v)}
           title="Filter"
         >
           <SlidersHorizontal size={16} />
-          {(dateFrom || dateTo) && <span style={styles.filterDot} />}
+          {filterState !== "ALL" && <span style={styles.filterDot} />}
         </button>
 
         {hasActiveFilters && (
@@ -147,49 +201,16 @@ function PastAuctions() {
       {/* ── Filter Drawer ── */}
       {showFilters && (
         <div style={styles.filterDrawer}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-            <span style={styles.filterLabel}>Sort by:</span>
-            {[
-              { key: "date_desc", label: "📅 Newest First" },
-              { key: "date_asc",  label: "📅 Oldest First" },
-              { key: "name_asc",  label: "🔤 Name A→Z" },
-              { key: "name_desc", label: "🔤 Name Z→A" }
-            ].map(opt => (
-              <button
-                key={opt.key}
-                style={{ ...styles.filterChip, ...(sortBy === opt.key ? styles.filterChipActive : {}) }}
-                onClick={() => setSortBy(opt.key)}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "12px", flexWrap: "wrap" }}>
-            <Calendar size={16} color="#6b7280" />
-            <span style={styles.filterLabel}>Date range:</span>
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={e => setDateFrom(e.target.value)}
-              style={styles.dateInput}
-            />
-            <span style={{ color: "#6b7280" }}>to</span>
-            <input
-              type="date"
-              value={dateTo}
-              onChange={e => setDateTo(e.target.value)}
-              style={styles.dateInput}
-            />
-            {(dateFrom || dateTo) && (
-              <button
-                style={{ ...styles.filterChip, color: "#ef4444", borderColor: "#ef4444" }}
-                onClick={() => { setDateFrom(""); setDateTo(""); }}
-              >
-                Clear dates
-              </button>
-            )}
-          </div>
+          <span style={styles.filterLabel}>Status:</span>
+          {["ALL"].map(opt => (
+            <button
+              key={opt}
+              style={{ ...styles.filterChip, ...(filterState === opt ? styles.filterChipActive : {}) }}
+              onClick={() => setFilterState(opt)}
+            >
+              {opt === "ALL" ? "All" : opt}
+            </button>
+          ))}
         </div>
       )}
 
@@ -200,14 +221,14 @@ function PastAuctions() {
         </div>
       ) : filteredAuctions.length === 0 ? (
         <div style={styles.emptyState}>
-          <Archive size={52} color="#374151" style={{ marginBottom: "20px" }} />
+          <Calendar size={52} color="#374151" style={{ marginBottom: "20px" }} />
           <h2 style={{ color: "#d1d5db", marginBottom: "10px" }}>
-            {auctions.length === 0 ? "No Completed Auctions Yet" : "No Results Found"}
+            {auctions.length === 0 ? "No Upcoming Auctions" : "No Results Found"}
           </h2>
-          <p style={{ color: "#6b7280", maxWidth: "380px", margin: "0 auto" }}>
+          <p style={{ color: "#6b7280", maxWidth: "380px", margin: "0 auto 24px" }}>
             {auctions.length === 0
-              ? "Completed auctions will be archived here for you to review and analyze."
-              : "Try adjusting your search terms or date filters."}
+              ? "There are no pending auctions waiting to start right now."
+              : "Try adjusting your search or filter options."}
           </p>
         </div>
       ) : (
@@ -217,7 +238,7 @@ function PastAuctions() {
           animate="show"
           variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08 } } }}
         >
-          {filteredAuctions.map((auction, index) => (
+          {filteredAuctions.map(auction => (
             <motion.div
               key={auction._id}
               variants={{
@@ -225,10 +246,10 @@ function PastAuctions() {
                 show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", damping: 20 } },
               }}
             >
-              <PastAuctionCard
+              <AuctionCard
                 auction={auction}
-                rank={index + 1}
-                onClick={() => navigate(`/past/${auction._id}/analytics`)}
+                isOrganizer={currentUser && auction.organizer && (currentUser.id === auction.organizer._id || currentUser.id === auction.organizer)}
+                onClick={() => handleAuctionClick(auction)}
               />
             </motion.div>
           ))}
@@ -239,27 +260,51 @@ function PastAuctions() {
   );
 }
 
-/* ── Past Auction Card ── */
-function PastAuctionCard({ auction, rank, onClick }) {
-  const endDate = auction.endedAt
-    ? new Date(auction.endedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
-    : new Date(auction.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+/* ── Auction Card ── */
+function AuctionCard({ auction, isOrganizer, onClick }) {
+  const isLive = auction.state === "LIVE";
+  const [codeCopied, setCodeCopied] = useState(false);
+  const date = new Date(auction.createdAt).toLocaleDateString("en-IN", {
+    day: "numeric", month: "short", year: "numeric"
+  });
+
+  const copyCode = (e) => {
+    e.stopPropagation();
+    if (auction.auctionCode) {
+      navigator.clipboard.writeText(auction.auctionCode);
+      setCodeCopied(true);
+      setTimeout(() => setCodeCopied(false), 2000);
+    }
+  };
 
   return (
-    <BorderGlow style={styles.card} className="past-auction-card" onClick={onClick} id={`past-card-${auction._id}`} animated={false}>
+    <BorderGlow style={styles.card} className="auction-card" onClick={onClick} id={`card-${auction._id}`} animated={false}>
+      {/* Status Badge */}
       <div style={styles.cardHeader}>
-        <span style={styles.endedBadge}>✓ ENDED</span>
-        <span style={styles.dateText}>{endDate}</span>
+        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+          <span style={{ ...styles.stateBadge, background: "rgba(59,130,246,0.15)", color: "#3b82f6", border: `1px solid #3b82f6` }}>
+            📅 UPCOMING
+          </span>
+          {isOrganizer && (
+            <span style={styles.organizerBadge}>👑 Organizer</span>
+          )}
+        </div>
+        <span style={styles.dateText}>{date}</span>
       </div>
 
+      {/* Auction Name */}
       <h2 style={styles.cardTitle}>{auction.auctionName || "Untitled Auction"}</h2>
 
-      {auction.auctionCode && (
-        <div style={{ fontSize: "0.8rem", color: "#6b7280", marginBottom: "10px", fontFamily: "monospace", letterSpacing: "2px" }}>
-          #{auction.auctionCode}
-        </div>
-      )}
+      {/* Code */}
+      <div style={styles.codeLine} onClick={copyCode}>
+        <Hash size={12} color="#6b7280" />
+        <span style={{ color: "#60a5fa", fontFamily: "monospace", fontWeight: 700, letterSpacing: "2px" }}>
+          {auction.auctionCode || "—"}
+        </span>
+        {codeCopied ? <Check size={12} color="#10b981" /> : <Copy size={12} color="#6b7280" />}
+      </div>
 
+      {/* Meta */}
       <div style={styles.cardMeta}>
         <span style={styles.metaItem}>
           <Users size={14} style={{ marginRight: "5px" }} />
@@ -267,26 +312,29 @@ function PastAuctionCard({ auction, rank, onClick }) {
         </span>
         <span style={styles.metaItem}>
           <Wallet size={14} style={{ marginRight: "5px" }} />
-          ₹{auction.maxBudget?.toLocaleString() || 0}
+          ₹{auction.maxBudget?.toLocaleString() || 0} budget
         </span>
       </div>
 
+      {/* Organizer name */}
       {auction.organizer && auction.organizer.username && (
         <div style={{ fontSize: "0.8rem", color: "#6b7280", marginBottom: "12px" }}>
-          By <span style={{ color: "#9ca3af", fontWeight: 600 }}>{auction.organizer.username}</span>
+          Organized by <span style={{ color: "#9ca3af", fontWeight: 600 }}>{auction.organizer.username}</span>
         </div>
       )}
 
+      {/* CTA */}
       <div style={styles.cardFooter}>
-        <button style={styles.analyticsBtn} onClick={onClick}>
-          <BarChart2 size={14} style={{ marginRight: "6px" }} />
-          View Analytics
+        <button style={isOrganizer ? styles.manageBtn : styles.watchBtn} onClick={onClick}>
+          <Calendar size={14} style={{ marginRight: "6px" }} />
+          {isOrganizer ? "Manage Setup" : "View Lobby"}
         </button>
       </div>
     </BorderGlow>
   );
 }
 
+/* ── Styles ── */
 const styles = {
   container: {
     padding: "40px 40px 60px",
@@ -314,15 +362,55 @@ const styles = {
     marginTop: "8px",
     fontSize: "1rem"
   },
-  totalCount: {
+  liveCount: {
     display: "flex",
     alignItems: "center",
     gap: "8px",
-    background: "rgba(139,92,246,0.1)",
-    border: "1px solid rgba(139,92,246,0.3)",
+    background: "rgba(16,185,129,0.1)",
+    border: "1px solid rgba(16,185,129,0.3)",
     padding: "8px 16px",
     borderRadius: "50px",
-    color: "#8b5cf6"
+    color: "#10b981"
+  },
+  pulseDot: {
+    width: "10px",
+    height: "10px",
+    borderRadius: "50%",
+    background: "#10b981",
+    display: "inline-block",
+    boxShadow: "0 0 0 3px rgba(16,185,129,0.3)",
+    animation: "pulse 2s infinite"
+  },
+  rejoinBar: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    background: "rgba(17,24,39,0.6)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: "12px",
+    padding: "12px 16px",
+    marginBottom: "20px"
+  },
+  codeInput: {
+    flex: 1,
+    background: "transparent",
+    border: "none",
+    color: "#fff",
+    fontSize: "1rem",
+    fontFamily: "monospace",
+    letterSpacing: "3px",
+    outline: "none",
+    textTransform: "uppercase"
+  },
+  codeBtn: {
+    background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+    color: "white",
+    border: "none",
+    padding: "8px 20px",
+    borderRadius: "8px",
+    fontWeight: 700,
+    cursor: "pointer",
+    fontSize: "0.9rem"
   },
   controlBar: {
     display: "flex",
@@ -376,9 +464,9 @@ const styles = {
     transition: "all 0.2s"
   },
   iconBtnActive: {
-    background: "rgba(139,92,246,0.15)",
-    border: "1px solid rgba(139,92,246,0.5)",
-    color: "#a78bfa"
+    background: "rgba(59,130,246,0.15)",
+    border: "1px solid rgba(59,130,246,0.5)",
+    color: "#60a5fa"
   },
   filterDot: {
     width: "6px",
@@ -408,11 +496,15 @@ const styles = {
     fontSize: "0.85rem"
   },
   filterDrawer: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
     background: "rgba(17,24,39,0.6)",
     border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: "12px",
     padding: "14px 20px",
-    marginBottom: "24px"
+    marginBottom: "24px",
+    flexWrap: "wrap"
   },
   filterLabel: {
     color: "#6b7280",
@@ -430,19 +522,9 @@ const styles = {
     transition: "all 0.2s"
   },
   filterChipActive: {
-    background: "rgba(139,92,246,0.15)",
-    border: "1px solid #8b5cf6",
-    color: "#a78bfa"
-  },
-  dateInput: {
-    background: "rgba(17,24,39,0.8)",
-    border: "1px solid rgba(255,255,255,0.15)",
-    borderRadius: "8px",
-    padding: "6px 12px",
-    color: "white",
-    fontSize: "0.85rem",
-    outline: "none",
-    colorScheme: "dark"
+    background: "rgba(59,130,246,0.15)",
+    border: "1px solid #3b82f6",
+    color: "#60a5fa"
   },
   emptyState: {
     background: "rgba(17,24,39,0.4)",
@@ -456,10 +538,21 @@ const styles = {
     width: "44px",
     height: "44px",
     border: "3px solid rgba(255,255,255,0.1)",
-    borderTopColor: "#8b5cf6",
+    borderTopColor: "#3b82f6",
     borderRadius: "50%",
     margin: "0 auto",
     animation: "spin 0.8s linear infinite"
+  },
+  ctaBtn: {
+    background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+    color: "white",
+    border: "none",
+    padding: "12px 28px",
+    borderRadius: "50px",
+    fontSize: "0.95rem",
+    fontWeight: 700,
+    cursor: "pointer",
+    boxShadow: "0 4px 20px rgba(59,130,246,0.3)"
   },
   grid: {
     display: "grid",
@@ -485,25 +578,43 @@ const styles = {
     alignItems: "center",
     marginBottom: "16px"
   },
-  endedBadge: {
+  stateBadge: {
     padding: "4px 12px",
     borderRadius: "50px",
     fontSize: "0.75rem",
     fontWeight: 700,
-    letterSpacing: "0.5px",
-    background: "rgba(139,92,246,0.15)",
-    color: "#a78bfa",
-    border: "1px solid #8b5cf6"
+    letterSpacing: "0.5px"
+  },
+  organizerBadge: {
+    padding: "4px 10px",
+    borderRadius: "50px",
+    fontSize: "0.7rem",
+    fontWeight: 700,
+    background: "rgba(251,191,36,0.15)",
+    color: "#fbbf24",
+    border: "1px solid rgba(251,191,36,0.3)"
   },
   dateText: {
     color: "#6b7280",
     fontSize: "0.8rem"
   },
   cardTitle: {
-    margin: "0 0 8px",
+    margin: "0 0 10px",
     fontSize: "1.3rem",
     fontWeight: 800,
     color: "#f9fafb"
+  },
+  codeLine: {
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    background: "rgba(0,0,0,0.2)",
+    padding: "6px 12px",
+    borderRadius: "6px",
+    marginBottom: "14px",
+    width: "fit-content",
+    cursor: "pointer",
+    fontSize: "0.85rem"
   },
   cardMeta: {
     display: "flex",
@@ -522,8 +633,8 @@ const styles = {
     paddingTop: "16px",
     marginTop: "auto"
   },
-  analyticsBtn: {
-    background: "linear-gradient(135deg, #7c3aed, #8b5cf6)",
+  watchBtn: {
+    background: "linear-gradient(135deg, #059669, #10b981)",
     color: "white",
     border: "none",
     padding: "10px 20px",
@@ -533,9 +644,23 @@ const styles = {
     display: "flex",
     alignItems: "center",
     fontSize: "0.9rem",
-    boxShadow: "0 4px 12px rgba(139,92,246,0.3)",
+    boxShadow: "0 4px 12px rgba(16,185,129,0.3)",
+    transition: "all 0.2s"
+  },
+  manageBtn: {
+    background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+    color: "white",
+    border: "none",
+    padding: "10px 20px",
+    borderRadius: "50px",
+    fontWeight: 700,
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    fontSize: "0.9rem",
+    boxShadow: "0 4px 12px rgba(59,130,246,0.3)",
     transition: "all 0.2s"
   }
 };
 
-export default PastAuctions;
+export default UpcomingAuctions;

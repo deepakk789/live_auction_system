@@ -226,6 +226,25 @@ router.post("/reset-password", async (req, res, next) => {
   }
 });
 
+// LOOKUP USER BY USERNAME (For Team Manager Assignment)
+router.post("/lookup-user", protect, async (req, res, next) => {
+  try {
+    const { username } = req.body;
+    if (!username) return res.status(400).json({ error: "Username is required" });
+    
+    // Case insensitive search
+    const user = await User.findOne({ username: new RegExp(`^${username}$`, "i") });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    
+    res.json({ user: { id: user._id, username: user.username } });
+  } catch (error) {
+    console.error("Lookup Error:", error);
+    next(error);
+  }
+});
+
 // GET USER STATS (auctions organized)
 router.get("/stats", protect, async (req, res, next) => {
   try {

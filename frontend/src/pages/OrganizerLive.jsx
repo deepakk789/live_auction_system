@@ -30,6 +30,7 @@ function OrganizerLive() {
   const [hasLock, setHasLock] = useState(false);
   const [activeOrganizerInfo, setActiveOrganizerInfo] = useState(null);
   const [lockLoading, setLockLoading] = useState(true);
+  const [managerStatuses, setManagerStatuses] = useState({});
   const [currentUser, setCurrentUser] = useState(null);
 
   const navigate = useNavigate();
@@ -180,12 +181,22 @@ function OrganizerLive() {
       if (!hasLock) setAuctionState(state);
     });
 
+    socket.on("manager_status_change", ({ teamName, status }) => {
+      setManagerStatuses(prev => ({ ...prev, [teamName]: status }));
+    });
+
+    socket.on("team_quit_alert", ({ teamName }) => {
+      alert(`⚠️ TEAM MANAGER QUIT: ${teamName} has disconnected from the auction!`);
+    });
+
     return () => {
       socket.emit("leave_auction", { auctionId });
       socket.off("teams_update");
       socket.off("auction_update");
       socket.off("auction_state");
       socket.off("organizer_lock_change");
+      socket.off("manager_status_change");
+      socket.off("team_quit_alert");
     };
   }, [auctionId, hasLock, currentUser]);
 
@@ -413,6 +424,96 @@ function OrganizerLive() {
   const { players, currentIndex } = playersState;
   const currentPlayer = players[currentIndex];
   const bidSteps = setup.bidSteps || [10, 20, 50];
+
+  const handleNotifyTeams = () => {
+    const managerIds = teams.map(t => t.manager).filter(Boolean);
+    if (managerIds.length === 0) {
+      alert("No managers are assigned to any teams.");
+      return;
+    }
+    socket.emit("notify_managers", { 
+      managerIds, 
+      auctionId, 
+      message: `The organizer is ready for ${setup.auctionName}. Please join the auction now!` 
+    });
+    alert("Push notification sent to all assigned team managers!");
+  };
+
+  if (auctionState === "UPCOMING" && biddingMode === "ONLINE") {
+    const allJoined = teams.every(t => t.managerUsername ? managerStatuses[t.name] === "Connected" : false);
+
+    return (
+      <PageTransition>
+        <div style={{...styles.layout, display: "flex", flexDirection: "column", height: "100vh"}}>
+           <motion.div className="glass-panel" style={styles.header} initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
+             <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+               <h1 style={{ margin: 0, fontSize: "1.8rem", fontWeight: 800 }}>Pre-Auction Lobby</h1>
+               <div style={styles.lockBadge}>
+                 {hasLock ? <Lock size={16} color="#10b981"/> : <Unlock size={16} color="#ef4444"/>}
+                 <span style={{ fontSize: "0.85rem", fontWeight: 600, color: hasLock ? "#10b981" : "#ef4444" }}>
+                   {hasLock ? "Edit Access" : "Read Only"}
+                 </span>
+               </div>
+             </div>
+           </motion.div>
+
+           <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "20px" }}>
+             <div className="glass-panel" style={{ width: "100%", maxWidth: "800px", padding: "40px", textAlign: "center" }}>
+                <h2 style={{ fontSize: "2rem", marginBottom: "10px", color: "white" }}>Waiting for Team Managers</h2>
+                <p style={{ color: "#9ca3af", marginBottom: "40px" }}>
+                  This is an ONLINE auction. All assigned team managers must be connected to the auction room before you can start.
+                </p>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "40px", textAlign: "left" }}>
+                  {teams.map((team, idx) => {
+                    const isConnected = managerStatuses[team.name] === "Connected";
+                    return (
+                      <div key={idx} className="glass-card" style={{ display: "flex", justifyContent: "space-between", padding: "16px 20px", alignItems: "center" }}>
+                         <div>
+                           <div style={{ fontWeight: 700, fontSize: "1.1rem", color: "white" }}>{team.name}</div>
+                           <div style={{ color: "#6b7280", fontSize: "0.85rem" }}>
+                             Manager: {team.managerUsername || <span style={{ color: "#ef4444" }}>Unassigned</span>}
+                           </div>
+                         </div>
+                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                           <span style={{
+                             width: "10px", height: "10px", borderRadius: "50%",
+                             background: isConnected ? "#10b981" : "#ef4444",
+                             boxShadow: `0 0 8px ${isConnected ? "#10b981" : "#ef4444"}`
+                           }}></span>
+                           <span style={{ color: isConnected ? "#10b981" : "#ef4444", fontWeight: 600 }}>
+                             {isConnected ? "Connected" : "Offline / Waiting"}
+                           </span>
+                         </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div style={{ display: "flex", gap: "16px", justifyContent: "center" }}>
+                   <button className="btn-glass" onClick={handleNotifyTeams} disabled={!hasLock}>
+                     📣 Notify Teams
+                   </button>
+                   <button 
+                     className="btn-premium" 
+                     onClick={() => updateState("LIVE")} 
+                     disabled={!hasLock || !allJoined}
+                     style={{ opacity: (!hasLock || !allJoined) ? 0.5 : 1, filter: (!hasLock || !allJoined) ? "grayscale(100%)" : "none" }}
+                   >
+                     🚀 Start Auction
+                   </button>
+                </div>
+                {!allJoined && hasLock && (
+                  <p style={{ color: "#ef4444", marginTop: "16px", fontSize: "0.85rem" }}>
+                    Cannot start auction until all teams turn green.
+                  </p>
+                )}
+             </div>
+           </div>
+        </div>
+      </PageTransition>
+    );
+  }
 
   return (
     <PageTransition>

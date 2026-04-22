@@ -48,8 +48,8 @@ const auctionSchema = new mongoose.Schema(
 
     state: {
       type: String,
-      enum: ["LIVE", "BREAK", "ENDED"],
-      default: "LIVE"
+      enum: ["UPCOMING", "LIVE", "BREAK", "ENDED"],
+      default: "UPCOMING"
     },
 
     mode: {

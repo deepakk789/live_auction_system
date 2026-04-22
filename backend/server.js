@@ -40,6 +40,9 @@ const Auction = require("./models/Auction");
 const Player = require("./models/player");
 const Team = require("./models/Team");
 
+// Connect mapping: socket.id -> { auctionId, teamName }
+const managerConnections = new Map();
+
 // Socket events — ROOM-SCOPED for multi-auction support
 io.on("connection", (socket) => {
   console.log("Client connected:", socket.id);
@@ -56,6 +59,33 @@ io.on("connection", (socket) => {
     if (!auctionId) return;
     socket.leave(`auction_${auctionId}`);
     console.log(`Socket ${socket.id} left room auction_${auctionId}`);
+  });
+
+  // Global user room for personal notifications
+  socket.on("join_global", ({ userId }) => {
+    if (!userId) return;
+    socket.join(`user_${userId}`);
+  });
+
+  // 🔥 TEAM MANAGER LOBBY & NOTIFICATIONS
+  socket.on("manager_join", ({ auctionId, teamName }) => {
+    if (!auctionId || !teamName) return;
+    managerConnections.set(socket.id, { auctionId, teamName });
+    socket.to(`auction_${auctionId}`).emit("manager_status_change", { teamName, status: "Connected" });
+  });
+
+  socket.on("notify_managers", ({ managerIds, auctionId, message }) => {
+    if (managerIds && managerIds.length) {
+      managerIds.forEach(id => {
+        io.to(`user_${id}`).emit("auction_notification", { auctionId, message });
+      });
+    }
+  });
+
+  socket.on("team_quit_request", ({ auctionId, teamName }) => {
+    if (auctionId) {
+      socket.to(`auction_${auctionId}`).emit("team_quit_alert", { teamName });
+    }
   });
 
   // 🔥 FORWARD PLAYER UPDATES (scoped by auctionId)
@@ -180,6 +210,11 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     console.log("Client disconnected:", socket.id);
+    const mConn = managerConnections.get(socket.id);
+    if (mConn) {
+      io.to(`auction_${mConn.auctionId}`).emit("manager_status_change", { teamName: mConn.teamName, status: "Offline" });
+      managerConnections.delete(socket.id);
+    }
   });
 });
 

@@ -1,7 +1,23 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { BACKEND_URL } from "../services/socket";
-import { Copy, Check, Shield, Users, Globe, UserPlus, X } from "lucide-react";
+import { Copy, Check, Shield, Users, Globe, UserPlus, X, AlertCircle } from "lucide-react";
+
+const ErrorBanner = ({ message }) => {
+  if (!message) return null;
+  return (
+    <div className="animate-fade-in" style={{
+      display: "flex", alignItems: "center", gap: "12px",
+      background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.3)",
+      color: "#f87171", padding: "14px 20px", borderRadius: "8px",
+      fontSize: "0.95rem", fontWeight: "500", marginTop: "10px", marginBottom: "20px",
+      boxShadow: "0 4px 12px rgba(239, 68, 68, 0.1)"
+    }}>
+      <AlertCircle size={20} />
+      {message}
+    </div>
+  );
+};
 
 function OrganizerSetup() {
   const navigate = useNavigate();
@@ -13,7 +29,7 @@ function OrganizerSetup() {
   const [auctionName, setAuctionName] = useState("");
   const [biddingMode, setBiddingMode] = useState("OFFLINE"); // "ONLINE" or "OFFLINE"
   const [teamCount, setTeamCount] = useState(2);
-  const [teams, setTeams] = useState(["", ""]);
+  const [teams, setTeams] = useState([{ name: "", managerUsername: "" }, { name: "", managerUsername: "" }]);
   const [maxBudget, setMaxBudget] = useState("");
   const [bidSteps, setBidSteps] = useState([10, 20, 50]);
 
@@ -25,6 +41,7 @@ function OrganizerSetup() {
   const [coOrgError, setCoOrgError] = useState("");
 
   const [loading, setLoading] = useState(false);
+  const [stepError, setStepError] = useState("");
 
   // Auth check — redirect if not logged in
   useEffect(() => {
@@ -38,7 +55,7 @@ function OrganizerSetup() {
   const handleTeamCountChange = (e) => {
     const count = Number(e.target.value);
     setTeamCount(count);
-    const newTeams = Array(count).fill("");
+    const newTeams = Array(count).fill({ name: "", managerUsername: "" });
     for (let i = 0; i < Math.min(count, teams.length); i++) {
         newTeams[i] = teams[i];
     }
@@ -62,7 +79,13 @@ function OrganizerSetup() {
 
   const handleTeamNameChange = (index, value) => {
     const updated = [...teams];
-    updated[index] = value;
+    updated[index] = { ...updated[index], name: value };
+    setTeams(updated);
+  };
+
+  const handleManagerUsernameChange = (index, value) => {
+    const updated = [...teams];
+    updated[index] = { ...updated[index], managerUsername: value };
     setTeams(updated);
   };
 
@@ -75,8 +98,41 @@ function OrganizerSetup() {
   };
 
   const validateStep1 = () => auctionName.trim().length > 0;
-  const validateStep2 = () => teams.every(t => t.trim().length > 0);
+  const validateStep2 = () => {
+    return teams.every(t => {
+      const isNameValid = t.name.trim().length > 0;
+      const isManagerValid = biddingMode === "ONLINE" ? t.managerUsername.trim().length > 0 : true;
+      return isNameValid && isManagerValid;
+    });
+  };
   const validateStep3 = () => maxBudget > 0;
+
+  const nextStep1 = () => {
+    if (!validateStep1()) {
+      setStepError("Please enter the auction name. It is a required field.");
+      return;
+    }
+    setStepError("");
+    setStep(2);
+  };
+
+  const nextStep2 = () => {
+    if (!validateStep2()) {
+      setStepError("Please ensure all team names and manager usernames are entered.");
+      return;
+    }
+    setStepError("");
+    setStep(3);
+  };
+
+  const nextStep3 = async () => {
+    if (!validateStep3()) {
+      setStepError("Please enter a valid max budget greater than 0.");
+      return;
+    }
+    setStepError("");
+    await handleCreate();
+  };
 
   const handleCreate = async () => {
     const token = localStorage.getItem("authToken");
@@ -88,10 +144,33 @@ function OrganizerSetup() {
         bidSteps,
         biddingMode
       },
-      teamsState: teams.map(t => ({ name: t, budget: Number(maxBudget), players: [] }))
+      teamsState: teams.map(t => ({ name: t.name, managerUsername: biddingMode === "ONLINE" ? t.managerUsername : null, budget: Number(maxBudget), players: [] }))
     };
 
     setLoading(true);
+
+    if (biddingMode === "ONLINE") {
+      for (const team of teams) {
+        try {
+          const checkRes = await fetch(`${BACKEND_URL}/api/auth/lookup-user`, {
+            method: "POST",
+            headers: { 
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ username: team.managerUsername })
+          });
+          if (!checkRes.ok) {
+            setLoading(false);
+            return alert(`Manager username '${team.managerUsername}' for team '${team.name}' not found.`);
+          }
+        } catch (err) {
+          setLoading(false);
+          return alert(`Error validating manager for team '${team.name}'.`);
+        }
+      }
+    }
+
     try {
       const res = await fetch(`${BACKEND_URL}/api/auction/init`, {
         method: "POST",
@@ -212,8 +291,9 @@ function OrganizerSetup() {
               </div>
             </div>
 
+            <ErrorBanner message={stepError} />
             <div style={styles.btnWrapperRight}>
-              <button className="btn-premium" disabled={!validateStep1()} onClick={() => setStep(2)}>
+              <button className="btn-premium" onClick={nextStep1}>
                 Next: Configure Teams →
               </button>
             </div>
@@ -245,16 +325,30 @@ function OrganizerSetup() {
                     className="input-premium"
                     type="text"
                     placeholder={`e.g. Mumbai Indians`}
-                    value={team}
+                    value={team.name}
                     onChange={(e) => handleTeamNameChange(index, e.target.value)}
                   />
+                  {biddingMode === "ONLINE" && (
+                    <div style={{ marginTop: "10px" }}>
+                      <label style={{...styles.label, fontSize: "0.8rem"}}>Manager Username</label>
+                      <input
+                        className="input-premium"
+                        style={{ padding: "8px 12px", fontSize: "0.85rem" }}
+                        type="text"
+                        placeholder={`Manager username`}
+                        value={team.managerUsername}
+                        onChange={(e) => handleManagerUsernameChange(index, e.target.value)}
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
 
+            <ErrorBanner message={stepError} />
             <div style={styles.btnWrapperBetween}>
-              <button className="btn-glass" onClick={() => setStep(1)}>← Back</button>
-              <button className="btn-premium" disabled={!validateStep2()} onClick={() => setStep(3)}>
+              <button className="btn-glass" onClick={() => { setStepError(""); setStep(1); }}>← Back</button>
+              <button className="btn-premium" onClick={nextStep2}>
                 Next: Budget Details →
               </button>
             </div>
@@ -313,9 +407,10 @@ function OrganizerSetup() {
               </p>
             </div>
 
+            <ErrorBanner message={stepError} />
             <div style={styles.btnWrapperBetween}>
-              <button className="btn-glass" onClick={() => setStep(2)}>← Back</button>
-              <button className="btn-premium" disabled={!validateStep3() || loading} onClick={handleCreate}>
+              <button className="btn-glass" onClick={() => { setStepError(""); setStep(2); }}>← Back</button>
+              <button className="btn-premium" onClick={nextStep3} disabled={loading}>
                 {loading ? "Creating..." : "Launch Auction 🚀"}
               </button>
             </div>

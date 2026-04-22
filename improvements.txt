@@ -1,0 +1,39 @@
+improvements 
+1-there should be very well full working sign in/register page and that a person if newly registered there should be an entry created in the database that should save these details of the users and then whenever next time the user comes he/she should directly log in and get back to his id .
+
+2- in login page there should be forgot password ooption also . you know it better than me so create the whole login/register page fully functional . registered users should be in databases 
+
+3- only the organiser of that specific auction can change the details no one else for the auction organised by an organiser .
+
+4- at same time there should be multiple auctions that can be live . all those list of live auctions anyone can view in the live auctions sidebar page
+
+5- means if the organiser is logged out of the organiser page or like that then he should go on live auctions and can search by the auction name and if directly want to go back to the organiser page it should enter the code generated for each auction in the live auctions page search.
+
+6- means clicking the live auction in side navbar can be diverted to 2 pages if the user is organiser transfer to organiser page and if the user is a viewer for that auction transfer it to viewers page 
+
+7- same with the past auctions sidebar option it should open to a page where we can do the searches and all . and by clicking a specific auction it should show analytics of that auction . there should be option for filter sort by date and search option also.
+
+8-add animation on the home page like cricket related backgrounds and some extraordinary animations on auction hammer coming and sold being stamped like that .
+
+
+
+improvement 2
+
+1- the bit counter should have an good text animation while increasing and decreasing looks engaging
+ 
+IMPROVEMENT -3
+
+1- integrate all those details of top bar in side bar and remove the top bar.
+
+2- add a option of hiding side navbar also.
+
+3-in the online/remote auction the second type of organising auction
+  the auction will be very different the organiser during creating auction must have to add teams manager on creating auction or can add after the auction is created . means in this the auction is created and added in the upcoming auctions page in the side navbar and.
+whenever the organiser has to start the auction there will be option of notify the teams. that will directly pop up on the screen logged in of our website of that team manager or there can be option of sharing code or there can be option of notifying them to join the auction  auction is about to start to their registered mail.there will be a log type table in which each team name and the status of joined auction or not, my system ensures that all of the team managers are joined to the auction then only the organiser can start the auction . otherwise display the msg you cannot start before everyone joins if the organiser accidently clicks start and the temas are not joined .
+
+and then if all joined all set then the organiser can start the auction and then the organiser role is to just observe the auction because the bidding is now done completely by teams they can bid over the current player shown on the screen by the organiser just the organiser can see a queue on his page that which player is going next in auction and the auction state of like live break and end is also maintained by the organiser 
+
+and then with individual teams perspective they will be shown the card of the current player 
+the current bid amount who has done the last bid and also there should be a page of deep analytics for the individual teams they can see their team and the full analytics of the other team as well anytime while the auction is running . 
+
+if the team owner is trying to quit auction notify him with a mssg that you cannot revert your decision and also notify the organiser that team name is requesting to quit . and like this  

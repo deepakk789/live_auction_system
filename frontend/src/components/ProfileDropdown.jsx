@@ -82,18 +82,18 @@ function ProfileDropdown() {
         {isOpen && (
           <motion.div
             className="glass-card"
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            initial={{ opacity: 0, x: -15, scale: 0.95 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: -15, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             style={{
               position: "absolute",
-              top: "calc(100% + 10px)",
-              right: 0,
+              bottom: "-10px",
+              left: "calc(100% + 15px)",
               width: "280px",
               padding: "10px",
               zIndex: 100,
-              boxShadow: "0 20px 40px rgba(0,0,0,0.8)",
+              boxShadow: "20px 0 40px rgba(0,0,0,0.8)",
               border: "1px solid rgba(255,255,255,0.1)",
               background: "#0f172a",
               backdropFilter: "blur(20px)",

@@ -4,6 +4,7 @@ import { AuthProvider } from "./context/AuthContext";
 
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
+import UpcomingAuctions from "./pages/UpcomingAuctions";
 import LiveAuctions from "./pages/LiveAuctions";
 import PastAuctions from "./pages/PastAuctions";
 import AuctionAnalytics from "./pages/AuctionAnalytics";
@@ -28,7 +29,8 @@ function AnimatedRoutes() {
           <Route path="/register"                        element={<AuthPage />} />
           <Route path="/reset-password/:token"           element={<ResetPassword />} />
 
-          {/* Live Auctions listing */}
+          {/* Auction Navigation */}
+          <Route path="/upcoming"                        element={<UpcomingAuctions />} />
           <Route path="/live"                            element={<LiveAuctions />} />
 
           {/* Past Auctions listing → click → per-auction analytics */}

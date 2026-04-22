@@ -18,6 +18,7 @@ function ViewerLive() {
   const navigate = useNavigate();
   const fallbackPhoto = "https://cdn-icons-png.flaticon.com/512/861/861512.png";
 
+  const [currentUser, setCurrentUser] = useState(null);
   const [playersState, setPlayersState] = useState(null);
   const [auctionState, setAuctionState] = useState("LIVE");
   const [teams, setTeams] = useState([]);
@@ -74,6 +75,24 @@ function ViewerLive() {
         if (data.auctionConfig?.selectedFields) setSelectedFields(data.auctionConfig.selectedFields);
         if (data.biddingMode) setBiddingMode(data.biddingMode);
         if (data.auctionSetup?.bidSteps) setBidSteps(data.auctionSetup.bidSteps);
+
+        // MANAGER DETECTION
+        const tknUserStr = localStorage.getItem("authUser");
+        let activeUser = null;
+        if (tknUserStr) {
+          activeUser = JSON.parse(tknUserStr);
+          setCurrentUser(activeUser);
+        }
+
+        if (activeUser && data.teamsState && data.biddingMode === "ONLINE") {
+          const managedTeam = data.teamsState.find(
+            t => t.managerUsername && t.managerUsername.toLowerCase() === activeUser.username.toLowerCase()
+          );
+          if (managedTeam) {
+            setRepresentingTeam(managedTeam.name);
+            socket.emit("manager_join", { auctionId, teamName: managedTeam.name });
+          }
+        }
       } catch (err) {
         console.error("Failed to load auction", err);
       } finally {
@@ -97,6 +116,18 @@ function ViewerLive() {
       socket.off("auction_config");
     };
   }, [auctionId]);
+
+  useEffect(() => {
+    if (representingTeam && biddingMode === "ONLINE") {
+      const handleBeforeUnload = (e) => {
+        socket.emit("team_quit_request", { auctionId, teamName: representingTeam });
+        e.preventDefault();
+        e.returnValue = "Leaving will disconnect your team and alert the organizer!";
+      };
+      window.addEventListener("beforeunload", handleBeforeUnload);
+      return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+    }
+  }, [representingTeam, biddingMode, auctionId]);
 
   /* ---------- ONLINE BIDDING ---------- */
   const handleSubmitBid = (amt) => {
@@ -137,6 +168,27 @@ function ViewerLive() {
             </motion.div>
             <h3 style={{ margin: "20px 0 8px", fontSize: "1.4rem" }}>Waiting for Organizer</h3>
             <p style={{ color: "#64748b" }}>The auction hasn't started yet. Hang tight!</p>
+          </motion.div>
+        </div>
+      </PageTransition>
+    );
+  }
+
+  if (auctionState === "UPCOMING") {
+    return (
+      <PageTransition>
+        <div style={styles.container}>
+          <motion.div className="glass-panel" style={styles.waitingState} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: "spring" }}>
+            <motion.div animate={{ rotate: [0, 360] }} transition={{ repeat: Infinity, duration: 4, ease: "linear" }} style={{ display: "inline-block" }}>
+              <Zap size={48} color="#10b981" />
+            </motion.div>
+            <h3 style={{ margin: "20px 0 8px", fontSize: "1.4rem" }}>Lobby Open</h3>
+            <p style={{ color: "#64748b" }}>Waiting for the organizer to legally start the auction.</p>
+            {representingTeam && (
+              <div style={{ marginTop: "20px", padding: "10px 20px", background: "rgba(16,185,129,0.15)", border: "1px solid #10b981", borderRadius: "8px", color: "#10b981", fontWeight: "bold" }}>
+                ✅ You are connected as Manager for {representingTeam}
+              </div>
+            )}
           </motion.div>
         </div>
       </PageTransition>
@@ -299,24 +351,15 @@ function ViewerLive() {
                 transition={{ delay: 0.4 }}
               >
                 <h3 style={{ margin: "0 0 20px", display: "flex", alignItems: "center", gap: "8px" }}>
-                  <Zap color="#3b82f6"/> Bid from your Device
+                  <Zap color="#3b82f6"/> {representingTeam ? `Manager Pad: ${representingTeam}` : "Viewer Mode"}
                 </h3>
 
-                <div style={{ marginBottom: "20px" }}>
-                  <label style={{ display: "block", color: "#94a3b8", marginBottom: "8px", fontSize: "0.9rem" }}>Are you representing a team?</label>
-                  <select
-                    className="input-premium"
-                    value={representingTeam}
-                    onChange={e => setRepresentingTeam(e.target.value)}
-                  >
-                    <option value="">-- I am just a viewer --</option>
-                    {teams.map(t => (
-                      <option key={t.name} value={t.name}>{t.name} (Budget: ₹{t.budget})</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div style={{ display: "flex", gap: "10px", opacity: representingTeam ? 1 : 0.4, pointerEvents: representingTeam ? "auto" : "none" }}>
+                {representingTeam ? (
+                  <>
+                    <div style={{ padding: "10px 15px", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: "8px", marginBottom: "20px", color: "#10b981", fontSize: "0.9rem" }}>
+                      ✅ Authorized to bid on behalf of {representingTeam}
+                    </div>
+                    <div style={{ display: "flex", gap: "10px" }}>
                   {bidSteps.map(amt => (
                     <motion.button
                       key={amt}
@@ -330,7 +373,13 @@ function ViewerLive() {
                     </motion.button>
                   ))}
                 </div>
-                {!representingTeam && <p style={{ color: "#facc15", fontSize: "0.85rem", marginTop: "15px", textAlign: "center" }}>Select your team to place bids.</p>}
+                </>
+              ) : (
+                <div style={{ textAlign: "center", color: "#9ca3af", padding: "20px", background: "rgba(255,255,255,0.02)", borderRadius: "8px" }}>
+                  👀 You are viewing this auction in read-only mode.<br/>
+                  <span style={{ fontSize: "0.85rem", opacity: 0.8 }}>Only assigned team managers can place bids.</span>
+                </div>
+              )}
               </motion.div>
             )}
           </div>

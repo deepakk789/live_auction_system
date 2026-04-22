@@ -14,6 +14,17 @@ const teamSchema = new mongoose.Schema(
       required: true
     },
 
+    manager: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null
+    },
+
+    managerUsername: {
+      type: String,
+      default: null
+    },
+
     budget: {
       type: Number,
       required: true

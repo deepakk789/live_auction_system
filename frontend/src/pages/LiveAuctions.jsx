@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { BACKEND_URL } from "../services/socket";
 import PageTransition from "../components/PageTransition";
 import SkeletonLoader from "../components/SkeletonLoader";
+import BorderGlow from "../components/BorderGlow";
 
 function LiveAuctions() {
   const navigate = useNavigate();
@@ -226,14 +227,9 @@ function LiveAuctions() {
           </h2>
           <p style={{ color: "#6b7280", maxWidth: "380px", margin: "0 auto 24px" }}>
             {auctions.length === 0
-              ? "There are no auctions running right now. Create one to get started!"
+              ? "There are no auctions running right now."
               : "Try adjusting your search or filter options."}
           </p>
-          {auctions.length === 0 && (
-            <button style={styles.ctaBtn} onClick={() => navigate("/create-auction")}>
-              + Create New Auction
-            </button>
-          )}
         </div>
       ) : (
         <motion.div
@@ -282,7 +278,7 @@ function AuctionCard({ auction, isOrganizer, onClick }) {
   };
 
   return (
-    <div style={styles.card} className="auction-card" onClick={onClick} id={`card-${auction._id}`}>
+    <BorderGlow style={styles.card} className="auction-card" onClick={onClick} id={`card-${auction._id}`} animated={false}>
       {/* Status Badge */}
       <div style={styles.cardHeader}>
         <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
@@ -334,7 +330,7 @@ function AuctionCard({ auction, isOrganizer, onClick }) {
           {isOrganizer ? "Manage Auction" : "Watch Live"}
         </button>
       </div>
-    </div>
+    </BorderGlow>
   );
 }
 
