@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { BACKEND_URL } from "../services/socket";
-import { Copy, Check, Shield, Users, Globe, UserPlus, X, AlertCircle } from "lucide-react";
+import { Copy, Check, Shield, Users, Globe, UserPlus, X, AlertCircle, Home, Calendar, Zap, ArrowRight, CalendarDays } from "lucide-react";
 
 const ErrorBanner = ({ message }) => {
   if (!message) return null;
@@ -42,6 +42,12 @@ function OrganizerSetup() {
 
   const [loading, setLoading] = useState(false);
   const [stepError, setStepError] = useState("");
+
+  // Schedule state
+  const [auctionAction, setAuctionAction] = useState(null); // "live" or "schedule"
+  const [scheduledDate, setScheduledDate] = useState("");
+  const [scheduleLoading, setScheduleLoading] = useState(false);
+  const [scheduleSuccess, setScheduleSuccess] = useState(false);
 
   // Auth check — redirect if not logged in
   useEffect(() => {
@@ -419,7 +425,7 @@ function OrganizerSetup() {
           </div>
         )}
 
-        {/* STEP 4: SUCCESS & INVITES */}
+        {/* STEP 4: SUCCESS & ACTION CHOICE */}
         {step === 4 && createdAuction && (
           <div className="stagger-1" style={{ textAlign: "center" }}>
             
@@ -436,7 +442,7 @@ function OrganizerSetup() {
                 Auction Join Code
               </p>
               <div style={styles.codeRow}>
-                <span style={styles.codeText}>{createdAuction.auctionCode}</span>
+                <span className="auction-code-text" style={styles.codeText}>{createdAuction.auctionCode}</span>
                 <button 
                   onClick={copyCode} 
                   style={{...styles.copyBtn, background: copied ? "#10b981" : "rgba(255,255,255,0.1)"}}
@@ -492,13 +498,145 @@ function OrganizerSetup() {
               )}
             </div>
 
-            <button 
-              className="btn-premium" 
-              style={{ width: "100%", padding: "16px", fontSize: "1.1rem", marginTop: "20px" }}
-              onClick={() => navigate(`/organizer/${createdAuction._id}/upload`)}
-            >
-              Continue to Player Upload →
-            </button>
+            {/* ACTION CHOICE: Start Live vs Schedule */}
+            {!auctionAction && !scheduleSuccess && (
+              <div style={{ marginTop: "30px" }}>
+                <p style={{ color: "#94a3b8", marginBottom: "20px", fontSize: "1.05rem" }}>What would you like to do next?</p>
+                <div style={styles.modeGrid}>
+                  <div 
+                    className="glass-card"
+                    style={{...styles.modeCard, cursor: "pointer"}}
+                    onClick={() => setAuctionAction("live")}
+                  >
+                    <Zap size={36} color="#eab308" />
+                    <h3 style={{ margin: "10px 0 5px" }}>Start Live</h3>
+                    <p style={{ fontSize: "0.85rem", color: "#94a3b8", margin: 0 }}>Upload players now and go live immediately.</p>
+                  </div>
+
+                  <div 
+                    className="glass-card"
+                    style={{...styles.modeCard, cursor: "pointer"}}
+                    onClick={() => setAuctionAction("schedule")}
+                  >
+                    <CalendarDays size={36} color="#3b82f6" />
+                    <h3 style={{ margin: "10px 0 5px" }}>Schedule Auction</h3>
+                    <p style={{ fontSize: "0.85rem", color: "#94a3b8", margin: 0 }}>Set a future date and time for this auction.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* START LIVE path → Player Upload */}
+            {auctionAction === "live" && (
+              <div style={{ marginTop: "20px" }}>
+                <button 
+                  className="btn-premium" 
+                  style={{ width: "100%", padding: "16px", fontSize: "1.1rem" }}
+                  onClick={() => navigate(`/organizer/${createdAuction._id}/upload`)}
+                >
+                  Continue to Player Upload →
+                </button>
+                <button 
+                  className="btn-glass" 
+                  style={{ width: "100%", marginTop: "12px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+                  onClick={() => setAuctionAction(null)}
+                >
+                  ← Back to options
+                </button>
+              </div>
+            )}
+
+            {/* SCHEDULE path → Date picker */}
+            {auctionAction === "schedule" && !scheduleSuccess && (
+              <div style={{ marginTop: "20px" }}>
+                <div className="glass-card" style={{ padding: "25px", textAlign: "left" }}>
+                  <label style={styles.label}>
+                    <CalendarDays size={16} style={{ marginRight: "8px", verticalAlign: "middle" }} />
+                    Select Date & Time
+                  </label>
+                  <input 
+                    className="input-premium"
+                    type="datetime-local"
+                    value={scheduledDate}
+                    onChange={e => setScheduledDate(e.target.value)}
+                    min={new Date().toISOString().slice(0, 16)}
+                    style={{ colorScheme: "dark" }}
+                  />
+
+                  <button 
+                    className="btn-premium" 
+                    style={{ width: "100%", padding: "14px", fontSize: "1rem", marginTop: "20px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+                    disabled={!scheduledDate || scheduleLoading}
+                    onClick={async () => {
+                      setScheduleLoading(true);
+                      try {
+                        const token = localStorage.getItem("authToken");
+                        const res = await fetch(`${BACKEND_URL}/api/auction/${createdAuction._id}/schedule`, {
+                          method: "POST",
+                          headers: { 
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${token}`
+                          },
+                          body: JSON.stringify({ scheduledDate })
+                        });
+                        if (!res.ok) throw new Error("Failed to schedule auction");
+                        setScheduleSuccess(true);
+                      } catch (err) {
+                        alert(err.message);
+                      } finally {
+                        setScheduleLoading(false);
+                      }
+                    }}
+                  >
+                    {scheduleLoading ? <div className="spinner-small"></div> : <><Calendar size={18} /> Save & Schedule Auction</>}
+                  </button>
+                </div>
+                <button 
+                  className="btn-glass" 
+                  style={{ width: "100%", marginTop: "12px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+                  onClick={() => setAuctionAction(null)}
+                >
+                  ← Back to options
+                </button>
+              </div>
+            )}
+
+            {/* SCHEDULE SUCCESS */}
+            {scheduleSuccess && (
+              <div className="glass-card animate-fade-in" style={{ padding: "30px", marginTop: "20px", textAlign: "center" }}>
+                <div style={{ ...styles.successIconBox, margin: "0 auto 15px" }}>
+                  <Check size={36} color="#10b981" />
+                </div>
+                <h3 style={{ color: "#10b981", marginBottom: "10px", fontSize: "1.4rem" }}>Auction Scheduled Successfully!</h3>
+                <p style={{ color: "#94a3b8", marginBottom: "8px" }}>
+                  Your auction <strong style={{ color: "#fff" }}>"{createdAuction.auctionName}"</strong> is scheduled for:
+                </p>
+                <p style={{ fontSize: "1.3rem", color: "#60a5fa", fontWeight: 700 }}>
+                  {new Date(scheduledDate).toLocaleString("en-IN", { dateStyle: "full", timeStyle: "short" })}
+                </p>
+                <p style={{ color: "#64748b", fontSize: "0.85rem", marginTop: "10px" }}>
+                  This auction will appear in the Upcoming Auctions section.
+                </p>
+                <button 
+                  className="btn-premium" 
+                  style={{ width: "100%", padding: "14px", fontSize: "1rem", marginTop: "25px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+                  onClick={() => navigate("/")}
+                >
+                  <Home size={18} /> Go to Home Page
+                </button>
+              </div>
+            )}
+
+            {/* Home button (always visible in step 4) */}
+            {!scheduleSuccess && (
+              <button 
+                className="btn-glass" 
+                style={{ width: "100%", marginTop: "15px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+                onClick={() => navigate("/")}
+              >
+                <Home size={18} /> Back to Home
+              </button>
+            )}
           </div>
         )}
 

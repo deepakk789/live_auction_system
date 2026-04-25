@@ -173,7 +173,8 @@ exports.initAuction = async (req, res) => {
       biddingMode: auctionSetup.biddingMode || "OFFLINE",
       state: "UPCOMING",
       currentPlayerIndex: 0,
-      organizer: req.user._id
+      organizer: req.user._id,
+      scheduledDate: auctionSetup.scheduledDate || null
     });
 
     // Create Teams scoped to this auction
@@ -564,6 +565,35 @@ exports.releaseOrganizerLock = async (req, res) => {
     }
 
     res.json({ message: "Lock released" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * SCHEDULE AUCTION — set a scheduled date for an upcoming auction
+ */
+exports.scheduleAuction = async (req, res) => {
+  try {
+    const { auctionId } = req.params;
+    const { scheduledDate } = req.body;
+
+    if (!scheduledDate) {
+      return res.status(400).json({ error: "scheduledDate is required" });
+    }
+
+    const auction = await Auction.findById(auctionId);
+    if (!auction) {
+      return res.status(404).json({ error: "Auction not found" });
+    }
+
+    auction.scheduledDate = new Date(scheduledDate);
+    await auction.save();
+
+    res.json({ 
+      message: "Auction scheduled successfully", 
+      scheduledDate: auction.scheduledDate 
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

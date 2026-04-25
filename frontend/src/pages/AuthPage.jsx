@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { BACKEND_URL } from "../services/socket";
 import { useAuth } from "../context/AuthContext";
-import { Shield, Mail, ArrowLeft, LogIn, UserPlus, Eye, EyeOff } from "lucide-react";
+import { Shield, Mail, ArrowLeft, LogIn, UserPlus, Eye, EyeOff, Home } from "lucide-react";
 import "../styles/design-system.css";
 
 function AuthPage() {
@@ -16,6 +16,7 @@ function AuthPage() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Forgot password state
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -217,15 +218,26 @@ function AuthPage() {
           {isRegister && (
             <div>
               <label style={styles.label}>Confirm Password</label>
-              <input
-                className="input-premium"
-                type={showPassword ? "text" : "password"}
-                name="confirmPassword"
-                placeholder="••••••••"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                required
-              />
+              <div style={{ position: "relative" }}>
+                <input
+                  className="input-premium"
+                  type={showConfirmPassword ? "text" : "password"}
+                  name="confirmPassword"
+                  placeholder="••••••••"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  style={{ width: "100%", paddingRight: "40px" }}
+                  required
+                />
+                <button
+                  type="button"
+                  style={styles.eyeIcon}
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  tabIndex="-1"
+                >
+                  {showConfirmPassword ? <EyeOff size={18} color="#9ca3af" /> : <Eye size={18} color="#9ca3af" />}
+                </button>
+              </div>
             </div>
           )}
 
@@ -243,12 +255,23 @@ function AuthPage() {
                 setIsRegister(!isRegister);
                 setError(null);
                 setFormData({ username: "", email: "", password: "", confirmPassword: "" });
+                setShowPassword(false);
+                setShowConfirmPassword(false);
               }}
             >
               {isRegister ? "Sign In" : "Register Now"}
             </span>
           </p>
         </div>
+
+        {/* Home button */}
+        <button
+          className="btn-glass"
+          style={{ width: "100%", marginTop: "15px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+          onClick={() => navigate("/")}
+        >
+          <Home size={18} /> Back to Home
+        </button>
       </div>
     </div>
   );

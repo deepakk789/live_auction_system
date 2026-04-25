@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Zap, Activity, Users, ShieldCheck, Trophy, Sparkles, Server, DollarSign, PlayCircle, FileText, CheckCircle, MessageSquare, Mail, Settings } from "lucide-react";
 import { useState, useEffect } from "react";
 import "../styles/design-system.css";
+import "../styles/home-responsive.css";
 import PageTransition from "../components/PageTransition";
 import BorderGlow from "../components/BorderGlow";
 
@@ -19,7 +20,7 @@ function Home() {
 
   return (
     <PageTransition>
-    <div style={styles.container}>
+    <div style={styles.container} className="home-container stagger-1">
       
       {/* Background Glow Orbs */}
       <div style={styles.glowOrbRight} />
@@ -32,7 +33,7 @@ function Home() {
           AuctionX 2.0 is Live
         </div>
 
-        <h1 style={styles.title}>
+        <h1 className="home-title" style={styles.title}>
           The Ultimate <br/>
           <span className="text-gradient">Auction Orchestration</span> Platform
         </h1>
@@ -60,7 +61,7 @@ function Home() {
       </div>
 
       {/* Stats Row */}
-      <div style={styles.statsRow} className="stagger-2">
+      <div className="home-stats-row stagger-2" style={styles.statsRow}>
         <BorderGlow className="glass-card feature-card-hover" style={styles.statItem} animated={true} backgroundColor="transparent" fillOpacity={0} borderRadius={24}>
           <ShieldCheck size={32} color="#10b981" />
           <span style={styles.statNumber}>Dual</span>
@@ -85,7 +86,7 @@ function Home() {
           Everything you need to host a broadcast-quality auction event, packed into an intuitive platform for organizers and bidders alike.
         </p>
         
-        <div style={styles.featuresGrid}>
+        <div className="home-features-grid" style={styles.featuresGrid}>
           {/* Card 1 */}
           <BorderGlow className="glass-card feature-card-hover" style={styles.featureCard} animated={false} backgroundColor="transparent" fillOpacity={0} borderRadius={24}>
             <div style={styles.iconBox}><Activity size={24} color="#3b82f6" /></div>
@@ -131,7 +132,7 @@ function Home() {
       </div>
 
       {/* How it works Section */}
-      <div className="stagger-4 glass-panel" style={styles.howItWorksBox}>
+      <div className="stagger-4 glass-panel home-how-it-works" style={styles.howItWorksBox}>
         <div style={{ textAlign: "center", marginBottom: "50px" }}>
           <h2 style={{ fontSize: "2.8rem", fontWeight: 900, marginBottom: "15px", letterSpacing: "-1px" }}>From Setup to <span className="text-gradient-success">Sold</span></h2>
           <p style={{ color: "#94a3b8", fontSize: "1.15rem", maxWidth: "600px", margin: "0 auto", lineHeight: "1.6" }}>
@@ -139,7 +140,7 @@ function Home() {
           </p>
         </div>
 
-        <div style={styles.timelineGrid}>
+        <div className="home-timeline-grid" style={styles.timelineGrid}>
           {/* Step 1 */}
           <div style={styles.stepCard} className="glass-card feature-card-hover">
             <div style={styles.stepNumber}>1</div>
@@ -172,7 +173,7 @@ function Home() {
       </div>
 
       {/* About & Contact Section */}
-      <div className="stagger-4 glass-card" style={styles.footerLayout}>
+      <div className="stagger-4 glass-card home-footer-layout" style={styles.footerLayout}>
         <div style={styles.footerSection}>
           <h3 style={{ fontSize: "1.5rem", color: "#fff", display: "flex", alignItems: "center", gap: "10px", fontWeight: "900", marginBottom: "20px" }}>
             <Sparkles size={22} color="#3b82f6"/> About AuctionX

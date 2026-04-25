@@ -4,6 +4,7 @@ import PlayerCardPreview from "../components/PlayerCardPreview";
 import "../styles/organizer.css";
 import { useNavigate, useParams } from "react-router-dom";
 import socket, { BACKEND_URL } from "../services/socket";
+import { Home } from "lucide-react";
 
 function UploadPlayers() {
   const { auctionId } = useParams();
@@ -123,6 +124,13 @@ function UploadPlayers() {
 
   return (
     <div className="setup-container">
+      <button 
+        className="btn-glass" 
+        onClick={() => navigate("/")} 
+        style={{ marginBottom: "20px", display: "flex", alignItems: "center", gap: "8px", padding: "8px 16px", fontSize: "0.9rem" }}
+      >
+        <Home size={16} /> Home
+      </button>
       <h1>Upload Player Data</h1>
 
       <label>

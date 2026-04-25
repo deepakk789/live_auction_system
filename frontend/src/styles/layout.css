@@ -46,6 +46,95 @@
   border-color: #3b82f6;
 }
 
+.sidebar-toggle-group {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 105;
+}
+
+.sidebar-toggle-group .sidebar-toggle-btn {
+  position: static;
+}
+
+.home-shortcut-btn:hover {
+  background: rgba(59, 130, 246, 0.25) !important;
+  border-color: #60a5fa !important;
+}
+
+/* ═══════════════════════════════════════════════
+   MOBILE RESPONSIVE
+   ═══════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .app-shell {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 260px;
+    z-index: 200;
+    box-shadow: 4px 0 30px rgba(0, 0, 0, 0.5);
+  }
+
+  .sidebar.collapsed {
+    margin-left: -260px;
+  }
+
+  /* Overlay behind sidebar on mobile */
+  .sidebar:not(.collapsed)::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 260px;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: -1;
+  }
+
+  .main-content {
+    width: 100%;
+    min-height: 100vh;
+  }
+
+  .content-area {
+    padding: 10px !important;
+  }
+
+  .sidebar-toggle-group {
+    top: 12px;
+    left: 12px;
+    flex-direction: row;
+  }
+
+  /* Hero stamp mobile */
+  .hero-sold-stamp {
+    font-size: 2.5rem !important;
+    letter-spacing: 4px;
+    padding: 8px 20px;
+    border-width: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar-toggle-group {
+    top: 10px;
+    left: 10px;
+  }
+
+  .sidebar-toggle-btn {
+    padding: 6px !important;
+  }
+}
+
+
 .sidebar-logo {
   padding: 0 20px 30px;
   font-size: 1.5rem;

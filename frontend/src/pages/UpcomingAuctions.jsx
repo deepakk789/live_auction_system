@@ -323,6 +323,19 @@ function AuctionCard({ auction, isOrganizer, onClick }) {
         </div>
       )}
 
+      {/* Scheduled Date */}
+      {auction.scheduledDate && (
+        <div style={{ 
+          display: "flex", alignItems: "center", gap: "8px",
+          background: "rgba(59, 130, 246, 0.08)", border: "1px solid rgba(59,130,246,0.2)",
+          padding: "8px 14px", borderRadius: "8px", marginBottom: "12px",
+          fontSize: "0.85rem", color: "#60a5fa"
+        }}>
+          <Calendar size={14} />
+          <span>Scheduled: <strong>{new Date(auction.scheduledDate).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</strong></span>
+        </div>
+      )}
+
       {/* CTA */}
       <div style={styles.cardFooter}>
         <button style={isOrganizer ? styles.manageBtn : styles.watchBtn} onClick={onClick}>

@@ -108,6 +108,11 @@ const auctionSchema = new mongoose.Schema(
       default: null
     },
 
+    scheduledDate: {
+      type: Date,
+      default: null
+    },
+
     // Snapshot stored when auction ends (teams + players for analytics)
     snapshot: {
       type: Object,

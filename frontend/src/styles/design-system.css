@@ -333,3 +333,44 @@ body {
   color: #f8fafc;
 }
 
+/* ═══════════════════════════════════════════════
+   MOBILE RESPONSIVE — design-system additions
+   ═══════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .btn-premium,
+  .btn-glass {
+    min-height: 44px;
+    font-size: 0.95rem;
+  }
+
+  .input-premium {
+    font-size: 16px; /* Prevents iOS zoom on focus */
+    min-height: 44px;
+  }
+
+  .glass-panel {
+    border-radius: 12px;
+  }
+
+  .glass-card:hover {
+    transform: none; /* Disable hover lift on touch devices */
+  }
+}
+
+@media (max-width: 480px) {
+  .btn-premium {
+    padding: 10px 18px;
+    font-size: 0.9rem;
+  }
+  
+  .btn-glass {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+
+  /* Auction code text */
+  .auction-code-text {
+    font-size: 2rem !important;
+    letter-spacing: 3px !important;
+  }
+}

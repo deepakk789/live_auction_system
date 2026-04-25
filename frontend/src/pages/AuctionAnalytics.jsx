@@ -5,7 +5,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, PieChart, Pie, Cell
 } from "recharts";
-import { ArrowLeft, Trophy, Users, Wallet, Activity, Archive } from "lucide-react";
+import { ArrowLeft, Trophy, Users, Wallet, Activity, Archive, Home } from "lucide-react";
 
 const COLORS = ["#16a34a", "#f97316", "#3b82f6", "#eab308", "#8b5cf6", "#ec4899"];
 
@@ -89,6 +89,9 @@ function AuctionAnalytics() {
         <div>
           <button style={S.backBtn} onClick={() => navigate("/past")}>
             <ArrowLeft size={16} style={{ marginRight: "6px" }} /> Back to Past Auctions
+          </button>
+          <button style={{...S.backBtn, marginLeft: "10px"}} onClick={() => navigate("/")}>
+            <Home size={16} style={{ marginRight: "6px" }} /> Home
           </button>
           <h1 style={S.title}>{data.auctionName || "Auction"} — Analytics</h1>
           <p style={{ color: "#6b7280", marginTop: "6px", fontSize: "0.9rem" }}>

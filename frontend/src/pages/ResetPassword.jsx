@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { BACKEND_URL } from "../services/socket";
-import { Lock, CheckCircle, ShieldCheck } from "lucide-react";
+import { Lock, CheckCircle, ShieldCheck, Home } from "lucide-react";
 import "../styles/design-system.css";
 
 function ResetPassword() {
@@ -73,6 +73,9 @@ function ResetPassword() {
           <button onClick={() => navigate("/login")} className="btn-premium" style={{ width: "100%" }}>
             Go to Sign In
           </button>
+          <button onClick={() => navigate("/")} className="btn-glass" style={{ width: "100%", marginTop: "12px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+            <Home size={18} /> Back to Home
+          </button>
         </div>
       </div>
     );
@@ -142,6 +145,10 @@ function ResetPassword() {
             {loading ? <div className="spinner-small" style={{ margin: "auto" }}></div> : "Reset Password"}
           </button>
         </form>
+
+        <button onClick={() => navigate("/")} className="btn-glass" style={{ width: "100%", marginTop: "15px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+          <Home size={18} /> Back to Home
+        </button>
       </div>
     </div>
   );

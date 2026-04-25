@@ -1,5 +1,5 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { Activity, Archive, Plus, Shield, LogOut, Radio, Calendar, Menu, X } from "lucide-react";
+import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { Activity, Archive, Plus, Shield, LogOut, Radio, Calendar, Menu, X, Home } from "lucide-react";
 import { useEffect, useState } from "react";
 import socket, { BACKEND_URL } from "../services/socket";
 import { useAuth } from "../context/AuthContext";
@@ -28,7 +28,9 @@ const LogoIcon = () => (
 
 function Layout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout } = useAuth();
+  const isHomePage = location.pathname === "/";
   const [liveAuctionCount, setLiveAuctionCount] = useState(0);
   const [upcomingAuctionCount, setUpcomingAuctionCount] = useState(0);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Changed to false to hide by default
@@ -69,9 +71,16 @@ function Layout() {
     <div className="app-shell animate-fade-in">
       {/* GLOBAL NOTIFICATION MENU TOGGLE */}
       {!isSidebarOpen && (
-        <button className="sidebar-toggle-btn" onClick={() => setIsSidebarOpen(true)} style={{ padding: "8px", background: "rgba(17,24,39,0.8)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ width: "28px", height: "28px" }}><LogoIcon /></div>
-        </button>
+        <div className="sidebar-toggle-group">
+          <button className="sidebar-toggle-btn" onClick={() => setIsSidebarOpen(true)} style={{ padding: "8px", background: "rgba(17,24,39,0.8)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: "28px", height: "28px" }}><LogoIcon /></div>
+          </button>
+          {!isHomePage && (
+            <button className="sidebar-toggle-btn home-shortcut-btn" onClick={() => navigate("/")} title="Go to Home" style={{ padding: "8px", background: "rgba(17,24,39,0.8)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Home size={22} color="#60a5fa" />
+            </button>
+          )}
+        </div>
       )}
 
       {/* SIDEBAR */}
