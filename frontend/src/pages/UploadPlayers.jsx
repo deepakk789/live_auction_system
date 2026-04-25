@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 import PlayerCardPreview from "../components/PlayerCardPreview";
 import "../styles/organizer.css";
@@ -89,6 +89,24 @@ function UploadPlayers() {
       !col.toLowerCase().includes("photo")
   );
 
+  const [biddingMode, setBiddingMode] = useState("OFFLINE");
+
+  useEffect(() => {
+    // Fetch auction type so we know where to route after upload
+    const fetchAuction = async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/auction/${auctionId}/sync`);
+        if (res.ok) {
+          const data = await res.json();
+          setBiddingMode(data.biddingMode || "OFFLINE");
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchAuction();
+  }, [auctionId]);
+
   const proceedToLive = async () => {
     if (selectedFields.length === 0) {
       alert("Please select at least one field to show on player card");
@@ -114,8 +132,12 @@ function UploadPlayers() {
       
       if (!response.ok) throw new Error("Failed to upload players to DB");
       
-      // Navigate to live with auctionId
-      navigate(`/organizer/${auctionId}/live`);
+      // Navigate based on mode
+      if (biddingMode === "ONLINE") {
+        navigate(`/online-lobby/${auctionId}`);
+      } else {
+        navigate(`/organizer/${auctionId}/live`);
+      }
     } catch (err) {
       console.error(err);
       alert("Error saving players: " + err.message);

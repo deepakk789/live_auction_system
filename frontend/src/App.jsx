@@ -17,6 +17,10 @@ import Dashboard from "./pages/Dashboard";
 import AuthPage from "./pages/AuthPage";
 import ResetPassword from "./pages/ResetPassword";
 
+import OnlineLobby from "./pages/OnlineLobby";
+import TeamRepDashboard from "./pages/TeamRepDashboard";
+import OrganizerOnlineView from "./pages/OrganizerOnlineView";
+
 function AnimatedRoutes() {
   const location = useLocation();
 
@@ -43,6 +47,11 @@ function AnimatedRoutes() {
           <Route path="/organizer/:auctionId/live"       element={<OrganizerLive />} />
           <Route path="/organizer/:auctionId/analytics"  element={<Dashboard />} />
           <Route path="/organizer/:auctionId/teams"      element={<DrinksBreak />} />
+
+          {/* Online Auction specific flows */}
+          <Route path="/online-lobby/:auctionId"         element={<OnlineLobby />} />
+          <Route path="/team-rep/:auctionId"             element={<TeamRepDashboard />} />
+          <Route path="/organizer-online/:auctionId"     element={<OrganizerOnlineView />} />
 
           {/* Viewer / Break */}
           <Route path="/viewer/:auctionId"               element={<ViewerLive />} />

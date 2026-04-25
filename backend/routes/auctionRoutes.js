@@ -18,7 +18,8 @@ const {
   removeCoOrganizer,
   claimOrganizerLock,
   releaseOrganizerLock,
-  scheduleAuction
+  scheduleAuction,
+  assignTeamRep
 } = require("../controllers/auctionController");
 
 const { protect, organizerOnly } = require("../middleware/authMiddleware");
@@ -49,5 +50,6 @@ router.delete("/:auctionId/co-organizer/:userId", protect, organizerOnly, remove
 router.post("/:auctionId/claim-lock", protect, organizerOnly, claimOrganizerLock);
 router.post("/:auctionId/release-lock", protect, organizerOnly, releaseOrganizerLock);
 router.post("/:auctionId/schedule", protect, scheduleAuction);
+router.post("/:auctionId/assign-rep", protect, organizerOnly, assignTeamRep);
 
 module.exports = router;

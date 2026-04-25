@@ -54,6 +54,9 @@ const Team = require("./models/Team");
 // Connect mapping: socket.id -> { auctionId, teamName }
 const managerConnections = new Map();
 
+// Online auction countdown timers: auctionId -> { timer, seconds }
+const auctionCountdowns = new Map();
+
 // Socket events — ROOM-SCOPED for multi-auction support
 io.on("connection", (socket) => {
   console.log("Client connected:", socket.id);
@@ -82,7 +85,7 @@ io.on("connection", (socket) => {
   socket.on("manager_join", ({ auctionId, teamName }) => {
     if (!auctionId || !teamName) return;
     managerConnections.set(socket.id, { auctionId, teamName });
-    socket.to(`auction_${auctionId}`).emit("manager_status_change", { teamName, status: "Connected" });
+    io.to(`auction_${auctionId}`).emit("manager_status_change", { teamName, status: "Connected" });
   });
 
   socket.on("notify_managers", ({ managerIds, auctionId, message }) => {
@@ -98,6 +101,286 @@ io.on("connection", (socket) => {
       socket.to(`auction_${auctionId}`).emit("team_quit_alert", { teamName });
     }
   });
+
+  // ═══════════════════════════════════════
+  // ONLINE AUCTION: BIDDING + COUNTDOWN
+  // ═══════════════════════════════════════
+
+  socket.on("online_bid", async ({ auctionId, teamName, amount }) => {
+    if (!auctionId || !teamName || !amount) return;
+
+    try {
+      // Validate: get current auction state
+      const auction = await Auction.findById(auctionId);
+      if (!auction || auction.state !== "LIVE") return;
+
+      const players = await Player.find({ auctionId }).sort({ index: 1 });
+      const currentPlayer = players[auction.currentPlayerIndex];
+      if (!currentPlayer || currentPlayer.status === "SOLD" || currentPlayer.status === "UNSOLD") return;
+
+      // Validate bid is higher
+      if (amount <= (currentPlayer.currentBid || 0)) return;
+
+      // Validate team budget
+      const team = await Team.findOne({ auctionId, name: teamName });
+      if (!team || team.budget < amount) return;
+
+      // Accept bid — update DB
+      currentPlayer.currentBid = amount;
+      currentPlayer.currentBidder = teamName;
+      currentPlayer.status = "LIVE";
+      await currentPlayer.save();
+
+      // Broadcast accepted bid to all clients
+      io.to(`auction_${auctionId}`).emit("bid_accepted", {
+        playerIndex: auction.currentPlayerIndex,
+        amount,
+        teamName,
+        playerName: currentPlayer.name
+      });
+
+      // Start/reset 10-second countdown
+      const existing = auctionCountdowns.get(auctionId);
+      if (existing && existing.timer) {
+        clearInterval(existing.timer);
+      }
+
+      let seconds = 10;
+      io.to(`auction_${auctionId}`).emit("bid_countdown_tick", { seconds });
+
+      const timer = setInterval(async () => {
+        seconds--;
+        io.to(`auction_${auctionId}`).emit("bid_countdown_tick", { seconds });
+
+        if (seconds <= 0) {
+          clearInterval(timer);
+          auctionCountdowns.delete(auctionId);
+
+          // AUTO-SELL: mark player sold
+          try {
+            const freshPlayer = await Player.findById(currentPlayer._id);
+            if (!freshPlayer || freshPlayer.status === "SOLD") return;
+
+            const winningTeam = freshPlayer.currentBidder;
+            const soldPrice = freshPlayer.currentBid;
+
+            freshPlayer.status = "SOLD";
+            freshPlayer.soldTo = winningTeam;
+            freshPlayer.soldPrice = soldPrice;
+            await freshPlayer.save();
+
+            // Deduct budget
+            await Team.updateOne(
+              { auctionId, name: winningTeam },
+              { 
+                $inc: { budget: -soldPrice },
+                $push: { players: { name: freshPlayer.name, price: soldPrice } }
+              }
+            );
+
+            // Emit sold event
+            io.to(`auction_${auctionId}`).emit("player_sold_auto", {
+              playerIndex: auction.currentPlayerIndex,
+              playerName: freshPlayer.name,
+              soldTo: winningTeam,
+              soldPrice
+            });
+
+            // Auto-advance to next player after 3 seconds
+            setTimeout(async () => {
+              try {
+                const auc = await Auction.findById(auctionId);
+                if (!auc) return;
+                const allPlayers = await Player.find({ auctionId }).sort({ index: 1 });
+                
+                // Find next UPCOMING player
+                let nextIdx = auc.currentPlayerIndex + 1;
+                while (nextIdx < allPlayers.length && allPlayers[nextIdx].status !== "UPCOMING") {
+                  nextIdx++;
+                }
+                
+                if (nextIdx < allPlayers.length) {
+                  auc.currentPlayerIndex = nextIdx;
+                  await auc.save();
+                  
+                  const nextPlayer = allPlayers[nextIdx];
+                  nextPlayer.status = "LIVE";
+                  await nextPlayer.save();
+
+                  // Fetch fresh teams
+                  const freshTeams = await Team.find({ auctionId });
+
+                  io.to(`auction_${auctionId}`).emit("online_next_player", {
+                    playerIndex: nextIdx,
+                    player: nextPlayer,
+                    teams: freshTeams.map(t => ({ name: t.name, budget: t.budget, players: t.players }))
+                  });
+                } else {
+                  // No more players — all done
+                  io.to(`auction_${auctionId}`).emit("online_auction_complete", {});
+                }
+              } catch (err) {
+                console.error("Auto-advance error:", err.message);
+              }
+            }, 3000);
+
+          } catch (err) {
+            console.error("Auto-sell error:", err.message);
+          }
+        }
+      }, 1000);
+
+      auctionCountdowns.set(auctionId, { timer, seconds });
+
+    } catch (err) {
+      console.error("Online bid error:", err.message);
+    }
+  });
+
+  // Organizer sets current player from player list
+  socket.on("organizer_set_player", async ({ auctionId, playerIndex }) => {
+    if (!auctionId || playerIndex === undefined) return;
+    
+    try {
+      // Clear any active countdown
+      const existing = auctionCountdowns.get(auctionId);
+      if (existing && existing.timer) {
+        clearInterval(existing.timer);
+        auctionCountdowns.delete(auctionId);
+      }
+
+      const auction = await Auction.findById(auctionId);
+      if (!auction) return;
+
+      const players = await Player.find({ auctionId }).sort({ index: 1 });
+      if (playerIndex >= players.length) return;
+
+      // Set current player to LIVE
+      const targetPlayer = players[playerIndex];
+      if (targetPlayer.status === "SOLD") return; // Can't re-auction sold players
+
+      targetPlayer.status = "LIVE";
+      targetPlayer.currentBid = 0;
+      targetPlayer.currentBidder = null;
+      await targetPlayer.save();
+
+      auction.currentPlayerIndex = playerIndex;
+      await auction.save();
+
+      const freshTeams = await Team.find({ auctionId });
+
+      io.to(`auction_${auctionId}`).emit("online_next_player", {
+        playerIndex,
+        player: targetPlayer,
+        teams: freshTeams.map(t => ({ name: t.name, budget: t.budget, players: t.players }))
+      });
+    } catch (err) {
+      console.error("Set player error:", err.message);
+    }
+  });
+
+  // Organizer force-skips (marks unsold)
+  socket.on("organizer_skip_player", async ({ auctionId }) => {
+    if (!auctionId) return;
+
+    try {
+      // Clear countdown
+      const existing = auctionCountdowns.get(auctionId);
+      if (existing && existing.timer) {
+        clearInterval(existing.timer);
+        auctionCountdowns.delete(auctionId);
+      }
+
+      const auction = await Auction.findById(auctionId);
+      if (!auction) return;
+
+      const players = await Player.find({ auctionId }).sort({ index: 1 });
+      const currentPlayer = players[auction.currentPlayerIndex];
+      if (currentPlayer && currentPlayer.status !== "SOLD") {
+        currentPlayer.status = "UNSOLD";
+        currentPlayer.currentBid = 0;
+        currentPlayer.currentBidder = null;
+        await currentPlayer.save();
+      }
+
+      io.to(`auction_${auctionId}`).emit("player_skipped", {
+        playerIndex: auction.currentPlayerIndex,
+        playerName: currentPlayer?.name
+      });
+
+      // Auto-advance after 2 seconds
+      setTimeout(async () => {
+        try {
+          const auc = await Auction.findById(auctionId);
+          if (!auc) return;
+          const allPlayers = await Player.find({ auctionId }).sort({ index: 1 });
+          
+          let nextIdx = auc.currentPlayerIndex + 1;
+          while (nextIdx < allPlayers.length && allPlayers[nextIdx].status !== "UPCOMING") {
+            nextIdx++;
+          }
+
+          if (nextIdx < allPlayers.length) {
+            auc.currentPlayerIndex = nextIdx;
+            await auc.save();
+
+            const nextPlayer = allPlayers[nextIdx];
+            nextPlayer.status = "LIVE";
+            await nextPlayer.save();
+
+            const freshTeams = await Team.find({ auctionId });
+            io.to(`auction_${auctionId}`).emit("online_next_player", {
+              playerIndex: nextIdx,
+              player: nextPlayer,
+              teams: freshTeams.map(t => ({ name: t.name, budget: t.budget, players: t.players }))
+            });
+          } else {
+            io.to(`auction_${auctionId}`).emit("online_auction_complete", {});
+          }
+        } catch (err) {
+          console.error("Skip advance error:", err.message);
+        }
+      }, 2000);
+    } catch (err) {
+      console.error("Skip player error:", err.message);
+    }
+  });
+
+  // Organizer starts online auction
+  socket.on("start_online_auction", async ({ auctionId }) => {
+    if (!auctionId) return;
+    try {
+      const auction = await Auction.findById(auctionId);
+      if (!auction) return;
+
+      auction.state = "LIVE";
+      await auction.save();
+
+      const players = await Player.find({ auctionId }).sort({ index: 1 });
+      if (players.length > 0) {
+        const firstPlayer = players[0];
+        firstPlayer.status = "LIVE";
+        await firstPlayer.save();
+        auction.currentPlayerIndex = 0;
+        await auction.save();
+      }
+
+      const freshTeams = await Team.find({ auctionId });
+
+      io.to(`auction_${auctionId}`).emit("auction_state", "LIVE");
+      io.to(`auction_${auctionId}`).emit("online_next_player", {
+        playerIndex: 0,
+        player: players[0] || null,
+        teams: freshTeams.map(t => ({ name: t.name, budget: t.budget, players: t.players }))
+      });
+    } catch (err) {
+      console.error("Start online auction error:", err.message);
+    }
+  });
+
+  // ═══════════════════════════════════════
+  // OFFLINE AUCTION (existing events)
+  // ═══════════════════════════════════════
 
   // 🔥 FORWARD PLAYER UPDATES (scoped by auctionId)
   socket.on("auction_update", async (data) => {
@@ -211,10 +494,9 @@ io.on("connection", (socket) => {
     }
   });
 
-  // 🔥 VIEWER ONLINE BIDDING
+  // 🔥 VIEWER ONLINE BIDDING (legacy — for offline mode organizer-mediated)
   socket.on("viewer_bid", ({ auctionId, teamName, amount }) => {
     if (auctionId) {
-      // Send to room, where the active OrganizerLive client will process it and update the master state
       io.to(`auction_${auctionId}`).emit("viewer_bid_received", { teamName, amount });
     }
   });

@@ -282,11 +282,12 @@ exports.syncState = async (req, res) => {
     res.json({
       auctionSetup,
       auctionConfig,
-      teamsState: teams.map(t => ({ name: t.name, budget: t.budget, players: t.players })),
+      teamsState: teams.map(t => ({ name: t.name, budget: t.budget, players: t.players, managerUsername: t.managerUsername })),
       playersState,
       auctionState: auction.state || "LIVE",
       maxBid: auction.maxBid,
       auctionCode: auction.auctionCode,
+      biddingMode: auction.biddingMode || "OFFLINE",
       organizer: auction.organizer
         ? { _id: auction.organizer._id, username: auction.organizer.username }
         : null
@@ -594,6 +595,37 @@ exports.scheduleAuction = async (req, res) => {
       message: "Auction scheduled successfully", 
       scheduledDate: auction.scheduledDate 
     });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * ASSIGN TEAM REP — assign a username to a team
+ */
+exports.assignTeamRep = async (req, res) => {
+  try {
+    const { auctionId } = req.params;
+    const { teamName, username } = req.body;
+
+    if (!teamName) {
+      return res.status(400).json({ error: "teamName is required" });
+    }
+
+    const auction = await Auction.findById(auctionId);
+    if (!auction) {
+      return res.status(404).json({ error: "Auction not found" });
+    }
+
+    const team = await Team.findOne({ auctionId, name: teamName });
+    if (!team) {
+      return res.status(404).json({ error: "Team not found in this auction" });
+    }
+
+    team.managerUsername = username || null;
+    await team.save();
+
+    res.json({ message: "Team rep assigned successfully", team });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
