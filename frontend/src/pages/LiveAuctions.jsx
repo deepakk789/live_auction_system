@@ -31,7 +31,7 @@ function LiveAuctions() {
         const res = await fetch(`${BACKEND_URL}/api/auction/list`);
         if (!res.ok) throw new Error("Failed to fetch auctions");
         const data = await res.json();
-        setAuctions(data.filter(a => a.state === "LIVE" || a.state === "BREAK"));
+        setAuctions(data.filter(a => a.state === "LIVE" || a.state === "BREAK" || a.state === "PAUSED" || a.state === "RESUMING"));
       } catch (err) {
         console.error("LiveAuctions fetch error:", err);
         setAuctions([]);
@@ -202,13 +202,13 @@ function LiveAuctions() {
       {showFilters && (
         <div style={styles.filterDrawer}>
           <span style={styles.filterLabel}>Status:</span>
-          {["ALL", "LIVE", "BREAK"].map(opt => (
+          {["ALL", "LIVE", "BREAK", "PAUSED", "RESUMING"].map(opt => (
             <button
               key={opt}
               style={{ ...styles.filterChip, ...(filterState === opt ? styles.filterChipActive : {}) }}
               onClick={() => setFilterState(opt)}
             >
-              {opt === "ALL" ? "All" : opt === "LIVE" ? "🟢 Live" : "☕ Break"}
+              {opt === "ALL" ? "All" : opt === "LIVE" ? "🟢 Live" : opt === "PAUSED" ? "⚠️ Paused" : opt === "RESUMING" ? "⏳ Resuming" : "☕ Break"}
             </button>
           ))}
         </div>
@@ -282,8 +282,13 @@ function AuctionCard({ auction, isOrganizer, onClick }) {
       {/* Status Badge */}
       <div style={styles.cardHeader}>
         <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-          <span style={{ ...styles.stateBadge, background: isLive ? "rgba(16,185,129,0.15)" : "rgba(251,191,36,0.15)", color: isLive ? "#10b981" : "#fbbf24", border: `1px solid ${isLive ? "#10b981" : "#fbbf24"}` }}>
-            {isLive ? "🟢 LIVE" : "☕ BREAK"}
+          <span style={{ 
+            ...styles.stateBadge, 
+            background: isLive ? "rgba(16,185,129,0.15)" : auction.state === "PAUSED" ? "rgba(239,68,68,0.15)" : auction.state === "RESUMING" ? "rgba(59,130,246,0.15)" : "rgba(251,191,36,0.15)", 
+            color: isLive ? "#10b981" : auction.state === "PAUSED" ? "#ef4444" : auction.state === "RESUMING" ? "#60a5fa" : "#fbbf24", 
+            border: `1px solid ${isLive ? "#10b981" : auction.state === "PAUSED" ? "#ef4444" : auction.state === "RESUMING" ? "#60a5fa" : "#fbbf24"}` 
+          }}>
+            {isLive ? "🟢 LIVE" : auction.state === "PAUSED" ? "⚠️ PAUSED" : auction.state === "RESUMING" ? "⏳ RESUMING" : "☕ BREAK"}
           </span>
           {isOrganizer && (
             <span style={styles.organizerBadge}>👑 Organizer</span>

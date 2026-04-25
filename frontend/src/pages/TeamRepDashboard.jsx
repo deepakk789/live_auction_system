@@ -6,6 +6,7 @@ import socket, { BACKEND_URL } from "../services/socket";
 import PageTransition from "../components/PageTransition";
 import AnimatedCounter from "../components/AnimatedCounter";
 import SkeletonLoader from "../components/SkeletonLoader";
+import DrinksBreak from "./DrinksBreak";
 
 function TeamRepDashboard() {
   const { auctionId } = useParams();
@@ -23,6 +24,7 @@ function TeamRepDashboard() {
   const [representingTeam, setRepresentingTeam] = useState("");
   const [countdown, setCountdown] = useState(null);
   const [myTeamData, setMyTeamData] = useState(null);
+  const [resumeSeconds, setResumeSeconds] = useState(null);
 
   const fallbackPhoto = "https://cdn-icons-png.flaticon.com/512/861/861512.png";
 
@@ -178,6 +180,10 @@ function TeamRepDashboard() {
 
     socket.on("teams_update", (tms) => setTeams(tms));
 
+    socket.on("resume_countdown_tick", ({ seconds }) => {
+      setResumeSeconds(seconds);
+    });
+
     return () => {
       socket.emit("team_quit_request", { auctionId, teamName: representingTeam });
       socket.emit("leave_auction", { auctionId });
@@ -189,6 +195,7 @@ function TeamRepDashboard() {
       socket.off("player_skipped");
       socket.off("online_auction_complete");
       socket.off("teams_update");
+      socket.off("resume_countdown_tick");
     };
   }, [auctionId, navigate, representingTeam]);
 
@@ -253,6 +260,33 @@ function TeamRepDashboard() {
               You are connected as the manager for <strong style={{ color: "#10b981" }}>{representingTeam}</strong>. The auction will start when the organizer opens the lobby.
             </p>
           </div>
+        </div>
+      </PageTransition>
+    );
+  }
+
+  if (auctionState === "BREAK" || auctionState === "PAUSED" || auctionState === "RESUMING") {
+    return (
+      <PageTransition>
+        <div style={{ padding: "30px 40px", maxWidth: "1400px", margin: "0 auto" }}>
+          {auctionState === "PAUSED" && (
+            <motion.div className="glass-panel" style={{ padding: "20px 30px", border: "2px solid #ef4444", marginBottom: "30px", textAlign: "center" }} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+              <h2 style={{ color: "#ef4444", margin: "0 0 10px" }}>⚠️ Auction Paused (Break Time)</h2>
+              <p style={{ color: "#9ca3af", margin: 0 }}>A team representative has disconnected. Waiting for them to rejoin before continuing.</p>
+            </motion.div>
+          )}
+          {auctionState === "RESUMING" && (
+            <motion.div className="glass-panel" style={{ padding: "20px 30px", border: "2px solid #3b82f6", marginBottom: "30px", textAlign: "center" }} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+              <h2 style={{ color: "#60a5fa", margin: "0 0 10px" }}>⏳ Resuming in {resumeSeconds}s...</h2>
+              <p style={{ color: "#9ca3af", margin: 0 }}>All representatives are connected. Get ready!</p>
+            </motion.div>
+          )}
+          {auctionState === "BREAK" && (
+            <motion.div className="glass-panel" style={{ padding: "20px 30px", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "30px" }} initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
+              <h2 style={{ margin: 0, display: "flex", alignItems: "center", gap: "10px" }}>Drinks Break 🍹</h2>
+            </motion.div>
+          )}
+          <DrinksBreak readOnly />
         </div>
       </PageTransition>
     );

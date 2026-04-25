@@ -63,6 +63,11 @@ const auctionSchema = new mongoose.Schema(
       default: 0
     },
 
+    queuedPlayerIndex: {
+      type: Number,
+      default: null
+    },
+
     bidSteps: {
       type: [Number],
       default: [10, 20, 50]

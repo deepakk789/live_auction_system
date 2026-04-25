@@ -21,6 +21,8 @@ function ViewerLive() {
   const [currentUser, setCurrentUser] = useState(null);
   const [playersState, setPlayersState] = useState(null);
   const [auctionState, setAuctionState] = useState("LIVE");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [resumeSeconds, setResumeSeconds] = useState(null);
   const [teams, setTeams] = useState([]);
   const [auctionName, setAuctionName] = useState("");
   const [selectedFields, setSelectedFields] = useState([]);
@@ -107,6 +109,9 @@ function ViewerLive() {
     socket.on("auction_config", (cfg) => {
       if (cfg.selectedFields) setSelectedFields(cfg.selectedFields);
     });
+    socket.on("resume_countdown_tick", ({ seconds }) => {
+      setResumeSeconds(seconds);
+    });
 
     return () => {
       socket.emit("leave_auction", { auctionId });
@@ -114,6 +119,7 @@ function ViewerLive() {
       socket.off("teams_update");
       socket.off("auction_state");
       socket.off("auction_config");
+      socket.off("resume_countdown_tick");
     };
   }, [auctionId]);
 
@@ -195,13 +201,27 @@ function ViewerLive() {
     );
   }
 
-  if (auctionState === "BREAK") {
+  if (auctionState === "BREAK" || auctionState === "PAUSED" || auctionState === "RESUMING") {
     return (
       <PageTransition>
         <div style={styles.container}>
-          <motion.div className="glass-panel" style={{ padding: "20px 30px", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "30px" }} initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-            <h2 style={{ margin: 0, display: "flex", alignItems: "center", gap: "10px" }}>{auctionName || "Auction"} - Drinks Break 🍹</h2>
-          </motion.div>
+          {auctionState === "PAUSED" && (
+            <motion.div className="glass-panel" style={{ padding: "20px 30px", border: "2px solid #ef4444", marginBottom: "30px", textAlign: "center" }} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+              <h2 style={{ color: "#ef4444", margin: "0 0 10px" }}>⚠️ Auction Paused (Break Time)</h2>
+              <p style={{ color: "#9ca3af", margin: 0 }}>A team representative has disconnected. Waiting for them to rejoin before continuing.</p>
+            </motion.div>
+          )}
+          {auctionState === "RESUMING" && (
+            <motion.div className="glass-panel" style={{ padding: "20px 30px", border: "2px solid #3b82f6", marginBottom: "30px", textAlign: "center" }} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+              <h2 style={{ color: "#60a5fa", margin: "0 0 10px" }}>⏳ Resuming in {resumeSeconds}s...</h2>
+              <p style={{ color: "#9ca3af", margin: 0 }}>All representatives are connected. Get ready!</p>
+            </motion.div>
+          )}
+          {auctionState === "BREAK" && (
+            <motion.div className="glass-panel" style={{ padding: "20px 30px", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "30px" }} initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
+              <h2 style={{ margin: 0, display: "flex", alignItems: "center", gap: "10px" }}>{auctionName || "Auction"} - Drinks Break 🍹</h2>
+            </motion.div>
+          )}
           <DrinksBreak readOnly />
         </div>
       </PageTransition>

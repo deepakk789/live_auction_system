@@ -43,7 +43,7 @@ function Layout() {
         const res = await fetch(`${BACKEND_URL}/api/auction/list`);
         if (res.ok) {
           const data = await res.json();
-          const live = data.filter(a => a.state === "LIVE" || a.state === "BREAK");
+          const live = data.filter(a => a.state === "LIVE" || a.state === "BREAK" || a.state === "PAUSED");
           const upcoming = data.filter(a => a.state === "UPCOMING");
           setLiveAuctionCount(live.length);
           setUpcomingAuctionCount(upcoming.length);

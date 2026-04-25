@@ -630,3 +630,46 @@ exports.assignTeamRep = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+/**
+ * RESET AUCTION — reset auction state, player states, and team budgets
+ */
+exports.resetAuction = async (req, res) => {
+  try {
+    const { auctionId } = req.body;
+    if (!auctionId) return res.status(400).json({ error: "auctionId required" });
+
+    const auction = await Auction.findById(auctionId);
+    if (!auction) return res.status(404).json({ error: "Auction not found" });
+
+    // 1. Reset auction state
+    auction.state = "UPCOMING";
+    auction.currentPlayerIndex = 0;
+    await auction.save();
+
+    // 2. Reset all players
+    await Player.updateMany(
+      { auctionId },
+      { $set: { status: "UPCOMING", currentBid: 0, currentBidder: null, soldTo: null, soldPrice: null } }
+    );
+
+    // 3. Reset teams budgets and players
+    const maxBudget = auction.maxBudget || 1000;
+    await Team.updateMany(
+      { auctionId },
+      { $set: { budget: maxBudget, players: [] } }
+    );
+
+    // Emit socket to refresh clients
+    const io = req.app.get("io");
+    if (io) {
+      io.to(`auction_${auctionId}`).emit("auction_state", "UPCOMING");
+      const freshTeams = await Team.find({ auctionId });
+      io.to(`auction_${auctionId}`).emit("teams_update", freshTeams.map(t => ({ name: t.name, budget: t.budget, players: t.players })));
+    }
+
+    res.json({ message: "Auction reset successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

@@ -22,8 +22,10 @@ function OrganizerOnlineView() {
   const [auctionConfig, setAuctionConfig] = useState(null);
   
   const [countdown, setCountdown] = useState(null);
+  const [resumeSeconds, setResumeSeconds] = useState(null);
   const [showPlayerList, setShowPlayerList] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [toastMessage, setToastMessage] = useState("");
 
   const fallbackPhoto = "https://cdn-icons-png.flaticon.com/512/861/861512.png";
 
@@ -163,12 +165,24 @@ function OrganizerOnlineView() {
       setAuctionState("ENDED");
     });
 
+    socket.on("teams_update", (tms) => setTeams(tms));
+
     socket.on("manager_status_change", ({ teamName, status }) => {
       setManagerStatuses(prev => ({ ...prev, [teamName]: status }));
     });
     
     socket.on("team_quit_alert", ({ teamName }) => {
-      alert(`⚠️ TEAM MANAGER DISCONNECTED: ${teamName}`);
+      setToastMessage(`⚠️ TEAM MANAGER DISCONNECTED: ${teamName}`);
+      setTimeout(() => setToastMessage(""), 5000);
+    });
+
+    socket.on("resume_countdown_tick", ({ seconds }) => {
+      setResumeSeconds(seconds);
+    });
+
+    socket.on("player_queued", ({ playerName }) => {
+      setToastMessage(`✅ ${playerName} queued for next round!`);
+      setTimeout(() => setToastMessage(""), 5000);
     });
 
     return () => {
@@ -180,8 +194,11 @@ function OrganizerOnlineView() {
       socket.off("online_next_player");
       socket.off("player_skipped");
       socket.off("online_auction_complete");
+      socket.off("teams_update");
       socket.off("manager_status_change");
       socket.off("team_quit_alert");
+      socket.off("resume_countdown_tick");
+      socket.off("player_queued");
     };
   }, [auctionId, navigate]);
 
@@ -203,6 +220,23 @@ function OrganizerOnlineView() {
           body: JSON.stringify({ auctionId })
         });
         socket.emit("auction_state", { auctionId, state: "ENDED" });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
+
+  const handleResetAuction = async () => {
+    if (!hasLock) return;
+    if (confirm("Are you sure you want to RESET the auction? All bids and sold players will be reverted to UPCOMING.")) {
+      try {
+        const token = localStorage.getItem("authToken");
+        await fetch(`${BACKEND_URL}/api/auction/reset`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          body: JSON.stringify({ auctionId })
+        });
+        alert("Auction reset successfully! Refresh to apply.");
       } catch (err) {
         console.error(err);
       }
@@ -235,8 +269,36 @@ function OrganizerOnlineView() {
 
   return (
     <PageTransition>
-      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", padding: "20px 40px" }}>
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", padding: "20px 40px", position: "relative" }}>
         
+        {/* Toast Notification */}
+        <AnimatePresence>
+          {toastMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: -50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -50 }}
+              style={{
+                position: "fixed",
+                top: "20px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                background: "rgba(239, 68, 68, 0.9)",
+                backdropFilter: "blur(10px)",
+                color: "white",
+                padding: "12px 24px",
+                borderRadius: "8px",
+                fontWeight: "bold",
+                zIndex: 1000,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+                border: "1px solid rgba(255,255,255,0.2)"
+              }}
+            >
+              {toastMessage}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Header */}
         <motion.div className="glass-panel" style={{ padding: "16px 24px", marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center" }} initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -249,12 +311,31 @@ function OrganizerOnlineView() {
             </button>
             <button className="btn-glass" onClick={() => navigate(`/organizer/${auctionId}/analytics`)}>📊 Analytics</button>
             {auctionState !== "ENDED" && hasLock && (
-              <button className="btn-glass" style={{ color: "#ef4444", borderColor: "rgba(239, 68, 68, 0.3)" }} onClick={handleEndAuction}>
-                <Power size={16} style={{ marginRight: "6px" }} /> End Auction
-              </button>
+              <>
+                <button className="btn-glass" style={{ color: "#facc15", borderColor: "rgba(250, 204, 21, 0.3)" }} onClick={handleResetAuction}>
+                  Reset Auction
+                </button>
+                <button className="btn-glass" style={{ color: "#ef4444", borderColor: "rgba(239, 68, 68, 0.3)" }} onClick={handleEndAuction}>
+                  <Power size={16} style={{ marginRight: "6px" }} /> End Auction
+                </button>
+              </>
             )}
           </div>
         </motion.div>
+
+        {auctionState === "PAUSED" && (
+          <motion.div className="glass-panel" style={{ padding: "16px 24px", marginBottom: "24px", border: "2px solid #ef4444", background: "rgba(239, 68, 68, 0.1)" }} initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
+            <h3 style={{ color: "#ef4444", margin: "0 0 5px" }}>⚠️ Auction Paused (Missing Representative)</h3>
+            <p style={{ margin: 0, color: "#f87171" }}>A team representative has disconnected. The auction timer is paused and will automatically resume when they reconnect.</p>
+          </motion.div>
+        )}
+
+        {auctionState === "RESUMING" && (
+          <motion.div className="glass-panel" style={{ padding: "16px 24px", marginBottom: "24px", border: "2px solid #3b82f6", background: "rgba(59, 130, 246, 0.1)" }} initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
+            <h3 style={{ color: "#60a5fa", margin: "0 0 5px" }}>⏳ Resuming in {resumeSeconds}s...</h3>
+            <p style={{ margin: 0, color: "#93c5fd" }}>All representatives are connected. The auction is about to automatically resume.</p>
+          </motion.div>
+        )}
 
         {auctionState === "ENDED" ? (
           <div className="glass-panel" style={{ padding: "60px", textAlign: "center", flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
@@ -262,10 +343,10 @@ function OrganizerOnlineView() {
             <p style={{ color: "#9ca3af", fontSize: "1.2rem" }}>The auction has concluded successfully.</p>
           </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: showPlayerList ? "1fr 400px 350px" : "1fr 350px", gap: "24px", flex: 1, transition: "all 0.3s" }}>
+          <div style={{ display: "grid", gridTemplateColumns: showPlayerList ? "1fr 400px 350px" : "1fr 350px", gap: "24px", flex: 1, minHeight: 0, transition: "all 0.3s" }}>
             
             {/* Left: Player + Bidding Status */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "24px", overflowY: "auto", paddingRight: "5px" }}>
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentIndex}
@@ -350,7 +431,7 @@ function OrganizerOnlineView() {
                     style={{ width: "100%", paddingLeft: "30px", fontSize: "0.9rem" }}
                   />
                 </div>
-                <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "8px", paddingRight: "5px" }}>
+                <div style={{ flex: 1, overflowY: "auto", minHeight: 0, display: "flex", flexDirection: "column", gap: "8px", paddingRight: "5px" }}>
                   {filteredPlayers.map((p, idx) => (
                     <div key={idx} style={{ 
                       background: "rgba(255,255,255,0.03)", 
