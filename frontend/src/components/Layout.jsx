@@ -31,7 +31,7 @@ function Layout() {
   const { user, logout } = useAuth();
   const [liveAuctionCount, setLiveAuctionCount] = useState(0);
   const [upcomingAuctionCount, setUpcomingAuctionCount] = useState(0);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Changed to false to hide by default
 
   useEffect(() => {
 

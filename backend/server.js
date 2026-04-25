@@ -30,7 +30,7 @@ app.get("/api/health", (req, res) => {
 app.get("/", (req, res) => {
   res.send(`
     <div style="font-family: sans-serif; padding: 40px; text-align: center;">
-      <h1 style="color: #4CAF50;">✅ Backend is successfully deployed and running!</h1>
+      <h1 style="color: #4CAF50;">Backend is successfully deployed and running!</h1>
       <p>This is the API server for the Live Auction System.</p>
       <p>To access the application, please visit the frontend URL.</p>
     </div>
