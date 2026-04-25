@@ -410,7 +410,48 @@ function OrganizerLive() {
 
 
   /* ---------- RENDER ---------- */
-  if (lockLoading || !setup || !auctionConfig || !playersState) {
+  if (lockLoading) {
+    return (
+      <PageTransition>
+        <div style={{ padding: "40px", maxWidth: "1400px", margin: "0 auto" }}>
+          <SkeletonLoader variant="card" count={2} />
+          <div style={{ marginTop: "20px" }}><SkeletonLoader variant="row" count={4} /></div>
+        </div>
+      </PageTransition>
+    );
+  }
+
+  /* No players uploaded yet — guide organizer to upload */
+  if (setup && (!playersState || !playersState.players || playersState.players.length === 0)) {
+    return (
+      <PageTransition>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "70vh", padding: "40px", textAlign: "center", color: "white" }}>
+          <div className="glass-panel" style={{ padding: "50px", maxWidth: "500px" }}>
+            <h2 style={{ fontSize: "1.8rem", marginBottom: "12px" }}>No Players Uploaded</h2>
+            <p style={{ color: "#94a3b8", marginBottom: "30px" }}>
+              You need to upload player data before you can start the auction. Upload an Excel file with your player roster.
+            </p>
+            <button
+              className="btn-premium"
+              style={{ width: "100%", padding: "14px", fontSize: "1.05rem" }}
+              onClick={() => navigate(`/organizer/${auctionId}/upload`)}
+            >
+              📄 Upload Players
+            </button>
+            <button
+              className="btn-glass"
+              style={{ width: "100%", marginTop: "12px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+              onClick={() => navigate("/")}
+            >
+              ← Back to Home
+            </button>
+          </div>
+        </div>
+      </PageTransition>
+    );
+  }
+
+  if (!setup || !auctionConfig || !playersState) {
     return (
       <PageTransition>
         <div style={{ padding: "40px", maxWidth: "1400px", margin: "0 auto" }}>

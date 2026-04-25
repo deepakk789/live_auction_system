@@ -49,7 +49,12 @@ function UpcomingAuctions() {
       (currentUser.id === auction.organizer._id || currentUser.id === auction.organizer);
 
     if (isOrganizer) {
-      navigate(`/organizer/${auction._id}/live`);
+      // For UPCOMING auctions, go to upload first; for LIVE, go to live board
+      if (auction.state === "UPCOMING") {
+        navigate(`/organizer/${auction._id}/upload`);
+      } else {
+        navigate(`/organizer/${auction._id}/live`);
+      }
     } else {
       navigate(`/viewer/${auction._id}`);
     }
