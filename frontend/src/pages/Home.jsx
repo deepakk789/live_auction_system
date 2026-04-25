@@ -131,7 +131,7 @@ function Home() {
       </div>
 
       {/* How it works Section */}
-      <div className="stagger-4" style={styles.howItWorksBox}>
+      <div className="stagger-4 glass-panel" style={styles.howItWorksBox}>
         <div style={{ textAlign: "center", marginBottom: "50px" }}>
           <h2 style={{ fontSize: "2.8rem", fontWeight: 900, marginBottom: "15px", letterSpacing: "-1px" }}>From Setup to <span className="text-gradient-success">Sold</span></h2>
           <p style={{ color: "#94a3b8", fontSize: "1.15rem", maxWidth: "600px", margin: "0 auto", lineHeight: "1.6" }}>
@@ -172,7 +172,7 @@ function Home() {
       </div>
 
       {/* About & Contact Section */}
-      <div className="stagger-4" style={styles.footerLayout}>
+      <div className="stagger-4 glass-card" style={styles.footerLayout}>
         <div style={styles.footerSection}>
           <h3 style={{ fontSize: "1.5rem", color: "#fff", display: "flex", alignItems: "center", gap: "10px", fontWeight: "900", marginBottom: "20px" }}>
             <Sparkles size={22} color="#3b82f6"/> About AuctionX

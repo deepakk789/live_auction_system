@@ -271,6 +271,7 @@ function OrganizerSetup() {
             <label style={styles.label}>Bidding Mode</label>
             <div style={styles.modeGrid}>
               <div 
+                className="glass-card"
                 style={{...styles.modeCard, ...(biddingMode === "OFFLINE" ? styles.modeCardActive : {})}}
                 onClick={() => setBiddingMode("OFFLINE")}
               >
@@ -281,6 +282,7 @@ function OrganizerSetup() {
               </div>
 
               <div 
+                className="glass-card"
                 style={{...styles.modeCard, ...(biddingMode === "ONLINE" ? styles.modeCardActive : {})}}
                 onClick={() => setBiddingMode("ONLINE")}
               >
@@ -448,7 +450,7 @@ function OrganizerSetup() {
             </div>
 
             {/* Co-Organizers */}
-            <div style={styles.coOrgSection}>
+            <div className="glass-card" style={styles.coOrgSection}>
               <h3 style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", margin: "0 0 15px" }}>
                 <Users size={20} color="#3b82f6" /> Add Co-Organizers
               </h3>

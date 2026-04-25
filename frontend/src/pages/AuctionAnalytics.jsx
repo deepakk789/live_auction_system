@@ -110,7 +110,7 @@ function AuctionAnalytics() {
       <div style={S.grid}>
 
         {/* Budget Bar */}
-        <div style={S.card}>
+        <div className="glass-card" style={S.card}>
           <h2 style={S.cardTitle}>Team Budget Overview</h2>
           <div style={{ height: 280 }}>
             <ResponsiveContainer>
@@ -128,7 +128,7 @@ function AuctionAnalytics() {
         </div>
 
         {/* Status Pie */}
-        <div style={S.card}>
+        <div className="glass-card" style={S.card}>
           <h2 style={S.cardTitle}>Player Auction Status</h2>
           <div style={{ height: 280, display:"flex", justifyContent:"center" }}>
             <ResponsiveContainer>
@@ -153,7 +153,7 @@ function AuctionAnalytics() {
         </div>
 
         {/* Top 5 Players */}
-        <div style={{ ...S.card, gridColumn: "1 / -1" }}>
+        <div className="glass-card" style={{ ...S.card, gridColumn: "1 / -1" }}>
           <h2 style={S.cardTitle}>
             <Trophy size={18} color="#eab308" style={{ marginRight:"8px", verticalAlign:"middle" }} />
             Top Signings
@@ -185,13 +185,13 @@ function AuctionAnalytics() {
 
         {/* Per-Team Rosters */}
         {teams.length > 0 && (
-          <div style={{ ...S.card, gridColumn: "1 / -1" }}>
+          <div className="glass-card" style={{ ...S.card, gridColumn: "1 / -1" }}>
             <h2 style={S.cardTitle}>Team Rosters</h2>
             <div style={S.rosterGrid}>
               {teams.map((team, idx) => {
                 const spent = team.players.reduce((s, p) => s + (p.price||0), 0);
                 return (
-                  <div key={team.name} style={{ ...S.rosterCard, borderColor: COLORS[idx % COLORS.length] + "55" }}>
+                  <div key={team.name} className="glass-card" style={{ ...S.rosterCard, borderColor: COLORS[idx % COLORS.length] + "55" }}>
                     <div style={S.rosterHeader}>
                       <span style={{ fontWeight: 800, fontSize: "1rem", color: COLORS[idx % COLORS.length] }}>{team.name}</span>
                       <span style={{ fontSize: "0.8rem", color: "#6b7280" }}>₹{team.budget.toLocaleString()} left</span>
@@ -226,7 +226,7 @@ function AuctionAnalytics() {
 /* ── KPI Card ── */
 function KpiCard({ icon, label, value, accent }) {
   return (
-    <div style={{ ...S.kpiCard, borderColor: accent + "33" }}>
+    <div className="glass-card" style={{ ...S.kpiCard, borderColor: accent + "33" }}>
       <div style={{ ...S.kpiIcon, background: accent + "20" }}>{icon}</div>
       <div>
         <p style={{ margin:0, color:"#6b7280", fontSize:"0.8rem", fontWeight:600, textTransform:"uppercase", letterSpacing:"0.5px" }}>{label}</p>
