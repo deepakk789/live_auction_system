@@ -16,6 +16,10 @@ const logger = require("./utils/logger");
 const app = express();
 const server = http.createServer(app);
 
+// Trust Render/cloud reverse proxy — required for express-rate-limit
+// to correctly read client IPs from X-Forwarded-For header
+app.set("trust proxy", 1);
+
 // ── Security Middleware ───────────────────────────────────────────────
 app.use(helmet());
 
