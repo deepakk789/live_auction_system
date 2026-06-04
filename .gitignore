@@ -1,3 +1,25 @@
+# ── Dependencies ──────────────────────────────────
 node_modules/
+
+# ── Environment Variables (NEVER commit these) ────
 .env
+.env.local
+.env.production
+
+# ── Uploads / generated files ─────────────────────
 uploads/
+dist/
+build/
+
+# ── Logs ──────────────────────────────────────────
+logs/
+*.log
+
+# ── OS / Editor ───────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ── Testing output ────────────────────────────────
+coverage/

@@ -1,8 +1,12 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Auction = require("../models/Auction");
+const logger = require("../utils/logger");
 
-const JWT_SECRET = process.env.JWT_SECRET || "supersecretauctionkey2026";
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error("FATAL: JWT_SECRET is not set in environment variables.");
+}
 
 /**
  * Protect route — verifies JWT and attaches req.user
@@ -29,7 +33,7 @@ const protect = async (req, res, next) => {
     req.user = user;
     next();
   } catch (error) {
-    console.error("Auth middleware error:", error.message);
+    logger.warn(`Auth failed: ${error.message}`);
     return res.status(401).json({ error: "Not authorized — invalid token" });
   }
 };
@@ -63,7 +67,7 @@ const organizerOnly = async (req, res, next) => {
     req.auction = auction;
     next();
   } catch (error) {
-    console.error("organizerOnly error:", error.message);
+    logger.error(`organizerOnly error: ${error.message}`);
     return res.status(500).json({ error: "Server error" });
   }
 };

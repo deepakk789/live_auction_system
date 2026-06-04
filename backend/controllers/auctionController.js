@@ -2,6 +2,7 @@ const Player = require("../models/player");
 const Auction = require("../models/Auction");
 const Team = require("../models/Team");
 const User = require("../models/User");
+const logger = require("../utils/logger");
 
 /**
  * Set auction mode: RANDOM or MANUAL
@@ -24,6 +25,7 @@ exports.setMode = async (req, res) => {
 
     res.json({ message: "Auction mode updated successfully", mode });
   } catch (err) {
+    logger.error(`setMode error: ${err.message}`);
     res.status(500).json({ error: err.message });
   }
 };
@@ -299,9 +301,9 @@ exports.syncState = async (req, res) => {
 };
 
 /**
- * RESET AUCTION — scoped by auctionId
+ * ARCHIVE AUCTION — ends the auction, saves snapshot, clears players & teams
  */
-exports.resetAuction = async (req, res) => {
+exports.archiveAuction = async (req, res) => {
   try {
     const { auctionId } = req.body;
 
@@ -334,8 +336,9 @@ exports.resetAuction = async (req, res) => {
       io.to(`auction_${auctionId}`).emit("auction_reset", true);
     }
 
-    res.json({ message: "Auction fully reset and archived." });
+    res.json({ message: "Auction fully archived and data cleared." });
   } catch (err) {
+    logger.error(`archiveAuction error: ${err.message}`);
     res.status(500).json({ error: err.message });
   }
 };
@@ -632,7 +635,7 @@ exports.assignTeamRep = async (req, res) => {
 };
 
 /**
- * RESET AUCTION — reset auction state, player states, and team budgets
+ * SOFT RESET AUCTION — reset auction state, player states, and team budgets (keeps the auction alive)
  */
 exports.resetAuction = async (req, res) => {
   try {
@@ -670,6 +673,7 @@ exports.resetAuction = async (req, res) => {
 
     res.json({ message: "Auction reset successfully" });
   } catch (err) {
+    logger.error(`resetAuction error: ${err.message}`);
     res.status(500).json({ error: err.message });
   }
 };
