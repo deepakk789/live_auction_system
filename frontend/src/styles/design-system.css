@@ -1,27 +1,31 @@
 /* =========================================
-   AUCTIONX PREMIUM DESIGN SYSTEM
+   AUCTIONX — RED / BLACK / WHITE DESIGN SYSTEM
    ========================================= */
 
 :root {
-  /* Dynamic Color Palette */
-  --bg-dark: #0b1120;
-  --bg-card: rgba(17, 24, 39, 0.7);
-  --bg-glass: rgba(17, 24, 39, 0.45);
-  
-  --primary-glow: #3b82f6;
-  --secondary-glow: #8b5cf6;
-  --success-glow: #10b981;
-  --danger-glow: #ef4444;
-  --warning-glow: #facc15;
-  
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  
-  --border-light: rgba(255, 255, 255, 0.1);
-  --border-glow: rgba(59, 130, 246, 0.3);
-  
-  /* Transitions */
-  --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  /* ── Core Palette ── */
+  --bg-dark: #080808;
+  --bg-card: rgba(18, 0, 0, 0.75);
+  --bg-glass: rgba(20, 5, 5, 0.50);
+
+  /* ── Brand Colors: Red + White ── */
+  --primary-glow: #e11d48;        /* rose-600 */
+  --primary-bright: #f43f5e;      /* rose-500 */
+  --primary-dark: #9f1239;        /* rose-800 */
+  --secondary-glow: #dc2626;      /* red-600 */
+
+  --success-glow: #22c55e;
+  --danger-glow:  #ef4444;
+  --warning-glow: #f59e0b;
+
+  --text-main:  #f9fafb;
+  --text-muted: #9ca3af;
+
+  --border-light: rgba(255, 255, 255, 0.08);
+  --border-glow:  rgba(225, 29, 72, 0.45);
+
+  /* ── Transitions ── */
+  --transition-fast:   0.2s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-smooth: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   --transition-bounce: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -32,9 +36,10 @@
 body {
   background-color: var(--bg-dark);
   color: var(--text-main);
-  background-image: 
-    radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
+  background-image:
+    radial-gradient(circle at 15% 50%, rgba(225, 29, 72, 0.09) 0%, transparent 55%),
+    radial-gradient(circle at 85% 20%, rgba(220, 38, 38, 0.07) 0%, transparent 55%),
+    radial-gradient(circle at 50% 90%, rgba(159, 18, 57, 0.06) 0%, transparent 50%);
   background-attachment: fixed;
   overflow-x: hidden;
 }
@@ -48,6 +53,7 @@ body {
   overflow: visible;
 }
 
+/* Animated conic-gradient border glow — now in red tones */
 .glass-panel::before,
 .glass-card::before {
   content: '';
@@ -58,18 +64,18 @@ body {
   background: conic-gradient(
     from var(--glow-angle, 0deg),
     transparent 0%,
-    rgba(59, 130, 246, 0.4) 5%,
-    rgba(139, 92, 246, 0.6) 10%,
-    rgba(192, 132, 252, 0.4) 15%,
+    rgba(225, 29, 72, 0.5)  5%,
+    rgba(239, 68, 68, 0.7)  10%,
+    rgba(253, 164, 175, 0.4) 15%,
     transparent 20%,
     transparent 80%,
-    rgba(56, 189, 248, 0.4) 85%,
-    rgba(59, 130, 246, 0.6) 90%,
-    rgba(139, 92, 246, 0.4) 95%,
+    rgba(220, 38, 38, 0.4)  85%,
+    rgba(225, 29, 72, 0.6)  90%,
+    rgba(239, 68, 68, 0.4)  95%,
     transparent 100%
   );
-  -webkit-mask: 
-    linear-gradient(#fff 0 0) content-box, 
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
     linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -87,7 +93,7 @@ body {
   animation-play-state: running;
 }
 
-/* Outer glow shadow on hover */
+/* Outer red glow on hover */
 .glass-panel::after,
 .glass-card::after {
   content: '';
@@ -98,10 +104,10 @@ body {
   transition: opacity 0.4s ease;
   pointer-events: none;
   z-index: -1;
-  box-shadow: 
-    0 0 15px rgba(59, 130, 246, 0.15),
-    0 0 30px rgba(139, 92, 246, 0.1),
-    0 0 60px rgba(59, 130, 246, 0.05);
+  box-shadow:
+    0 0 15px rgba(225, 29, 72, 0.18),
+    0 0 30px rgba(220, 38, 38, 0.10),
+    0 0 60px rgba(225, 29, 72, 0.06);
 }
 
 .glass-panel:hover::after,
@@ -110,7 +116,7 @@ body {
 }
 
 @keyframes borderGlowRotate {
-  0% { --glow-angle: 0deg; }
+  0%   { --glow-angle: 0deg; }
   100% { --glow-angle: 360deg; }
 }
 
@@ -126,7 +132,7 @@ body {
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-light);
   border-radius: 16px;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.25);
 }
 
 .glass-card {
@@ -140,14 +146,14 @@ body {
 .glass-card:hover {
   transform: translateY(-5px) scale(1.01);
   border-color: var(--border-glow);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2), 0 0 20px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3), 0 0 20px rgba(225, 29, 72, 0.12);
 }
 
 /* -----------------------------------------
-   TEXT ANIMATIONS & GRADIENTS
+   TEXT GRADIENTS
    ----------------------------------------- */
 .text-gradient {
-  background: linear-gradient(135deg, #60a5fa, #c084fc);
+  background: linear-gradient(135deg, #f87171, #fca5a5, #fde8ec);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -158,12 +164,14 @@ body {
   background: linear-gradient(135deg, #34d399, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .text-gradient-warning {
   background: linear-gradient(135deg, #fbbf24, #f59e0b);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* -----------------------------------------
@@ -171,7 +179,7 @@ body {
    ----------------------------------------- */
 .btn-premium {
   position: relative;
-  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  background: linear-gradient(135deg, #9f1239, #e11d48);
   color: white;
   border: none;
   padding: 12px 24px;
@@ -180,7 +188,7 @@ body {
   cursor: pointer;
   overflow: hidden;
   transition: var(--transition-bounce);
-  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 4px 15px rgba(225, 29, 72, 0.35);
   z-index: 1;
 }
 
@@ -188,7 +196,7 @@ body {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  background: linear-gradient(135deg, #e11d48, #f43f5e);
   z-index: -1;
   transition: opacity var(--transition-fast);
   opacity: 0;
@@ -196,7 +204,7 @@ body {
 
 .btn-premium:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4);
+  box-shadow: 0 8px 25px rgba(225, 29, 72, 0.5);
 }
 
 .btn-premium:hover::before {
@@ -207,9 +215,15 @@ body {
   transform: translateY(1px);
 }
 
+.btn-premium:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .btn-glass {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.10);
   color: var(--text-main);
   padding: 10px 20px;
   border-radius: 8px;
@@ -220,8 +234,8 @@ body {
 }
 
 .btn-glass:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(225, 29, 72, 0.08);
+  border-color: rgba(225, 29, 72, 0.30);
   transform: translateY(-2px);
 }
 
@@ -229,8 +243,8 @@ body {
    INPUT FIELDS
    ----------------------------------------- */
 .input-premium {
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(10, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: white;
   padding: 14px 16px;
   border-radius: 8px;
@@ -243,16 +257,20 @@ body {
 .input-premium:focus {
   outline: none;
   border-color: var(--primary-glow);
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-  background: rgba(15, 23, 42, 0.8);
+  box-shadow: 0 0 0 2px rgba(225, 29, 72, 0.22);
+  background: rgba(15, 0, 0, 0.75);
+}
+
+.input-premium::placeholder {
+  color: #4b5563;
 }
 
 /* -----------------------------------------
    MISC ANIMATIONS
    ----------------------------------------- */
 @keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+  0%   { transform: translateY(0px); }
+  50%  { transform: translateY(-10px); }
   100% { transform: translateY(0px); }
 }
 
@@ -261,9 +279,9 @@ body {
 }
 
 @keyframes pulseGlow {
-  0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+  0%   { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.45); }
+  70%  { box-shadow: 0 0 0 10px rgba(225, 29, 72, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); }
 }
 
 .pulse-glow {
@@ -272,7 +290,7 @@ body {
 
 @keyframes slideUpFade {
   from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .stagger-1 { animation: slideUpFade 0.5s ease-out 0.1s both; }
@@ -283,20 +301,13 @@ body {
 /* -----------------------------------------
    Custom Scrollbar
    ----------------------------------------- */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-track {
-  background: var(--bg-dark);
-}
+::-webkit-scrollbar       { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-dark); }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #3f0a14;
   border-radius: 4px;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: #475569;
-}
+::-webkit-scrollbar-thumb:hover { background: #6f1020; }
 
 /* -----------------------------------------
    SPINNER ANIMATIONS
@@ -308,12 +319,15 @@ body {
 .spinner-small {
   width: 20px;
   height: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.2);
   border-radius: 50%;
-  border-top-color: #fff;
+  border-top-color: #f43f5e;
   animation: spin 0.8s linear infinite;
 }
 
+/* -----------------------------------------
+   PASSWORD TOGGLE
+   ----------------------------------------- */
 .password-toggle-btn {
   position: absolute;
   right: 12px;
@@ -321,7 +335,7 @@ body {
   transform: translateY(-50%);
   background: transparent;
   border: none;
-  color: #94a3b8;
+  color: #6b7280;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -329,12 +343,10 @@ body {
   padding: 0;
 }
 
-.password-toggle-btn:hover {
-  color: #f8fafc;
-}
+.password-toggle-btn:hover { color: #f9fafb; }
 
 /* ═══════════════════════════════════════════════
-   MOBILE RESPONSIVE — design-system additions
+   MOBILE RESPONSIVE
    ═══════════════════════════════════════════════ */
 @media (max-width: 768px) {
   .btn-premium,
@@ -362,13 +374,12 @@ body {
     padding: 10px 18px;
     font-size: 0.9rem;
   }
-  
+
   .btn-glass {
     padding: 8px 16px;
     font-size: 0.9rem;
   }
 
-  /* Auction code text */
   .auction-code-text {
     font-size: 2rem !important;
     letter-spacing: 3px !important;

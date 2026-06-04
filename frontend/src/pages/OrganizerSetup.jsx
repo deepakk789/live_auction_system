@@ -457,46 +457,76 @@ function OrganizerSetup() {
 
             {/* Co-Organizers */}
             <div className="glass-card" style={styles.coOrgSection}>
-              <h3 style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", margin: "0 0 15px" }}>
-                <Users size={20} color="#3b82f6" /> Add Co-Organizers
+              <h3 style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", margin: "0 0 5px" }}>
+                <Users size={20} color="#3b82f6" /> Co-Organizers
               </h3>
-              <p style={{ fontSize: "0.85rem", color: "#94a3b8", marginBottom: "20px" }}>
-                Allow up to 3 trusted members to manage the board with you. Only one organizer can make edits at a time.
+              <p style={{ fontSize: "0.82rem", color: "#64748b", textAlign: "center", marginBottom: "18px" }}>
+                {coOrganizersList.length}/3 slots used · Only one organizer can control the board at a time
               </p>
 
-              <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
-                <input 
-                  className="input-premium" 
+              <div style={{ display: "flex", gap: "10px", marginBottom: "12px" }}>
+                <input
+                  className="input-premium"
                   style={{ flex: 1 }}
                   placeholder="Enter username or email..."
                   value={coOrganizerId}
                   onChange={e => setCoOrganizerId(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && handleAddCoOrganizer()}
                   disabled={coOrganizersList.length >= 3}
                 />
-                <button 
-                  className="btn-premium" 
-                  style={{ padding: "0 20px" }}
+                <button
+                  className="btn-premium"
+                  style={{ padding: "0 20px", opacity: coOrganizersList.length >= 3 || !coOrganizerId ? 0.5 : 1 }}
                   onClick={handleAddCoOrganizer}
                   disabled={coOrganizersList.length >= 3 || !coOrganizerId}
                 >
                   <UserPlus size={18}/>
                 </button>
               </div>
-              {coOrgError && <p style={{ color: "#ef4444", fontSize: "0.8rem", textAlign: "left" }}>{coOrgError}</p>}
+              {coOrgError && <p style={{ color: "#ef4444", fontSize: "0.8rem", textAlign: "left", marginBottom: "10px" }}>{coOrgError}</p>}
 
-              {coOrganizersList.length > 0 && (
+              {/* Co-organizer list with green tick badges */}
+              {coOrganizersList.length > 0 ? (
                 <div style={styles.coOrgList}>
-                  {coOrganizersList.map(u => (
+                  {coOrganizersList.map((u, idx) => (
                     <div key={u._id} style={styles.coOrgItem}>
-                      <span style={{ fontWeight: 600 }}>{u.username}</span>
-                      <button style={styles.removeBtn} onClick={() => handleRemoveCoOrganizer(u._id)}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        {/* Green tick circle */}
+                        <div style={{
+                          width: "28px", height: "28px", borderRadius: "50%",
+                          background: "rgba(16, 185, 129, 0.15)",
+                          border: "2px solid #10b981",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          flexShrink: 0
+                        }}>
+                          <Check size={14} color="#10b981" />
+                        </div>
+                        <div>
+                          <span style={{ fontWeight: 700, color: "#f1f5f9" }}>@{u.username}</span>
+                          <span style={{
+                            marginLeft: "8px", fontSize: "0.72rem", fontWeight: 600,
+                            background: "rgba(16, 185, 129, 0.15)", color: "#10b981",
+                            padding: "2px 8px", borderRadius: "20px", border: "1px solid rgba(16,185,129,0.3)"
+                          }}>Active</span>
+                        </div>
+                      </div>
+                      <button style={styles.removeBtn} onClick={() => handleRemoveCoOrganizer(u._id)} title="Remove co-organizer">
                         <X size={14} />
                       </button>
                     </div>
                   ))}
                 </div>
+              ) : (
+                <div style={{
+                  textAlign: "center", padding: "20px",
+                  border: "1px dashed rgba(255,255,255,0.1)", borderRadius: "8px",
+                  color: "#475569", fontSize: "0.85rem"
+                }}>
+                  No co-organizers added yet. Add up to 3.
+                </div>
               )}
             </div>
+
 
             {/* ACTION CHOICE: Start Live vs Schedule */}
             {!auctionAction && !scheduleSuccess && (

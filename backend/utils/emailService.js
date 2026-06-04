@@ -8,9 +8,9 @@ function createTransporter() {
   const emailUser = process.env.EMAIL_USER;
   const emailPass = process.env.EMAIL_PASS;
 
-  // Guard: if email credentials aren't configured, warn and return null
-  if (!emailUser || !emailPass || emailUser === "your-email@gmail.com") {
-    console.warn("⚠️  Email service not configured — skipping email send. Set EMAIL_USER and EMAIL_PASS in .env");
+  // Guard: skip if credentials are missing
+  if (!emailUser || !emailPass) {
+    console.warn("⚠️  Email service not configured — set EMAIL_USER and EMAIL_PASS in environment variables.");
     return null;
   }
 
