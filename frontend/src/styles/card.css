@@ -1,9 +1,11 @@
 .player-card {
-  background: #0f172a;
+  background: var(--bg-card);
   border-radius: 10px;
   padding: 20px;
   width: 280px;
   margin-top: 20px;
+  border: 1px solid var(--border-light);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
 .player-photo img {
