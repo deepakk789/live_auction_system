@@ -74,7 +74,8 @@ function AuthPage() {
         throw new Error(data.error || "Failed to send reset email");
       }
 
-      setForgotMsg({ type: "success", text: data.message });
+      // In dev mode the backend returns devResetUrl when SMTP is not configured
+      setForgotMsg({ type: "success", text: data.message, devUrl: data.devResetUrl || null });
     } catch (err) {
       setForgotMsg({ type: "error", text: err.stack ? "Backend unavailable" : err.message });
     } finally {
@@ -106,6 +107,17 @@ function AuthPage() {
               ...(forgotMsg.type === "success" ? styles.successBanner : {})
             }}>
               {forgotMsg.text}
+              {forgotMsg.devUrl && (
+                <div style={{ marginTop: "12px", fontSize: "0.8rem", wordBreak: "break-all" }}>
+                  <strong>🔗 Dev Reset Link:</strong>{" "}
+                  <a
+                    href={forgotMsg.devUrl}
+                    style={{ color: "#60a5fa", textDecoration: "underline" }}
+                  >
+                    Click here to reset password
+                  </a>
+                </div>
+              )}
             </div>
           )}
 

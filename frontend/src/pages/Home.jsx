@@ -20,188 +20,188 @@ function Home() {
 
   return (
     <PageTransition>
-    <div style={styles.container} className="home-container stagger-1">
-      
-      {/* Background Glow Orbs */}
-      <div style={styles.glowOrbRight} />
-      <div style={styles.glowOrbLeft} />
+      <div style={styles.container} className="home-container stagger-1">
 
-      {/* Hero Section */}
-      <div style={styles.hero} className="stagger-1">
-        <div style={styles.badge} className="pulse-glow">
-          <Sparkles size={14} style={{ marginRight: '6px' }} />
-          AuctionX 2.0 is Live
-        </div>
+        {/* Background Glow Orbs */}
+        <div style={styles.glowOrbRight} />
+        <div style={styles.glowOrbLeft} />
 
-        <h1 className="home-title" style={styles.title}>
-          The Ultimate <br/>
-          <span className="text-gradient">Auction Orchestration</span> Platform
-        </h1>
-
-        {/* SOLD stamp effect */}
-        {showStamp && (
-          <div className={`hero-sold-stamp ${stampFade ? "stamp-fade-out" : ""}`} style={{ zIndex: 10 }}>
-            <span style={{ fontSize: '1.2rem', display: 'block', letterSpacing: '4px' }}>OFFICIALLY</span>
-            SOLD!
+        {/* Hero Section */}
+        <div style={styles.hero} className="stagger-1">
+          <div style={styles.badge} className="pulse-glow">
+            <Sparkles size={14} style={{ marginRight: '6px' }} />
+            AuctionX 2.0 is Live
           </div>
-        )}
 
-        <p style={styles.subtitle}>
-          Seamlessly manage your players, teams, and live bids with our state-of-the-art interactive dashboard. Built for organizers, trusted by viewers.
-        </p>
+          <h1 className="home-title" style={styles.title}>
+            The Ultimate <br />
+            <span className="text-gradient">Auction Orchestration</span> Platform
+          </h1>
 
-        <div style={styles.btnRow}>
-          <button className="btn-premium" style={{ padding: "18px 40px", fontSize: "1.2rem" }} onClick={() => navigate("/create-auction")}>
-            Organise an Auction ✨
-          </button>
-          <button className="btn-glass" style={{ padding: "18px 40px", fontSize: "1.2rem" }} onClick={() => navigate("/live")}>
-            Join as Viewer →
-          </button>
-        </div>
-      </div>
+          {/* SOLD stamp effect */}
+          {showStamp && (
+            <div className={`hero-sold-stamp ${stampFade ? "stamp-fade-out" : ""}`} style={{ zIndex: 10 }}>
+              <span style={{ fontSize: '1.2rem', display: 'block', letterSpacing: '4px' }}>OFFICIALLY</span>
+              SOLD!
+            </div>
+          )}
 
-      {/* Stats Row */}
-      <div className="home-stats-row stagger-2" style={styles.statsRow}>
-        <BorderGlow className="glass-card feature-card-hover" style={styles.statItem} animated={true} backgroundColor="transparent" fillOpacity={0} borderRadius={24}>
-          <ShieldCheck size={32} color="#10b981" />
-          <span style={styles.statNumber}>Dual</span>
-          <span style={styles.statLabel}>Bidding Modes</span>
-        </BorderGlow>
-        <BorderGlow className="glass-card feature-card-hover" style={styles.statItem} animated={true} backgroundColor="transparent" fillOpacity={0} borderRadius={24}>
-          <Zap size={32} color="#eab308" />
-          <span style={styles.statNumber}>10ms</span>
-          <span style={styles.statLabel}>WebSocket Sync Rate</span>
-        </BorderGlow>
-        <BorderGlow className="glass-card feature-card-hover" style={styles.statItem} animated={true} backgroundColor="transparent" fillOpacity={0} borderRadius={24}>
-          <Users size={32} color="#3b82f6" />
-          <span style={styles.statNumber}>Multi</span>
-          <span style={styles.statLabel}>Organizer Access</span>
-        </BorderGlow>
-      </div>
-
-      {/* Services Provided Section */}
-      <div className="stagger-3" style={{ textAlign: "center", marginTop: "60px" }}>
-        <h2 style={{ fontSize: "2.8rem", fontWeight: 900, marginBottom: "15px", letterSpacing: "-1px" }}>Professional Services</h2>
-        <p style={{ color: "#94a3b8", fontSize: "1.15rem", maxWidth: "650px", margin: "0 auto 50px", lineHeight: "1.6" }}>
-          Everything you need to host a broadcast-quality auction event, packed into an intuitive platform for organizers and bidders alike.
-        </p>
-        
-        <div className="home-features-grid" style={styles.featuresGrid}>
-          {/* Card 1 */}
-          <BorderGlow className="glass-card feature-card-hover" style={styles.featureCard} animated={false} backgroundColor="transparent" fillOpacity={0} borderRadius={24}>
-            <div style={styles.iconBox}><Activity size={24} color="#3b82f6" /></div>
-            <h3 style={styles.cardTitle}>Live Economic Analytics</h3>
-            <p style={styles.cardText}>Track team budgets, see real-time player data, and manage your economy effortlessly as the auction progresses.</p>
-          </BorderGlow>
-          
-          {/* Card 2 */}
-          <BorderGlow className="glass-card feature-card-hover" style={styles.featureCard} animated={false} backgroundColor="transparent" fillOpacity={0} borderRadius={24}>
-            <div style={styles.iconBox}><Zap size={24} color="#eab308" /></div>
-            <h3 style={styles.cardTitle}>Remote Online Bidding</h3>
-            <p style={styles.cardText}>Allow teams to bid directly from their mobile devices with zero latency. Fast, secure, and globally synced over WebSockets.</p>
-          </BorderGlow>
-
-          {/* Card 3 */}
-          <BorderGlow className="glass-card feature-card-hover" style={styles.featureCard} animated={false} backgroundColor="transparent" fillOpacity={0} borderRadius={24}>
-            <div style={styles.iconBox}><Trophy size={24} color="#10b981" /></div>
-            <h3 style={styles.cardTitle}>Co-Organizer Delegation</h3>
-            <p style={styles.cardText}>Invite trusted members to manage the board with you. Our real-time locking system ensures only one admin edits the podium at a time.</p>
-          </BorderGlow>
-
-          {/* Card 4 */}
-          <BorderGlow className="glass-card feature-card-hover" style={styles.featureCard} animated={false} backgroundColor="transparent" fillOpacity={0} borderRadius={24}>
-            <div style={styles.iconBox}><DollarSign size={24} color="#ec4899" /></div>
-            <h3 style={styles.cardTitle}>Automated Failsafes</h3>
-            <p style={styles.cardText}>Smart constraints actively monitor team purses, automatically blocking bids that exceed maximum allowed budgets instantly.</p>
-          </BorderGlow>
-
-          {/* Card 5 */}
-          <BorderGlow className="glass-card feature-card-hover" style={styles.featureCard} animated={false} backgroundColor="transparent" fillOpacity={0} borderRadius={24}>
-            <div style={styles.iconBox}><Server size={24} color="#8b5cf6" /></div>
-            <h3 style={styles.cardTitle}>Persistent Cloud Data</h3>
-            <p style={styles.cardText}>Powered by MongoDB, your auction state is continuously saved. Accidental server restarts or browser crashes? Recover instantly.</p>
-          </BorderGlow>
-
-          {/* Card 6 */}
-          <BorderGlow className="glass-card feature-card-hover" style={styles.featureCard} animated={false} backgroundColor="transparent" fillOpacity={0} borderRadius={24}>
-            <div style={styles.iconBox}><PlayCircle size={24} color="#f97316" /></div>
-            <h3 style={styles.cardTitle}>Broadcast-Ready Interface</h3>
-            <p style={styles.cardText}>Dedicated spectator views ensure audiences and managers receive beautiful, distraction-free visual updates as the action unfolds.</p>
-          </BorderGlow>
-        </div>
-      </div>
-
-      {/* How it works Section */}
-      <div className="stagger-4 glass-panel home-how-it-works" style={styles.howItWorksBox}>
-        <div style={{ textAlign: "center", marginBottom: "50px" }}>
-          <h2 style={{ fontSize: "2.8rem", fontWeight: 900, marginBottom: "15px", letterSpacing: "-1px" }}>From Setup to <span className="text-gradient-success">Sold</span></h2>
-          <p style={{ color: "#94a3b8", fontSize: "1.15rem", maxWidth: "600px", margin: "0 auto", lineHeight: "1.6" }}>
-            A fast overview of how the auction orchestrates from start to finish, empowering organizers with maximum control.
+          <p style={styles.subtitle}>
+            Seamlessly manage your players, teams, and live bids with our state-of-the-art interactive dashboard. Built for organizers, trusted by viewers.
           </p>
+
+          <div style={styles.btnRow}>
+            <button className="btn-premium" style={{ padding: "18px 40px", fontSize: "1.2rem" }} onClick={() => navigate("/create-auction")}>
+              Organise an Auction ✨
+            </button>
+            <button className="btn-glass" style={{ padding: "18px 40px", fontSize: "1.2rem" }} onClick={() => navigate("/live")}>
+              Join as Viewer →
+            </button>
+          </div>
         </div>
 
-        <div className="home-timeline-grid" style={styles.timelineGrid}>
-          {/* Step 1 */}
-          <div style={styles.stepCard} className="glass-card feature-card-hover">
-            <div style={styles.stepNumber}>1</div>
-            <Settings size={36} color="#3b82f6" style={{ marginBottom: "20px" }} />
-            <h4 style={styles.stepTitle}>Configure Rules</h4>
-            <p style={styles.stepDesc}>The organizer sets the number of teams, maximum starting budgets, and decides between Manual or Online bidding.</p>
-          </div>
-          {/* Step 2 */}
-          <div style={styles.stepCard} className="glass-card feature-card-hover">
-            <div style={styles.stepNumber}>2</div>
-            <FileText size={36} color="#8b5cf6" style={{ marginBottom: "20px" }} />
-            <h4 style={styles.stepTitle}>Build Roster</h4>
-            <p style={styles.stepDesc}>Populate the player pool effortlessly. Upload names and base prices directly into the upcoming platform queue.</p>
-          </div>
-          {/* Step 3 */}
-          <div style={styles.stepCard} className="glass-card feature-card-hover">
-            <div style={styles.stepNumber}>3</div>
-            <Zap size={36} color="#eab308" style={{ marginBottom: "20px" }} />
-            <h4 style={styles.stepTitle}>Run the Podium</h4>
-            <p style={styles.stepDesc}>Go Live! A player is brought up. Teams aggressively bid using connected devices until the highest bid is legally locked.</p>
-          </div>
-          {/* Step 4 */}
-          <div style={styles.stepCard} className="glass-card feature-card-hover">
-            <div style={styles.stepNumber}>4</div>
-            <CheckCircle size={36} color="#10b981" style={{ marginBottom: "20px" }} />
-            <h4 style={styles.stepTitle}>Transfer & Archive</h4>
-            <p style={styles.stepDesc}>The organizer drops the hammer. The player is marked SOLD, budget is safely deducted, and real-time ledgers are instantly archived.</p>
-          </div>
+        {/* Stats Row */}
+        <div className="home-stats-row stagger-2" style={styles.statsRow}>
+          <BorderGlow className="glass-card feature-card-hover" style={styles.statItem} animated={true} backgroundColor="transparent" fillOpacity={0} borderRadius={24}>
+            <ShieldCheck size={32} color="#10b981" />
+            <span style={styles.statNumber}>Dual</span>
+            <span style={styles.statLabel}>Bidding Modes</span>
+          </BorderGlow>
+          <BorderGlow className="glass-card feature-card-hover" style={styles.statItem} animated={true} backgroundColor="transparent" fillOpacity={0} borderRadius={24}>
+            <Zap size={32} color="#eab308" />
+            <span style={styles.statNumber}>10ms</span>
+            <span style={styles.statLabel}>WebSocket Sync Rate</span>
+          </BorderGlow>
+          <BorderGlow className="glass-card feature-card-hover" style={styles.statItem} animated={true} backgroundColor="transparent" fillOpacity={0} borderRadius={24}>
+            <Users size={32} color="#3b82f6" />
+            <span style={styles.statNumber}>Multi</span>
+            <span style={styles.statLabel}>Organizer Access</span>
+          </BorderGlow>
         </div>
-      </div>
 
-      {/* About & Contact Section */}
-      <div className="stagger-4 glass-card home-footer-layout" style={styles.footerLayout}>
-        <div style={styles.footerSection}>
-          <h3 style={{ fontSize: "1.5rem", color: "#fff", display: "flex", alignItems: "center", gap: "10px", fontWeight: "900", marginBottom: "20px" }}>
-            <Sparkles size={22} color="#3b82f6"/> About AuctionX
-          </h3>
-          <p style={{ color: "#94a3b8", lineHeight: "1.7", fontSize: "1.05rem" }}>
-            AuctionX is crafted for tech enthusiasts and event managers seeking to revolutionize how sports drafts, corporate bidding, and professional auctions are hosted. We blend broadcast-quality design with ultra-low latency technology to guarantee an unforgettable experience.
+        {/* Services Provided Section */}
+        <div className="stagger-3" style={{ textAlign: "center", marginTop: "60px" }}>
+          <h2 style={{ fontSize: "2.8rem", fontWeight: 900, marginBottom: "15px", letterSpacing: "-1px" }}>Professional Services</h2>
+          <p style={{ color: "#94a3b8", fontSize: "1.15rem", maxWidth: "650px", margin: "0 auto 50px", lineHeight: "1.6" }}>
+            Everything you need to host a broadcast-quality auction event, packed into an intuitive platform for organizers and bidders alike.
           </p>
-        </div>
 
-        <div style={styles.footerSection}>
-          <h3 style={{ fontSize: "1.5rem", color: "#fff", display: "flex", alignItems: "center", gap: "10px", fontWeight: "900", marginBottom: "20px" }}>
-            <MessageSquare size={22} color="#10b981"/> Contact & Support
-          </h3>
-          <p style={{ color: "#94a3b8", lineHeight: "1.7", fontSize: "1.05rem", marginBottom: "20px" }}>
-            Need help configuring a custom event or facing access issues? Contact our engineering team.
-          </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            <a href="mailto:support@auctionx.com" style={styles.contactLink}><Mail size={18}/> support@auctionx.com</a>
+          <div className="home-features-grid" style={styles.featuresGrid}>
+            {/* Card 1 */}
+            <BorderGlow className="glass-card feature-card-hover" style={styles.featureCard} animated={false} backgroundColor="transparent" fillOpacity={0} borderRadius={24}>
+              <div style={styles.iconBox}><Activity size={24} color="#3b82f6" /></div>
+              <h3 style={styles.cardTitle}>Live Economic Analytics</h3>
+              <p style={styles.cardText}>Track team budgets, see real-time player data, and manage your economy effortlessly as the auction progresses.</p>
+            </BorderGlow>
+
+            {/* Card 2 */}
+            <BorderGlow className="glass-card feature-card-hover" style={styles.featureCard} animated={false} backgroundColor="transparent" fillOpacity={0} borderRadius={24}>
+              <div style={styles.iconBox}><Zap size={24} color="#eab308" /></div>
+              <h3 style={styles.cardTitle}>Remote Online Bidding</h3>
+              <p style={styles.cardText}>Allow teams to bid directly from their mobile devices with zero latency. Fast, secure, and globally synced over WebSockets.</p>
+            </BorderGlow>
+
+            {/* Card 3 */}
+            <BorderGlow className="glass-card feature-card-hover" style={styles.featureCard} animated={false} backgroundColor="transparent" fillOpacity={0} borderRadius={24}>
+              <div style={styles.iconBox}><Trophy size={24} color="#10b981" /></div>
+              <h3 style={styles.cardTitle}>Co-Organizer Delegation</h3>
+              <p style={styles.cardText}>Invite trusted members to manage the board with you. Our real-time locking system ensures only one admin edits the podium at a time.</p>
+            </BorderGlow>
+
+            {/* Card 4 */}
+            <BorderGlow className="glass-card feature-card-hover" style={styles.featureCard} animated={false} backgroundColor="transparent" fillOpacity={0} borderRadius={24}>
+              <div style={styles.iconBox}><DollarSign size={24} color="#ec4899" /></div>
+              <h3 style={styles.cardTitle}>Automated Failsafes</h3>
+              <p style={styles.cardText}>Smart constraints actively monitor team purses, automatically blocking bids that exceed maximum allowed budgets instantly.</p>
+            </BorderGlow>
+
+            {/* Card 5 */}
+            <BorderGlow className="glass-card feature-card-hover" style={styles.featureCard} animated={false} backgroundColor="transparent" fillOpacity={0} borderRadius={24}>
+              <div style={styles.iconBox}><Server size={24} color="#8b5cf6" /></div>
+              <h3 style={styles.cardTitle}>Persistent Cloud Data</h3>
+              <p style={styles.cardText}>Powered by MongoDB, your auction state is continuously saved. Accidental server restarts or browser crashes? Recover instantly.</p>
+            </BorderGlow>
+
+            {/* Card 6 */}
+            <BorderGlow className="glass-card feature-card-hover" style={styles.featureCard} animated={false} backgroundColor="transparent" fillOpacity={0} borderRadius={24}>
+              <div style={styles.iconBox}><PlayCircle size={24} color="#f97316" /></div>
+              <h3 style={styles.cardTitle}>Broadcast-Ready Interface</h3>
+              <p style={styles.cardText}>Dedicated spectator views ensure audiences and managers receive beautiful, distraction-free visual updates as the action unfolds.</p>
+            </BorderGlow>
           </div>
         </div>
-      </div>
-      
-      {/* Absolute Bottom Footer text */}
-      <div style={{ textAlign: "center", color: "#475569", padding: "30px 0 10px", marginTop: "30px", borderTop: "1px solid rgba(255,255,255,0.05)"}}>
-        <p style={{ fontWeight: 600 }}>&copy; {new Date().getFullYear()} AuctionX Orchestration. All rights reserved.</p>
-      </div>
 
-    </div>
+        {/* How it works Section */}
+        <div className="stagger-4 glass-panel home-how-it-works" style={styles.howItWorksBox}>
+          <div style={{ textAlign: "center", marginBottom: "50px" }}>
+            <h2 style={{ fontSize: "2.8rem", fontWeight: 900, marginBottom: "15px", letterSpacing: "-1px" }}>From Setup to <span className="text-gradient-success">Sold</span></h2>
+            <p style={{ color: "#94a3b8", fontSize: "1.15rem", maxWidth: "600px", margin: "0 auto", lineHeight: "1.6" }}>
+              A fast overview of how the auction orchestrates from start to finish, empowering organizers with maximum control.
+            </p>
+          </div>
+
+          <div className="home-timeline-grid" style={styles.timelineGrid}>
+            {/* Step 1 */}
+            <div style={styles.stepCard} className="glass-card feature-card-hover">
+              <div style={styles.stepNumber}>1</div>
+              <Settings size={36} color="#3b82f6" style={{ marginBottom: "20px" }} />
+              <h4 style={styles.stepTitle}>Configure Rules</h4>
+              <p style={styles.stepDesc}>The organizer sets the number of teams, maximum starting budgets, and decides between Manual or Online bidding.</p>
+            </div>
+            {/* Step 2 */}
+            <div style={styles.stepCard} className="glass-card feature-card-hover">
+              <div style={styles.stepNumber}>2</div>
+              <FileText size={36} color="#8b5cf6" style={{ marginBottom: "20px" }} />
+              <h4 style={styles.stepTitle}>Build Roster</h4>
+              <p style={styles.stepDesc}>Populate the player pool effortlessly. Upload names and base prices directly into the upcoming platform queue.</p>
+            </div>
+            {/* Step 3 */}
+            <div style={styles.stepCard} className="glass-card feature-card-hover">
+              <div style={styles.stepNumber}>3</div>
+              <Zap size={36} color="#eab308" style={{ marginBottom: "20px" }} />
+              <h4 style={styles.stepTitle}>Run the Podium</h4>
+              <p style={styles.stepDesc}>Go Live! A player is brought up. Teams aggressively bid using connected devices until the highest bid is legally locked.</p>
+            </div>
+            {/* Step 4 */}
+            <div style={styles.stepCard} className="glass-card feature-card-hover">
+              <div style={styles.stepNumber}>4</div>
+              <CheckCircle size={36} color="#10b981" style={{ marginBottom: "20px" }} />
+              <h4 style={styles.stepTitle}>Transfer & Archive</h4>
+              <p style={styles.stepDesc}>The organizer drops the hammer. The player is marked SOLD, budget is safely deducted, and real-time ledgers are instantly archived.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* About & Contact Section */}
+        <div className="stagger-4 glass-card home-footer-layout" style={styles.footerLayout}>
+          <div style={styles.footerSection}>
+            <h3 style={{ fontSize: "1.5rem", color: "#fff", display: "flex", alignItems: "center", gap: "10px", fontWeight: "900", marginBottom: "20px" }}>
+              <Sparkles size={22} color="#3b82f6" /> About AuctionX
+            </h3>
+            <p style={{ color: "#94a3b8", lineHeight: "1.7", fontSize: "1.05rem" }}>
+              AuctionX is crafted for tech enthusiasts and event managers seeking to revolutionize how sports drafts, corporate bidding, and professional auctions are hosted. We blend broadcast-quality design with ultra-low latency technology to guarantee an unforgettable experience.
+            </p>
+          </div>
+
+          <div style={styles.footerSection}>
+            <h3 style={{ fontSize: "1.5rem", color: "#fff", display: "flex", alignItems: "center", gap: "10px", fontWeight: "900", marginBottom: "20px" }}>
+              <MessageSquare size={22} color="#10b981" /> Contact & Support
+            </h3>
+            <p style={{ color: "#94a3b8", lineHeight: "1.7", fontSize: "1.05rem", marginBottom: "20px" }}>
+              Need help configuring a custom event or facing access issues? Contact our engineering team.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <a href="mailto:support@auctionx.com" style={styles.contactLink}><Mail size={18} /> support@auctionx.com</a>
+            </div>
+          </div>
+        </div>
+
+        {/* Absolute Bottom Footer text */}
+        <div style={{ textAlign: "center", color: "#475569", padding: "30px 0 10px", marginTop: "30px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+          <p style={{ fontWeight: 600 }}>&copy; {new Date().getFullYear()} AuctionX Orchestration. All rights reserved.</p>
+        </div>
+
+      </div>
     </PageTransition>
   );
 }

@@ -4,13 +4,28 @@ const nodemailer = require("nodemailer");
  * Create a reusable transporter.
  * Defaults to Gmail; override via EMAIL_HOST/EMAIL_PORT env vars.
  */
+/** Check whether the credential looks like a real value vs. a placeholder */
+function isPlaceholder(value) {
+  if (!value) return true;
+  const lower = value.toLowerCase();
+  return (
+    lower.includes("your-") ||
+    lower.includes("your_") ||
+    lower.includes("replace_") ||
+    lower === "your-email@gmail.com" ||
+    lower === "your_gmail_address@gmail.com" ||
+    lower === "your-app-password" ||
+    lower === "your_gmail_app_password_here"
+  );
+}
+
 function createTransporter() {
   const emailUser = process.env.EMAIL_USER;
   const emailPass = process.env.EMAIL_PASS;
 
-  // Guard: skip if credentials are missing
-  if (!emailUser || !emailPass) {
-    console.warn("⚠️  Email service not configured — set EMAIL_USER and EMAIL_PASS in environment variables.");
+  // Guard: skip if credentials are missing OR are still the example placeholders
+  if (isPlaceholder(emailUser) || isPlaceholder(emailPass)) {
+    console.warn("⚠️  Email service not configured — set real EMAIL_USER and EMAIL_PASS in .env");
     return null;
   }
 
@@ -30,9 +45,13 @@ async function sendResetEmail(toEmail, resetToken) {
   const transporter = createTransporter();
 
   if (!transporter) {
-    console.warn(`📧 Password reset requested for ${toEmail}. Reset token: ${resetToken}`);
-    console.warn(`   (Email not sent — configure EMAIL_USER/EMAIL_PASS in .env to enable)`);
-    return; // Don't throw — gracefully skip
+    // Dev fallback: log the reset link to console so developers can still test the flow
+    const devFrontend = process.env.FRONTEND_URL || "http://localhost:5173";
+    const devLink = `${devFrontend}/reset-password/${resetToken}`;
+    console.warn(`📧 [DEV] Password reset link for ${toEmail}:`);
+    console.warn(`   ${devLink}`);
+    console.warn(`   (Email not sent — set real EMAIL_USER/EMAIL_PASS in .env to enable SMTP)`);
+    return; // Don't throw — gracefully skip in dev
   }
 
   const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
@@ -74,7 +93,9 @@ async function sendResetEmail(toEmail, resetToken) {
     `
   };
 
+  // Let SMTP errors propagate — the caller (auth route) catches and logs them
   await transporter.sendMail(mailOptions);
+  console.log(`✅ Password reset email sent to ${toEmail}`);
 }
 
 module.exports = { sendResetEmail };

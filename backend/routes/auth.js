@@ -175,12 +175,28 @@ router.post("/forgot-password", async (req, res, next) => {
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
     await user.save();
 
-    // Send email
+    // Attempt to send email — capture whether it was actually sent
+    let emailSent = false;
     try {
       await sendResetEmail(user.email, resetToken);
+      emailSent = true;
     } catch (emailErr) {
-      console.error("Email send error:", emailErr.message);
-      // Don't fail the request — token is saved; user can retry
+      // SMTP authentication or network failure — log clearly but don't crash
+      console.error("❌ SMTP send failure:", emailErr.message);
+      console.error("   Make sure EMAIL_USER/EMAIL_PASS in .env are real Gmail credentials with an App Password.");
+    }
+
+    // In development (email not configured), expose the reset URL in the response
+    // so developers can test the full flow without needing a mail server.
+    const isDev = process.env.NODE_ENV !== "production";
+    if (isDev && !emailSent) {
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+      const devResetUrl = `${frontendUrl}/reset-password/${resetToken}`;
+      console.warn(`\n🔗 [DEV] Use this link to reset password for ${user.email}:\n   ${devResetUrl}\n`);
+      return res.json({
+        message: "Email not configured — use the devResetUrl below to test the reset flow.",
+        devResetUrl
+      });
     }
 
     res.json({ message: "If an account with that email exists, a reset link has been sent." });

@@ -165,3 +165,108 @@ Your `design-system.css` with CSS custom properties, glassmorphism, conic-gradie
 | "Is Tailwind the same as Vanilla CSS?" | No — they are opposites. Tailwind is a framework; Vanilla = no framework |
 | "Do I need to switch?" | No. Your plain CSS approach is strong and shows real CSS skill |
 | "Is Vanilla CSS same as Vanilla JS?" | No — completely different. One is CSS, one is JavaScript |
+
+---
+
+---
+
+## Q4. I wrote 29 automated tests — how do I explain this confidently in an interview?
+
+### Is 29 tests good for a fresher?
+
+**Yes — it's above average.** Most fresher projects have zero tests. Writing 29 shows you know:
+- What automated testing is
+- How to use a real testing framework (Jest + Supertest)
+- CI-safe development discipline (run tests before every deployment)
+
+---
+
+### What is Jest?
+
+**Jest** is a JavaScript **testing framework** by Meta (Facebook).
+
+- `describe("group name", () => {})` → groups related tests together
+- `it("what it should do", () => {})` or `test(...)` → a single test case
+- `expect(value).toBe(...)` / `.toEqual(...)` / `.toHaveLength(...)` → assertions (checks)
+
+**Interview answer:** *"Jest is the test runner — it finds all my `*.test.js` files, runs them, and reports which ones pass or fail."*
+
+---
+
+### What is Supertest?
+
+**Supertest** is a library that lets you make real HTTP requests to your Express app **without starting a server**.
+
+```js
+// Example
+const request = require("supertest");
+const app = require("../server");
+
+test("POST /api/auth/login → 401 for wrong password", async () => {
+  const res = await request(app)
+    .post("/api/auth/login")
+    .send({ email: "test@test.com", password: "wrongpassword" });
+
+  expect(res.status).toBe(401);
+});
+```
+
+**Interview answer:** *"Supertest lets me test my REST API endpoints directly — I send real HTTP requests to my Express app and assert the response status and body without deploying anywhere."*
+
+---
+
+### What do YOUR 29 tests cover?
+
+Open `backend/tests/auth.test.js` and `backend/tests/auction.test.js` and read each test. They likely cover:
+
+| Area | What is tested |
+|---|---|
+| **Auth flows** | Register, login, wrong password, missing fields, protected route access with/without token |
+| **Auction CRUD** | Create auction, get all auctions, get by ID, update, delete |
+| **Search** | Filter auctions by name/status |
+| **State transitions** | UPCOMING → LIVE → ENDED lifecycle changes |
+
+---
+
+### What is "zero-regression"?
+
+**Regression** = a bug introduced when you change existing code.  
+**Zero-regression** = no regressions happened — meaning old things still work after new changes.
+
+**Interview answer:** *"Every time I added a feature or changed code, I ran the full test suite. If all 29 tests still passed, I knew I hadn't broken anything that worked before. That's what zero-regression means."*
+
+---
+
+### How do you run the tests?
+
+```bash
+cd backend
+npm test
+# Jest automatically finds all *.test.js files and runs them
+```
+
+---
+
+### Likely Interview Questions + Ready Answers
+
+| Question | Your Answer |
+|---|---|
+| *What is unit vs integration testing?* | Unit = test one function in isolation. Integration = test multiple layers together (my API + DB). My Supertest tests are integration tests. |
+| *Why did you write tests?* | To catch regressions — when I added new features, tests told me immediately if I broke existing flows. |
+| *How do you run your tests?* | `npm test` — Jest picks up all `*.test.js` files automatically. |
+| *What is a mock?* | Replacing a real dependency (like a DB) with a fake one in tests to isolate what you're testing. |
+| *Did all 29 pass?* | Yes — I made sure the full suite was green before every deployment. |
+| *What does Supertest do?* | It lets me make HTTP requests to my Express app in tests without starting a real server. |
+
+---
+
+### One-Day Study Plan
+
+| Time | Task |
+|---|---|
+| Morning (1–1.5 hrs) | Read Jest basics: `describe`, `it`, `expect` — jest.io/docs |
+| Afternoon (1 hr) | Read Supertest docs — github.com/ladjs/supertest |
+| Afternoon (2 hrs) | Open your own test files, read every test, understand what each one asserts |
+| Evening (30 min) | Answer the table above out loud to yourself |
+
+**You already wrote the code — you're not learning from scratch. You're just understanding what you built.**
