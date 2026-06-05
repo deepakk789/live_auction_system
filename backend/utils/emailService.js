@@ -50,9 +50,12 @@ function createTransporter() {
     console.warn("⚠️ Email service not configured");
     return null;
   }
-
+  console.log("SMTP CONFIG: Gmail 587 STARTTLS");
   return nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false,
+    requireTLS: true,
     auth: {
       user: emailUser,
       pass: emailPass,
