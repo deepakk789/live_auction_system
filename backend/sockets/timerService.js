@@ -34,7 +34,7 @@ const startOnlineTimer = (auctionId, initialSeconds, io) => {
         if (!currentPlayer || currentPlayer.status === "SOLD" || currentPlayer.status === "UNSOLD") return;
 
         if (currentPlayer.currentBidder) {
-          // ── AUTO-SELL ──────────────────────────────────────
+          // AUTO-SELL
           const winningTeam = currentPlayer.currentBidder;
           const soldPrice = currentPlayer.currentBid;
 
@@ -60,7 +60,7 @@ const startOnlineTimer = (auctionId, initialSeconds, io) => {
             soldPrice,
           });
         } else {
-          // ── AUTO-UNSOLD ─────────────────────────────────────
+          // AUTO-UNSOLD
           currentPlayer.status = "UNSOLD";
           await currentPlayer.save();
 
@@ -70,7 +70,7 @@ const startOnlineTimer = (auctionId, initialSeconds, io) => {
           });
         }
 
-        // ── AUTO-ADVANCE ────────────────────────────────────
+        // AUTO-ADVANCE
         setTimeout(() => advanceToNextPlayer(auctionId, io), 3000);
       } catch (err) {
         logger.error(`Auto-sell error [auction ${auctionId}]: ${err.message}`);

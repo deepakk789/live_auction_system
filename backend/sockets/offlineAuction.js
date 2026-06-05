@@ -8,7 +8,7 @@ const logger = require("../utils/logger");
  */
 const registerOfflineAuctionEvents = (io, socket) => {
 
-  // ── Forward player / state updates scoped by auctionId ──────────
+  // Forward player / state updates scoped by auctionId
   socket.on("auction_update", async (data) => {
     const room = data.auctionId ? `auction_${data.auctionId}` : null;
 
@@ -39,7 +39,7 @@ const registerOfflineAuctionEvents = (io, socket) => {
     }
   });
 
-  // ── Auction state change ─────────────────────────────────────────
+  // Auction state change
   socket.on("auction_state", async ({ auctionId, state }) => {
     if (auctionId) {
       socket.to(`auction_${auctionId}`).emit("auction_state", state);
@@ -53,7 +53,7 @@ const registerOfflineAuctionEvents = (io, socket) => {
     }
   });
 
-  // ── Auction config sync ──────────────────────────────────────────
+  // Auction config sync
   socket.on("auction_config", async ({ auctionId, ...config }) => {
     if (auctionId) {
       socket.to(`auction_${auctionId}`).emit("auction_config", config);
@@ -69,7 +69,7 @@ const registerOfflineAuctionEvents = (io, socket) => {
     }
   });
 
-  // ── Teams state sync ─────────────────────────────────────────────
+  // Teams state sync
   socket.on("teams_update", async ({ auctionId, teams }) => {
     if (auctionId) {
       socket.to(`auction_${auctionId}`).emit("teams_update", teams);
@@ -94,7 +94,7 @@ const registerOfflineAuctionEvents = (io, socket) => {
     }
   });
 
-  // ── Max bid cap update ───────────────────────────────────────────
+  // Max bid cap update
   socket.on("max_bid_update", async ({ auctionId, value }) => {
     if (auctionId) {
       socket.to(`auction_${auctionId}`).emit("max_bid_update", value);
@@ -108,21 +108,21 @@ const registerOfflineAuctionEvents = (io, socket) => {
     }
   });
 
-  // ── Organizer lock state ─────────────────────────────────────────
+  // Organizer lock state
   socket.on("organizer_lock_change", ({ auctionId, activeOrganizer }) => {
     if (auctionId) {
       socket.to(`auction_${auctionId}`).emit("organizer_lock_change", { activeOrganizer });
     }
   });
 
-  // ── Viewer bid relay (offline mode) ─────────────────────────────
+  // Viewer bid relay (offline mode)
   socket.on("viewer_bid", ({ auctionId, teamName, amount }) => {
     if (auctionId) {
       io.to(`auction_${auctionId}`).emit("viewer_bid_received", { teamName, amount });
     }
   });
 
-  // ── Full state sync log (organizer sends on reconnect) ──────────
+  // Full state sync log (organizer sends on reconnect)
   socket.on("sync_full_state", ({ auctionId }) => {
     logger.debug(`Full state sync received from organizer for auction ${auctionId || "global"}`);
   });

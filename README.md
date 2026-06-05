@@ -1,4 +1,4 @@
-# ⚡ AuctionX — Live Auction Orchestration Platform
+# AuctionX — Live Auction Orchestration Platform
 
 > A full-stack real-time auction platform supporting concurrent multi-auction sessions, dual bidding modes, JWT authentication, and WebSocket-powered live synchronization.
 
@@ -10,18 +10,18 @@
 
 ---
 
-## 🔗 Live Demo
+## Live Demo
 
 | Service | URL |
 |---|---|
-| 🌐 Frontend | *(Add your Vercel URL here)* |
-| 🛠️ Backend API | *(Add your Render URL here)* |
+|  Frontend | *(Add your Vercel URL here)* |
+|  Backend API | *(Add your Render URL here)* |
 
 ---
 
-## ✨ Features
+## Features
 
-### 🎯 Core Auction Features
+### Core Auction Features
 - **Dual Bidding Modes** — Offline (organizer-controlled) & Online (distributed team bidding)
 - **Real-time WebSocket Sync** — All connected clients see bid updates in under 10ms
 - **Auto-Sell on Timer** — When countdown hits 0, highest bidder automatically wins
@@ -29,20 +29,20 @@
 - **Disconnect-Pause** — If a team manager disconnects during ONLINE mode, auction pauses until they reconnect
 - **RANDOM / MANUAL player selection** — Organizer controls order or randomizes
 
-### 👥 Multi-User System
+### Multi-User System
 - **JWT Authentication** — Secure login, register, and token-based session
 - **Forgot Password** — Email-based password reset with 1-hour expiry token
 - **Co-Organizer Support** — Up to 3 co-organizers per auction with real-time locking
 - **Team Manager Dashboard** — Teams bid independently with their own live view
 - **Viewer Mode** — Read-only spectator page for audience members
 
-### 📊 Analytics & History
+### Analytics & History
 - **Post-Auction Snapshots** — Every ended auction archives full team + player data to MongoDB
 - **Analytics Dashboard** — Charts for budget used, sold vs unsold, team composition
 - **Past Auctions Page** — Browse, search, and filter all completed auctions
 - **Upcoming Auctions Page** — Schedule future auctions with date/time
 
-### 🔧 Organizer Controls
+### Organizer Controls
 - **Auction Setup** — Configure team count, starting budget, bid increments
 - **Excel / CSV Upload** — Import player roster directly via `.xlsx` file
 - **Organizer Lock** — Only one organizer can control the podium at a time
@@ -51,7 +51,7 @@
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Frontend
 | Technology | Purpose |
@@ -78,7 +78,7 @@
 
 ---
 
-## 🏗️ Project Structure
+## Project Structure
 
 ```
 auction_system/
@@ -123,7 +123,7 @@ auction_system/
 
 ---
 
-## ⚙️ Local Setup
+## Local Setup
 
 ### Prerequisites
 - Node.js v18+
@@ -173,7 +173,7 @@ Frontend runs at: `http://localhost:5173`
 
 ---
 
-## 🔌 Key API Endpoints
+## Key API Endpoints
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -190,7 +190,7 @@ Frontend runs at: `http://localhost:5173`
 
 ---
 
-## 📡 Socket.IO Events
+## Socket.IO Events
 
 | Event | Direction | Description |
 |---|---|---|
@@ -205,7 +205,7 @@ Frontend runs at: `http://localhost:5173`
 
 ---
 
-## 🚀 Deployment
+## Deployment
 
 | Service | Platform |
 |---|---|
@@ -215,13 +215,13 @@ Frontend runs at: `http://localhost:5173`
 
 ---
 
-## 👨‍💻 Author
+## Author
 
 **Deepak Singh**
 - Built as a full-stack engineering project demonstrating real-time systems, multi-user authentication, and persistent state management.
 
 ---
 
-## 📄 License
+## License
 
 MIT License — feel free to fork and use for your own events.

@@ -13,7 +13,7 @@ const request = require("supertest");
 const mongoose = require("mongoose");
 const { app } = require("../server");
 
-// ── Helpers ────────────────────────────────────────────────────────
+// Helpers
 let authToken = "";
 let testAuctionId = "";
 const testUser = {
@@ -22,7 +22,7 @@ const testUser = {
   password: "Password123",
 };
 
-// ── Setup & Teardown ───────────────────────────────────────────────
+// Setup & Teardown
 beforeAll(async () => {
   await new Promise((resolve) => setTimeout(resolve, 2000));
 
@@ -45,7 +45,7 @@ afterAll(async () => {
   await mongoose.connection.close();
 });
 
-// ── INIT AUCTION ───────────────────────────────────────────────────
+// INIT AUCTION
 describe("POST /api/auction/init", () => {
   it("should create a new auction with valid data", async () => {
     const res = await request(app)
@@ -81,7 +81,7 @@ describe("POST /api/auction/init", () => {
   });
 });
 
-// ── SYNC STATE ─────────────────────────────────────────────────────
+// SYNC STATE
 describe("GET /api/auction/:auctionId/sync", () => {
   it("should return full auction state for a valid auctionId", async () => {
     const res = await request(app).get(`/api/auction/${testAuctionId}/sync`);
@@ -99,7 +99,7 @@ describe("GET /api/auction/:auctionId/sync", () => {
   });
 });
 
-// ── LIST AUCTIONS ──────────────────────────────────────────────────
+// LIST AUCTIONS
 describe("GET /api/auction/list", () => {
   it("should return an array of auctions", async () => {
     const res = await request(app).get("/api/auction/list");
@@ -109,7 +109,7 @@ describe("GET /api/auction/list", () => {
   });
 });
 
-// ── SEARCH AUCTION ─────────────────────────────────────────────────
+// SEARCH AUCTION
 describe("GET /api/auction/search", () => {
   it("should find auction by name", async () => {
     const res = await request(app).get("/api/auction/search?q=Test+Cricket+Auction");
@@ -132,7 +132,7 @@ describe("GET /api/auction/search", () => {
   });
 });
 
-// ── END AUCTION ────────────────────────────────────────────────────
+// END AUCTION
 describe("POST /api/auction/end", () => {
   it("should end the auction and archive it", async () => {
     const res = await request(app)
@@ -160,7 +160,7 @@ describe("POST /api/auction/end", () => {
   });
 });
 
-// ── ANALYTICS ─────────────────────────────────────────────────────
+// ANALYTICS
 describe("GET /api/auction/:id/analytics", () => {
   it("should return analytics for an ended auction", async () => {
     const res = await request(app).get(`/api/auction/${testAuctionId}/analytics`);

@@ -12,7 +12,7 @@ const managerConnections = new Map();
  */
 const registerOnlineAuctionEvents = (io, socket) => {
 
-  // ── ORGANIZER: Start online auction ──────────────────────────────
+  // ORGANIZER: Start online auction
   socket.on("start_online_auction", async ({ auctionId }) => {
     if (!auctionId) return;
     try {
@@ -44,7 +44,7 @@ const registerOnlineAuctionEvents = (io, socket) => {
     }
   });
 
-  // ── TEAM: Place a bid ────────────────────────────────────────────
+  // TEAM: Place a bid
   socket.on("online_bid", async ({ auctionId, teamName, amount }) => {
     if (!auctionId || !teamName || !amount) return;
 
@@ -91,7 +91,7 @@ const registerOnlineAuctionEvents = (io, socket) => {
     }
   });
 
-  // ── ORGANIZER: Queue next player ─────────────────────────────────
+  // ORGANIZER: Queue next player
   socket.on("organizer_set_player", async ({ auctionId, playerIndex }) => {
     if (!auctionId || playerIndex === undefined) return;
     try {
@@ -113,7 +113,7 @@ const registerOnlineAuctionEvents = (io, socket) => {
     }
   });
 
-  // ── ORGANIZER: Force skip player ─────────────────────────────────
+  // ORGANIZER: Force skip player
   socket.on("organizer_skip_player", async ({ auctionId }) => {
     if (!auctionId) return;
     try {
@@ -143,7 +143,7 @@ const registerOnlineAuctionEvents = (io, socket) => {
     }
   });
 
-  // ── TEAM MANAGER: Join lobby ─────────────────────────────────────
+  // TEAM MANAGER: Join lobby
   socket.on("manager_join", async ({ auctionId, teamName }) => {
     if (!auctionId || !teamName) return;
     managerConnections.set(socket.id, { auctionId, teamName });
@@ -192,7 +192,7 @@ const registerOnlineAuctionEvents = (io, socket) => {
     }
   });
 
-  // ── TEAM MANAGER: Disconnect handling ───────────────────────────
+  // TEAM MANAGER: Disconnect handling
   socket.on("disconnect", async () => {
     const mConn = managerConnections.get(socket.id);
     if (!mConn) return;

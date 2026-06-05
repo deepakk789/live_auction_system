@@ -10,7 +10,7 @@ const { registerOfflineAuctionEvents } = require("./offlineAuction");
  *  - Delegated event handlers for online and offline auction modes
  */
 const initSockets = (io) => {
-  // ── Socket JWT auth middleware ─────────────────────────────────
+  // Socket JWT auth middleware
   // Attaches socket.user if a valid token is provided.
   // Anonymous sockets (viewers, etc.) are still allowed to connect.
   io.use((socket, next) => {
@@ -30,7 +30,7 @@ const initSockets = (io) => {
   io.on("connection", (socket) => {
     logger.debug(`Client connected: ${socket.id}${socket.user ? ` (${socket.user.username})` : " (anonymous)"}`);
 
-    // ── Room management ──────────────────────────────────────────
+    // Room management
     socket.on("join_auction", ({ auctionId }) => {
       if (!auctionId) return;
       socket.join(`auction_${auctionId}`);
@@ -65,7 +65,7 @@ const initSockets = (io) => {
       }
     });
 
-    // ── Delegate to mode-specific handlers ──────────────────────
+    // Delegate to mode-specific handlers
     registerOnlineAuctionEvents(io, socket);
     registerOfflineAuctionEvents(io, socket);
 

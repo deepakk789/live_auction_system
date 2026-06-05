@@ -12,7 +12,7 @@ const authRoutes = require("./routes/auth");
 const { initSockets } = require("./sockets");
 const logger = require("./utils/logger");
 
-// ── App & Server Setup ────────────────────────────────────────────────
+// App & Server Setup
 const app = express();
 const server = http.createServer(app);
 
@@ -20,7 +20,7 @@ const server = http.createServer(app);
 // to correctly read client IPs from X-Forwarded-For header
 app.set("trust proxy", 1);
 
-// ── Security Middleware ───────────────────────────────────────────────
+// Security Middleware
 app.use(helmet());
 
 // CORS — restrict to known frontend origin in production
@@ -50,7 +50,7 @@ app.use("/api/auth/forgot-password", authLimiter);
 // Body parser
 app.use(express.json({ limit: "50mb" }));
 
-// ── Socket.IO ─────────────────────────────────────────────────────────
+// Socket.IO
 const io = new Server(server, {
   cors: { origin: allowedOrigin, credentials: true },
 });
@@ -61,13 +61,13 @@ app.set("io", io);
 // Delegate all socket logic to sockets/index.js
 initSockets(io);
 
-// ── Database ──────────────────────────────────────────────────────────
+// Database
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => logger.info("✅ MongoDB connected"))
   .catch((err) => logger.error(`❌ MongoDB connection error: ${err.message}`));
 
-// ── Routes ────────────────────────────────────────────────────────────
+// Routes
 // Health check — verify backend is reachable
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
@@ -88,13 +88,13 @@ app.get("/", (req, res) => {
 app.use("/api/auction", auctionRoutes);
 app.use("/api/auth", authRoutes);
 
-// ── Global Error Handler ──────────────────────────────────────────────
+// Global Error Handler
 app.use((err, req, res, next) => {
   logger.error(`Unhandled error: ${err.stack || err.message}`);
   res.status(err.status || 500).json({ error: err.message || "Internal server error" });
 });
 
-// ── Start Server ──────────────────────────────────────────────────────
+// Start Server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   logger.info(`🚀 Server running on http://localhost:${PORT}`);

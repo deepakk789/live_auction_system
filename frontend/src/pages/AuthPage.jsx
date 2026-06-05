@@ -100,7 +100,7 @@ function AuthPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // --- Forgot Password View ---
+  // Forgot Password View
   if (showForgotPassword) {
     return (
       <div style={styles.pageContainer} className="animate-fade-in">
@@ -159,7 +159,7 @@ function AuthPage() {
     );
   }
 
-  // --- Login / Register View ---
+  // Login / Register View
   return (
     <div style={styles.pageContainer} className="animate-fade-in">
       <BorderGlow {...AUTH_GLOW_PROPS} className="stagger-1" style={styles.authCard}>

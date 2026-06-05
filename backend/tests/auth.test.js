@@ -16,7 +16,7 @@ const request = require("supertest");
 const mongoose = require("mongoose");
 const { app } = require("../server");
 
-// ── Helpers ────────────────────────────────────────────────────────
+// Helpers
 const testUser = {
   username: `testuser_${Date.now()}`,
   email: `testuser_${Date.now()}@example.com`,
@@ -25,7 +25,7 @@ const testUser = {
 
 let authToken = "";
 
-// ── Setup & Teardown ───────────────────────────────────────────────
+// Setup & Teardown
 beforeAll(async () => {
   // Wait for mongoose connection (server.js connects on load)
   await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -38,7 +38,7 @@ afterAll(async () => {
   await mongoose.connection.close();
 });
 
-// ── REGISTER ───────────────────────────────────────────────────────
+// REGISTER
 describe("POST /api/auth/register", () => {
   it("should register a new user and return a token", async () => {
     const res = await request(app).post("/api/auth/register").send(testUser);
@@ -84,7 +84,7 @@ describe("POST /api/auth/register", () => {
   });
 });
 
-// ── LOGIN ──────────────────────────────────────────────────────────
+// LOGIN
 describe("POST /api/auth/login", () => {
   it("should login with correct credentials and return token", async () => {
     const res = await request(app)
@@ -119,7 +119,7 @@ describe("POST /api/auth/login", () => {
   });
 });
 
-// ── GET /me ────────────────────────────────────────────────────────
+// GET /me
 describe("GET /api/auth/me", () => {
   it("should return current user with valid token", async () => {
     const res = await request(app)
@@ -143,7 +143,7 @@ describe("GET /api/auth/me", () => {
   });
 });
 
-// ── FORGOT PASSWORD ────────────────────────────────────────────────
+// FORGOT PASSWORD
 describe("POST /api/auth/forgot-password", () => {
   it("should return success message for any email (security best practice)", async () => {
     const res = await request(app)
@@ -167,7 +167,7 @@ describe("POST /api/auth/forgot-password", () => {
   });
 });
 
-// ── HEALTH CHECK ───────────────────────────────────────────────────
+// HEALTH CHECK
 describe("GET /api/health", () => {
   it("should return ok status", async () => {
     const res = await request(app).get("/api/health");

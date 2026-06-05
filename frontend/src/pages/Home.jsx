@@ -12,14 +12,12 @@ import BorderGlow from "../components/BorderGlow";
 import { FEATURE_GLOW_PROPS, LIVE_PANEL_GLOW_PROPS } from "../components/borderGlowTheme";
 
 
-// ──────────────────────────────────────────────
 // DATA
-// ──────────────────────────────────────────────
 const STATS = [
-  { value: "Dual", label: "Bidding Modes", sub: "Manual & Online" },
-  { value: "10ms", label: "Sync Latency", sub: "WebSocket-powered" },
-  { value: "100%", label: "Recovery Rate", sub: "MongoDB persistent" },
-  { value: "∞", label: "Concurrent Users", sub: "Real-time scaling" },
+  { value: "Live", label: "Auctions", sub: "Real-time bidding updates" },
+  { value: "Teams", label: "Management", sub: "Create and manage teams" },
+  { value: "Pool", label: "Player Pool", sub: "Dynamic player allocation" },
+  { value: "Sync", label: "WebSocket Sync", sub: "Instant bid propagation" },
 ];
 
 const FEATURES = [
@@ -99,9 +97,7 @@ const MOCK_BID_HISTORY = [
   { team: "Delhi Capitals",    amount: "₹1,600L", rank: 4 },
 ];
 
-// ──────────────────────────────────────────────
 // ANIMATED COUNTER
-// ──────────────────────────────────────────────
 function LiveTimer() {
   const [seconds, setSeconds] = useState(28);
   useEffect(() => {
@@ -115,9 +111,7 @@ function LiveTimer() {
   );
 }
 
-// ──────────────────────────────────────────────
 // SECTION: HERO
-// ──────────────────────────────────────────────
 function HeroSection({ navigate }) {
   const [showStamp, setShowStamp] = useState(false);
   const [stampOut, setStampOut] = useState(false);
@@ -211,9 +205,7 @@ function HeroSection({ navigate }) {
   );
 }
 
-// ──────────────────────────────────────────────
 // SECTION: LIVE AUCTION PREVIEW
-// ──────────────────────────────────────────────
 function LiveAuctionSection() {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
@@ -339,9 +331,7 @@ function LiveAuctionSection() {
   );
 }
 
-// ──────────────────────────────────────────────
 // SECTION: FEATURES
-// ──────────────────────────────────────────────
 function FeaturesSection() {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
@@ -390,9 +380,7 @@ function FeaturesSection() {
   );
 }
 
-// ──────────────────────────────────────────────
 // SECTION: HOW IT WORKS
-// ──────────────────────────────────────────────
 function HowItWorksSection() {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
@@ -442,9 +430,7 @@ function HowItWorksSection() {
   );
 }
 
-// ──────────────────────────────────────────────
 // SECTION: FOOTER CTA
-// ──────────────────────────────────────────────
 function FooterSection({ navigate }) {
   return (
     <footer className="hn-footer">
@@ -519,9 +505,7 @@ function FooterSection({ navigate }) {
   );
 }
 
-// ──────────────────────────────────────────────
 // ROOT
-// ──────────────────────────────────────────────
 export default function Home() {
   const navigate = useNavigate();
   return (
