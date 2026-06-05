@@ -94,9 +94,21 @@ async function sendResetEmail(toEmail, resetToken) {
     `,
   };
 
-  await transporter.sendMail(mailOptions);
-  console.log(`✅ Password reset email sent to ${toEmail}`);
-  return { sent: true };
+  // await transporter.sendMail(mailOptions);
+  // console.log(`✅ Password reset email sent to ${toEmail}`);
+  // return { sent: true };
+  try {
+    await transporter.verify();
+    console.log("✅ SMTP verified");
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("✅ Email sent:", info.messageId);
+
+    return { sent: true };
+  } catch (err) {
+    console.error("❌ FULL EMAIL ERROR:", err);
+    return { sent: false, reason: err.message };
+  }
 }
 
 module.exports = { sendResetEmail, createTransporter };
