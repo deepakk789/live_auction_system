@@ -9,7 +9,7 @@ import PageTransition from "../components/PageTransition";
 
 /* ── Sidebar accent colours ── */
 const TEAM_COLORS = [
-  "#3b82f6","#8b5cf6","#10b981","#f59e0b","#ef4444","#ec4899","#14b8a6","#6366f1",
+  "#10b981","#8b5cf6","#10b981","#f59e0b","#ef4444","#ec4899","#14b8a6","#6366f1",
 ];
 
 function OrganizerLive() {
@@ -567,7 +567,7 @@ function OrganizerLive() {
 
             <motion.div className="glass-card" style={styles.codeBubble} onClick={copyCode} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <span style={{ fontSize: "10px", color: "#94a3b8" }}>CODE</span>
-              <span style={{ fontFamily: "monospace", fontWeight: "bold", fontSize: "1.2rem", color: "#60a5fa" }}>{auctionCode}</span>
+              <span style={{ fontFamily: "monospace", fontWeight: "bold", fontSize: "1.2rem", color: "#34d399" }}>{auctionCode}</span>
               <AnimatePresence mode="wait">
                 {codeCopied ? (
                   <motion.div key="check" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}><Check size={14} color="#10b981"/></motion.div>
@@ -599,7 +599,7 @@ function OrganizerLive() {
             {/* State buttons */}
             <motion.div style={{ display: "flex", gap: "10px" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>
               {[
-                { label: "LIVE", value: "LIVE", color: "linear-gradient(135deg, #2563eb, #7c3aed)" },
+                { label: "LIVE", value: "LIVE", color: "linear-gradient(135deg, #059669, #10b981)" },
                 { label: "BREAK", value: "BREAK" },
                 { label: "END", value: "ENDED" },
               ].map(btn => (
@@ -685,7 +685,7 @@ function OrganizerLive() {
             {/* BIDDING CONTROLS */}
             <motion.div className="glass-panel" style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "15px" }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <h3 style={{ margin: 0 }}>Controls {biddingMode === "ONLINE" && <span style={{ color: "#3b82f6", fontSize: "0.8rem", marginLeft: "10px" }}>(Online Ops Available)</span>}</h3>
+                <h3 style={{ margin: 0 }}>Controls {biddingMode === "ONLINE" && <span style={{ color: "#10b981", fontSize: "0.8rem", marginLeft: "10px" }}>(Online Ops Available)</span>}</h3>
                 <div style={{ fontSize: "0.85rem", color: "#94a3b8" }}>
                   Base: ₹{getBasePrice(currentPlayer.details)}
                 </div>
@@ -709,9 +709,9 @@ function OrganizerLive() {
                 disabled={!hasLock || currentPlayer.status === "SOLD"}
                 style={{ fontSize: "1.1rem", cursor: "pointer", background: selectedTeam ? "rgba(59,130,246,0.2)" : "" }}
               >
-                <option value="" style={{ color: "#0f172a", background: "#f8fafc" }}>-- SELECT TEAM --</option>
+                <option value="">-- SELECT TEAM --</option>
                 {teams.map(t => (
-                  <option key={t.name} value={t.name} style={{ color: "#0f172a", background: "#f8fafc" }}>{t.name} (₹{t.budget})</option>
+                  <option key={t.name} value={t.name}>{t.name} (₹{t.budget})</option>
                 ))}
               </select>
 
@@ -941,7 +941,7 @@ const styles = {
   badge: {
     background: "rgba(59, 130, 246, 0.1)",
     border: "1px solid rgba(59, 130, 246, 0.3)",
-    color: "#60a5fa",
+    color: "#34d399",
     padding: "4px 12px",
     borderRadius: "20px",
     fontSize: "0.8rem",

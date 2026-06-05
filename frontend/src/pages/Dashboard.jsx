@@ -11,7 +11,7 @@ import AnimatedCounter from "../components/AnimatedCounter";
 import SkeletonLoader from "../components/SkeletonLoader";
 import PageTransition from "../components/PageTransition";
 
-const COLORS = ["#16a34a", "#f97316", "#3b82f6", "#eab308", "#8b5cf6"];
+const COLORS = ["#16a34a", "#f97316", "#10b981", "#eab308", "#8b5cf6"];
 
 const containerVariants = {
   hidden: {},
@@ -97,7 +97,7 @@ function Dashboard() {
         {/* HEADER */}
         <motion.div style={headerStyle} initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-            <BarChart3 size={32} color="#3b82f6" />
+            <BarChart3 size={32} color="#10b981" />
             <h1 style={{ margin: 0 }}>Auction <span className="text-gradient">Analytics Hub</span></h1>
           </div>
           <motion.button
@@ -119,7 +119,7 @@ function Dashboard() {
           transition={{ delay: 0.15 }}
         >
           <div className="glass-card" style={statChipStyle}>
-            <Users size={22} color="#3b82f6" />
+            <Users size={22} color="#10b981" />
             <div style={statChipInner}>
               <span style={statLabelStyle}>Total Players</span>
               <AnimatedCounter value={players.length} fontSize="1.5rem" fontWeight="900" color="#f8fafc" />
@@ -154,7 +154,7 @@ function Dashboard() {
           {/* BUDGET CHART */}
           <motion.div className="glass-panel" style={cardStyle} variants={cardVariants} whileHover={{ y: -4, transition: { duration: 0.2 } }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
-              <BarChart3 size={20} color="#3b82f6" />
+              <BarChart3 size={20} color="#10b981" />
               <h2 style={{ margin: 0, fontSize: "1.2rem" }}>Team Budgets Tracker</h2>
             </div>
             <div style={{ width: "100%", height: 300 }}>

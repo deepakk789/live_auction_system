@@ -6,6 +6,7 @@ import { BACKEND_URL } from "../services/socket";
 import PageTransition from "../components/PageTransition";
 import SkeletonLoader from "../components/SkeletonLoader";
 import BorderGlow from "../components/BorderGlow";
+import { CARD_GLOW_PROPS } from "../components/borderGlowTheme";
 
 function LiveAuctions() {
   const navigate = useNavigate();
@@ -278,15 +279,15 @@ function AuctionCard({ auction, isOrganizer, onClick }) {
   };
 
   return (
-    <BorderGlow style={styles.card} className="auction-card" onClick={onClick} id={`card-${auction._id}`} animated={false}>
+    <BorderGlow {...CARD_GLOW_PROPS} style={styles.card} className="auction-card" onClick={onClick} id={`card-${auction._id}`}>
       {/* Status Badge */}
       <div style={styles.cardHeader}>
         <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
           <span style={{ 
             ...styles.stateBadge, 
-            background: isLive ? "rgba(16,185,129,0.15)" : auction.state === "PAUSED" ? "rgba(239,68,68,0.15)" : auction.state === "RESUMING" ? "rgba(59,130,246,0.15)" : "rgba(251,191,36,0.15)", 
-            color: isLive ? "#10b981" : auction.state === "PAUSED" ? "#ef4444" : auction.state === "RESUMING" ? "#60a5fa" : "#fbbf24", 
-            border: `1px solid ${isLive ? "#10b981" : auction.state === "PAUSED" ? "#ef4444" : auction.state === "RESUMING" ? "#60a5fa" : "#fbbf24"}` 
+            background: isLive ? "rgba(16,185,129,0.15)" : auction.state === "PAUSED" ? "rgba(239,68,68,0.15)" : auction.state === "RESUMING" ? "rgba(16,185,129,0.15)" : "rgba(251,191,36,0.15)", 
+            color: isLive ? "#10b981" : auction.state === "PAUSED" ? "#ef4444" : auction.state === "RESUMING" ? "#34d399" : "#fbbf24", 
+            border: `1px solid ${isLive ? "#10b981" : auction.state === "PAUSED" ? "#ef4444" : auction.state === "RESUMING" ? "#34d399" : "#fbbf24"}` 
           }}>
             {isLive ? "🟢 LIVE" : auction.state === "PAUSED" ? "⚠️ PAUSED" : auction.state === "RESUMING" ? "⏳ RESUMING" : "☕ BREAK"}
           </span>
@@ -303,7 +304,7 @@ function AuctionCard({ auction, isOrganizer, onClick }) {
       {/* Code */}
       <div style={styles.codeLine} onClick={copyCode}>
         <Hash size={12} color="#6b7280" />
-        <span style={{ color: "#60a5fa", fontFamily: "monospace", fontWeight: 700, letterSpacing: "2px" }}>
+        <span style={{ color: "#34d399", fontFamily: "monospace", fontWeight: 700, letterSpacing: "2px" }}>
           {auction.auctionCode || "—"}
         </span>
         {codeCopied ? <Check size={12} color="#10b981" /> : <Copy size={12} color="#6b7280" />}
@@ -408,7 +409,7 @@ const styles = {
     textTransform: "uppercase"
   },
   codeBtn: {
-    background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+    background: "linear-gradient(135deg, #059669, #10b981)",
     color: "white",
     border: "none",
     padding: "8px 20px",
@@ -469,9 +470,9 @@ const styles = {
     transition: "all 0.2s"
   },
   iconBtnActive: {
-    background: "rgba(59,130,246,0.15)",
-    border: "1px solid rgba(59,130,246,0.5)",
-    color: "#60a5fa"
+    background: "rgba(16,185,129,0.15)",
+    border: "1px solid rgba(16,185,129,0.5)",
+    color: "#34d399"
   },
   filterDot: {
     width: "6px",
@@ -527,9 +528,9 @@ const styles = {
     transition: "all 0.2s"
   },
   filterChipActive: {
-    background: "rgba(59,130,246,0.15)",
-    border: "1px solid #3b82f6",
-    color: "#60a5fa"
+    background: "rgba(16,185,129,0.15)",
+    border: "1px solid #10b981",
+    color: "#34d399"
   },
   emptyState: {
     background: "rgba(17,24,39,0.4)",
@@ -543,13 +544,13 @@ const styles = {
     width: "44px",
     height: "44px",
     border: "3px solid rgba(255,255,255,0.1)",
-    borderTopColor: "#3b82f6",
+    borderTopColor: "#10b981",
     borderRadius: "50%",
     margin: "0 auto",
     animation: "spin 0.8s linear infinite"
   },
   ctaBtn: {
-    background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+    background: "linear-gradient(135deg, #059669, #10b981)",
     color: "white",
     border: "none",
     padding: "12px 28px",
@@ -557,7 +558,7 @@ const styles = {
     fontSize: "0.95rem",
     fontWeight: 700,
     cursor: "pointer",
-    boxShadow: "0 4px 20px rgba(59,130,246,0.3)"
+    boxShadow: "0 4px 20px rgba(16,185,129,0.3)"
   },
   grid: {
     display: "grid",
@@ -566,16 +567,12 @@ const styles = {
     marginTop: "28px"
   },
   card: {
-    background: "rgba(17,24,39,0.7)",
-    border: "1px solid rgba(255,255,255,0.08)",
-    borderRadius: "16px",
     padding: "24px",
     cursor: "pointer",
-    transition: "all 0.25s ease",
-    backdropFilter: "blur(10px)",
-    boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
+    transition: "transform 0.25s ease",
     display: "flex",
-    flexDirection: "column"
+    flexDirection: "column",
+    height: "100%",
   },
   cardHeader: {
     display: "flex",
@@ -653,7 +650,7 @@ const styles = {
     transition: "all 0.2s"
   },
   manageBtn: {
-    background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+    background: "linear-gradient(135deg, #059669, #10b981)",
     color: "white",
     border: "none",
     padding: "10px 20px",
@@ -663,7 +660,7 @@ const styles = {
     display: "flex",
     alignItems: "center",
     fontSize: "0.9rem",
-    boxShadow: "0 4px 12px rgba(59,130,246,0.3)",
+    boxShadow: "0 4px 12px rgba(16,185,129,0.3)",
     transition: "all 0.2s"
   }
 };

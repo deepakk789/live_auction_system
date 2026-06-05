@@ -1,25 +1,44 @@
 # ── Dependencies ──────────────────────────────────
 node_modules/
+pnpm-lock.yaml
+package-lock.json
 
 # ── Environment Variables (NEVER commit these) ────
 .env
 .env.local
 .env.production
 
-# ── Uploads / generated files ─────────────────────
-uploads/
+# ── Build output ──────────────────────────────────
 dist/
 build/
+.next/
+out/
 
 # ── Logs ──────────────────────────────────────────
 logs/
 *.log
+npm-debug.log*
 
 # ── OS / Editor ───────────────────────────────────
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
+*.swp
 
 # ── Testing output ────────────────────────────────
 coverage/
+backend/tests/
+
+# ── Docs & Internal Design Files ──────────────────
+# These are internal notes — not needed on GitHub
+docs/
+auction-x-ui-design/
+
+# ── Uploads (user-generated) ──────────────────────
+uploads/
+
+# ── Misc ──────────────────────────────────────────
+.cache/
+.parcel-cache/
+*.local

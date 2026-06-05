@@ -10,7 +10,7 @@ import DrinksBreak from "./DrinksBreak";
 
 /* ── Team sidebar colours ── */
 const SIDEBAR_COLORS = [
-  "#3b82f6","#8b5cf6","#10b981","#f59e0b","#ef4444","#ec4899","#14b8a6","#6366f1",
+  "#10b981","#8b5cf6","#10b981","#f59e0b","#ef4444","#ec4899","#14b8a6","#6366f1",
 ];
 
 function ViewerLive() {
@@ -170,7 +170,7 @@ function ViewerLive() {
         <div style={styles.container}>
           <motion.div className="glass-panel" style={styles.waitingState} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: "spring" }}>
             <motion.div animate={{ rotate: [0, 360] }} transition={{ repeat: Infinity, duration: 3, ease: "linear" }} style={{ display: "inline-block" }}>
-              <Activity size={48} color="#3b82f6" />
+              <Activity size={48} color="#10b981" />
             </motion.div>
             <h3 style={{ margin: "20px 0 8px", fontSize: "1.4rem" }}>Waiting for Organizer</h3>
             <p style={{ color: "#64748b" }}>The auction hasn't started yet. Hang tight!</p>
@@ -212,8 +212,8 @@ function ViewerLive() {
             </motion.div>
           )}
           {auctionState === "RESUMING" && (
-            <motion.div className="glass-panel" style={{ padding: "20px 30px", border: "2px solid #3b82f6", marginBottom: "30px", textAlign: "center" }} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
-              <h2 style={{ color: "#60a5fa", margin: "0 0 10px" }}>⏳ Resuming in {resumeSeconds}s...</h2>
+            <motion.div className="glass-panel" style={{ padding: "20px 30px", border: "2px solid #10b981", marginBottom: "30px", textAlign: "center" }} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+              <h2 style={{ color: "#34d399", margin: "0 0 10px" }}>⏳ Resuming in {resumeSeconds}s...</h2>
               <p style={{ color: "#9ca3af", margin: 0 }}>All representatives are connected. Get ready!</p>
             </motion.div>
           )}
@@ -259,7 +259,7 @@ function ViewerLive() {
         {/* HEADER */}
         <motion.div className="glass-panel" style={styles.header} initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
           <h2 style={{ margin: 0, display: "flex", alignItems: "center", gap: "10px" }}>
-            <Activity size={24} color="#3b82f6"/>
+            <Activity size={24} color="#10b981"/>
             {auctionName || "Live Auction"}
           </h2>
           <div style={{ display: "flex", gap: "15px", alignItems: "center" }}>
@@ -371,7 +371,7 @@ function ViewerLive() {
                 transition={{ delay: 0.4 }}
               >
                 <h3 style={{ margin: "0 0 20px", display: "flex", alignItems: "center", gap: "8px" }}>
-                  <Zap color="#3b82f6"/> {representingTeam ? `Manager Pad: ${representingTeam}` : "Viewer Mode"}
+                  <Zap color="#10b981"/> {representingTeam ? `Manager Pad: ${representingTeam}` : "Viewer Mode"}
                 </h3>
 
                 {representingTeam ? (
@@ -507,7 +507,7 @@ const styles = {
     gap: "6px",
     background: "rgba(59, 130, 246, 0.15)",
     border: "1px solid rgba(59, 130, 246, 0.4)",
-    color: "#60a5fa",
+    color: "#34d399",
     padding: "6px 12px",
     borderRadius: "20px",
     fontWeight: "bold",

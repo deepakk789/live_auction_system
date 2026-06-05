@@ -1,423 +1,538 @@
 import { useNavigate } from "react-router-dom";
-import { Zap, Activity, Users, ShieldCheck, Trophy, Sparkles, Server, DollarSign, PlayCircle, FileText, CheckCircle, MessageSquare, Mail, Settings } from "lucide-react";
-import { useState, useEffect } from "react";
-import "../styles/design-system.css";
-import "../styles/home-responsive.css";
+import {
+  Zap, Activity, Users, ShieldCheck, Trophy, Server,
+  PlayCircle, FileText, CheckCircle, Settings,
+  ChevronUp, Timer, Gavel, ArrowRight,
+  Radio, Mail
+} from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import "../styles/home-new.css";
 import PageTransition from "../components/PageTransition";
 import BorderGlow from "../components/BorderGlow";
+import { FEATURE_GLOW_PROPS, LIVE_PANEL_GLOW_PROPS } from "../components/borderGlowTheme";
 
-function Home() {
-  const navigate = useNavigate();
+
+// ──────────────────────────────────────────────
+// DATA
+// ──────────────────────────────────────────────
+const STATS = [
+  { value: "Dual", label: "Bidding Modes", sub: "Manual & Online" },
+  { value: "10ms", label: "Sync Latency", sub: "WebSocket-powered" },
+  { value: "100%", label: "Recovery Rate", sub: "MongoDB persistent" },
+  { value: "∞", label: "Concurrent Users", sub: "Real-time scaling" },
+];
+
+const FEATURES = [
+  {
+    icon: Activity,
+    title: "Live Economic Analytics",
+    description: "Track team budgets, real-time player data, and manage your economy as the auction progresses with live charts.",
+    color: "#3b82f6",
+  },
+  {
+    icon: Zap,
+    title: "Remote Online Bidding",
+    description: "Allow teams to bid from mobile devices with zero latency. Globally synced over WebSockets in real-time.",
+    color: "#eab308",
+  },
+  {
+    icon: Trophy,
+    title: "Co-Organizer Delegation",
+    description: "Invite trusted members to manage the board. Real-time locking ensures only one admin edits at a time.",
+    color: "#10b981",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Automated Failsafes",
+    description: "Smart constraints monitor team purses, automatically blocking bids that exceed maximum allowed budgets.",
+    color: "#ec4899",
+  },
+  {
+    icon: Server,
+    title: "Persistent Cloud State",
+    description: "Powered by MongoDB. Your auction state is continuously saved — recover instantly from any crash.",
+    color: "#8b5cf6",
+  },
+  {
+    icon: PlayCircle,
+    title: "Broadcast-Ready Interface",
+    description: "Dedicated spectator views give audiences beautiful, distraction-free visual updates as the action unfolds.",
+    color: "#f97316",
+  },
+];
+
+const STEPS = [
+  {
+    icon: Settings,
+    number: "01",
+    title: "Configure Rules",
+    desc: "Set the number of teams, maximum starting budgets, and choose between Manual or Online bidding modes.",
+    color: "#3b82f6",
+  },
+  {
+    icon: FileText,
+    number: "02",
+    title: "Build Roster",
+    desc: "Upload player names and base prices directly into the upcoming platform queue in seconds.",
+    color: "#8b5cf6",
+  },
+  {
+    icon: Zap,
+    number: "03",
+    title: "Run the Podium",
+    desc: "Go Live! Teams bid using connected devices until the highest bid is legally locked by the auctioneer.",
+    color: "#eab308",
+  },
+  {
+    icon: CheckCircle,
+    number: "04",
+    title: "Transfer & Archive",
+    desc: "Drop the hammer. Player is marked SOLD, budget deducted, and real-time ledgers instantly archived.",
+    color: "#10b981",
+  },
+];
+
+const MOCK_BID_HISTORY = [
+  { team: "Royal Challengers", amount: "₹1,850L", rank: 1 },
+  { team: "Mumbai Indians",    amount: "₹1,800L", rank: 2 },
+  { team: "Chennai Super Kings",amount: "₹1,700L", rank: 3 },
+  { team: "Delhi Capitals",    amount: "₹1,600L", rank: 4 },
+];
+
+// ──────────────────────────────────────────────
+// ANIMATED COUNTER
+// ──────────────────────────────────────────────
+function LiveTimer() {
+  const [seconds, setSeconds] = useState(28);
+  useEffect(() => {
+    const t = setInterval(() => setSeconds(s => s > 0 ? s - 1 : 30), 1000);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <span className={`hn-timer-val ${seconds <= 5 ? "hn-timer-urgent" : ""}`}>
+      {seconds}s
+    </span>
+  );
+}
+
+// ──────────────────────────────────────────────
+// SECTION: HERO
+// ──────────────────────────────────────────────
+function HeroSection({ navigate }) {
   const [showStamp, setShowStamp] = useState(false);
-  const [stampFade, setStampFade] = useState(false);
+  const [stampOut, setStampOut] = useState(false);
 
   useEffect(() => {
-    // Show SOLD stamp after a delay for wow effect
-    const timer1 = setTimeout(() => setShowStamp(true), 1500);
-    const timer2 = setTimeout(() => setStampFade(true), 3500);
-    return () => { clearTimeout(timer1); clearTimeout(timer2); };
+    const t1 = setTimeout(() => setShowStamp(true), 1400);
+    const t2 = setTimeout(() => setStampOut(true), 3400);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
   return (
+    <section className="hn-hero">
+      {/* Grid background */}
+      <div className="hn-grid-bg" />
+      {/* Radial glow */}
+      <div className="hn-radial-glow" />
+
+      <div className="hn-hero-inner">
+        {/* Live badge */}
+        <div className="hn-live-badge hn-fade-up" style={{ animationDelay: "0.1s" }}>
+          <span className="hn-pulse-dot">
+            <span className="hn-pulse-ring" />
+          </span>
+          Live Auction in Progress
+        </div>
+
+        {/* Logo */}
+        <div className="hn-logo-block hn-fade-up" style={{ animationDelay: "0.2s" }}>
+          <div className="hn-logo-icon">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" width="36" height="36">
+              <polygon points="15,20 40,20 85,85 60,85" fill="#fff" />
+              <polygon points="85,20 60,20 15,85 40,85" fill="#fff" />
+              <polygon points="5,75 70,10 85,10 20,85" fill="#10b981" stroke="#0b1120" strokeWidth="4" strokeLinejoin="round" />
+              <polygon points="20,95 85,30 100,30 35,105" fill="#059669" stroke="#0b1120" strokeWidth="4" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <span className="hn-logo-text">
+            AUCTION<span className="hn-logo-accent">X</span>
+          </span>
+        </div>
+
+        {/* Title */}
+        <h1 className="hn-title hn-fade-up" style={{ animationDelay: "0.3s" }}>
+          The Ultimate<br />
+          <span className="hn-title-gradient">Auction Orchestration</span><br />
+          Platform
+        </h1>
+
+        {/* SOLD stamp */}
+        {showStamp && (
+          <div className={`hn-sold-stamp ${stampOut ? "hn-sold-stamp-out" : ""}`}>
+            <span className="hn-sold-sub">OFFICIALLY</span>
+            SOLD!
+          </div>
+        )}
+
+        {/* Subtitle */}
+        <p className="hn-subtitle hn-fade-up" style={{ animationDelay: "0.4s" }}>
+          Seamlessly manage players, teams, and live bids with our state-of-the-art
+          interactive dashboard. Built for organizers, trusted by viewers.
+        </p>
+
+        {/* CTA Buttons */}
+        <div className="hn-cta-row hn-fade-up" style={{ animationDelay: "0.5s" }}>
+          <button className="hn-btn-primary" onClick={() => navigate("/create-auction")}>
+            <Zap size={18} />
+            Organise an Auction
+            <ArrowRight size={16} className="hn-arrow" />
+          </button>
+          <button className="hn-btn-secondary" onClick={() => navigate("/live")}>
+            <Radio size={18} />
+            Join as Viewer
+          </button>
+        </div>
+
+        {/* Stats */}
+        <div className="hn-hero-stats hn-fade-up" style={{ animationDelay: "0.6s" }}>
+          {STATS.map(s => (
+            <div key={s.label} className="hn-hero-stat">
+              <span className="hn-hero-stat-val">{s.value}</span>
+              <span className="hn-hero-stat-label">{s.label}</span>
+              <span className="hn-hero-stat-sub">{s.sub}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Bottom fade */}
+      <div className="hn-hero-fade-bottom" />
+    </section>
+  );
+}
+
+// ──────────────────────────────────────────────
+// SECTION: LIVE AUCTION PREVIEW
+// ──────────────────────────────────────────────
+function LiveAuctionSection() {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) setVisible(true); },
+      { threshold: 0.15 }
+    );
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+
+  return (
+    <section ref={ref} id="live-preview" className={`hn-section hn-section-live ${visible ? "hn-in-view" : ""}`}>
+      <div className="hn-container">
+        {/* Header */}
+        <div className="hn-section-header hn-slide-up" style={{ animationDelay: "0.1s" }}>
+          <div className="hn-live-label">
+            <span className="hn-pulse-dot"><span className="hn-pulse-ring" /></span>
+            Live Auction
+          </div>
+          <h2 className="hn-section-title">Current Bid Session</h2>
+          <p className="hn-section-sub">
+            Watch the action unfold in real-time. Place your bids and secure your star players.
+          </p>
+        </div>
+
+        <div className="hn-auction-grid">
+          {/* Player Card */}
+          <div className="hn-glow-cell hn-slide-up" style={{ animationDelay: "0.2s" }}>
+          <BorderGlow
+            {...LIVE_PANEL_GLOW_PROPS}
+            className="hn-live-glow-wrap"
+          >
+            <div className="hn-player-inner">
+              {/* Avatar */}
+              <div className="hn-avatar-wrap">
+                <div className="hn-avatar">
+                  <span className="hn-avatar-letter">V</span>
+                </div>
+                <span className="hn-avatar-country">India</span>
+              </div>
+
+              {/* Info */}
+              <div className="hn-player-info">
+                <div className="hn-player-name-row">
+                  <h3 className="hn-player-name">Virat Kohli</h3>
+                  <span className="hn-role-badge">Batsman</span>
+                </div>
+
+                <div className="hn-stats-grid">
+                  <div className="hn-stat-box"><div className="hn-stat-v">7,263</div><div className="hn-stat-l">Runs</div></div>
+                  <div className="hn-stat-box"><div className="hn-stat-v">237</div><div className="hn-stat-l">Matches</div></div>
+                  <div className="hn-stat-box"><div className="hn-stat-v">37.25</div><div className="hn-stat-l">Average</div></div>
+                </div>
+
+                <div className="hn-current-bid-row">
+                  <div>
+                    <div className="hn-bid-label">Current Bid</div>
+                    <div className="hn-bid-amount">₹1,850L</div>
+                    <div className="hn-bid-by">by Royal Challengers</div>
+                  </div>
+                  <div className="hn-bid-action">
+                    <div className="hn-timer-row">
+                      <Timer size={16} className="hn-timer-icon" />
+                      <LiveTimer />
+                    </div>
+                    <button className="hn-btn-bid">
+                      <ChevronUp size={18} />
+                      Place Bid
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </BorderGlow>
+          </div>
+
+          {/* Bid History Panel */}
+          <div className="hn-glow-cell hn-slide-up" style={{ animationDelay: "0.3s" }}>
+          <BorderGlow
+            {...LIVE_PANEL_GLOW_PROPS}
+            className="hn-bid-panel-glow"
+          >
+            <div className="hn-bid-panel-header">
+              <div className="hn-icon-wrap"><Gavel size={18} /></div>
+              <div>
+                <div className="hn-bid-panel-title">Bid History</div>
+                <div className="hn-bid-panel-sub">Last 4 bids</div>
+              </div>
+            </div>
+
+            <div className="hn-bid-list">
+              {MOCK_BID_HISTORY.map((bid, i) => (
+                <div key={bid.team} className={`hn-bid-item ${i === 0 ? "hn-bid-item-top" : ""}`}>
+                  <div className="hn-bid-rank-wrap">
+                    <span className={`hn-bid-rank ${i === 0 ? "hn-bid-rank-top" : ""}`}>{bid.rank}</span>
+                    <span className="hn-bid-team">{bid.team}</span>
+                  </div>
+                  <span className={`hn-bid-amt ${i === 0 ? "hn-bid-amt-top" : ""}`}>{bid.amount}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="hn-bid-mini-stats">
+              <div className="hn-mini-stat">
+                <Users size={16} className="hn-mini-icon" />
+                <div className="hn-mini-val">8</div>
+                <div className="hn-mini-label">Teams Bidding</div>
+              </div>
+              <div className="hn-mini-stat">
+                <Gavel size={16} className="hn-mini-icon" />
+                <div className="hn-mini-val">24</div>
+                <div className="hn-mini-label">Total Bids</div>
+              </div>
+            </div>
+          </BorderGlow>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ──────────────────────────────────────────────
+// SECTION: FEATURES
+// ──────────────────────────────────────────────
+function FeaturesSection() {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) setVisible(true); },
+      { threshold: 0.1 }
+    );
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+
+  return (
+    <section ref={ref} id="features" className={`hn-section ${visible ? "hn-in-view" : ""}`}>
+      {/* Dot pattern background */}
+      <div className="hn-dot-bg" />
+      <div className="hn-container">
+        <div className="hn-section-header hn-slide-up" style={{ animationDelay: "0.1s" }}>
+          <span className="hn-eyebrow">Platform Features</span>
+          <h2 className="hn-section-title">Everything You Need</h2>
+          <p className="hn-section-sub">
+            A complete auction management system designed for professional leagues.
+          </p>
+        </div>
+
+        <div className="hn-features-grid">
+          {FEATURES.map((f, i) => (
+            <div
+              key={f.title}
+              className="hn-glow-cell hn-slide-up"
+              style={{ animationDelay: `${0.1 + i * 0.08}s` }}
+            >
+              <BorderGlow {...FEATURE_GLOW_PROPS} className="hn-feature-glow-wrap">
+                <div className="hn-feature-icon" style={{ "--icon-color": f.color }}>
+                  <f.icon size={22} />
+                </div>
+                <h3 className="hn-feature-title">{f.title}</h3>
+                <p className="hn-feature-desc">{f.description}</p>
+              </BorderGlow>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ──────────────────────────────────────────────
+// SECTION: HOW IT WORKS
+// ──────────────────────────────────────────────
+function HowItWorksSection() {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) setVisible(true); },
+      { threshold: 0.1 }
+    );
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+
+  return (
+    <section ref={ref} className={`hn-section hn-section-hiw ${visible ? "hn-in-view" : ""}`}>
+      <div className="hn-container">
+        <div className="hn-section-header hn-slide-up" style={{ animationDelay: "0.1s" }}>
+          <span className="hn-eyebrow">The Process</span>
+          <h2 className="hn-section-title">
+            From Setup to <span className="hn-title-success">Sold</span>
+          </h2>
+          <p className="hn-section-sub">
+            A fast overview of how an auction orchestrates from start to finish.
+          </p>
+        </div>
+
+        <div className="hn-steps-grid">
+          {STEPS.map((step, i) => (
+            <div
+              key={step.title}
+              className="hn-glow-cell hn-slide-up"
+              style={{ animationDelay: `${0.1 + i * 0.1}s` }}
+            >
+              <BorderGlow {...FEATURE_GLOW_PROPS} className="hn-step-glow-wrap">
+                <div className="hn-step-number">{step.number}</div>
+                <div className="hn-step-icon" style={{ "--icon-color": step.color }}>
+                  <step.icon size={28} />
+                </div>
+                <h4 className="hn-step-title">{step.title}</h4>
+                <p className="hn-step-desc">{step.desc}</p>
+              </BorderGlow>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ──────────────────────────────────────────────
+// SECTION: FOOTER CTA
+// ──────────────────────────────────────────────
+function FooterSection({ navigate }) {
+  return (
+    <footer className="hn-footer">
+      {/* CTA Banner */}
+      <div className="hn-container">
+        <div className="hn-cta-banner">
+          <div className="hn-cta-text">
+            <h3 className="hn-cta-title">Ready to Start Your Auction?</h3>
+            <p className="hn-cta-sub">
+              Join the platform built for organizers who demand real-time control, zero lag, and broadcast-quality display.
+            </p>
+          </div>
+          <button className="hn-btn-primary" onClick={() => navigate("/create-auction")}>
+            Get Started Free
+            <ArrowRight size={16} className="hn-arrow" />
+          </button>
+        </div>
+
+        {/* Footer links */}
+        <div className="hn-footer-grid">
+          <div className="hn-footer-brand">
+            <div className="hn-logo-block" style={{ marginBottom: "12px" }}>
+              <div className="hn-logo-icon hn-logo-icon-sm">
+                <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
+                  <polygon points="15,20 40,20 85,85 60,85" fill="#fff" />
+                  <polygon points="85,20 60,20 15,85 40,85" fill="#fff" />
+                  <polygon points="5,75 70,10 85,10 20,85" fill="#10b981" stroke="#0b1120" strokeWidth="4" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <span className="hn-logo-text" style={{ fontSize: "1.1rem" }}>
+                AUCTION<span className="hn-logo-accent">X</span>
+              </span>
+            </div>
+            <p className="hn-footer-tagline">
+              The ultimate platform for live player auctions. Build your dream team.
+            </p>
+          </div>
+
+          <div className="hn-footer-col">
+            <h4 className="hn-footer-col-title">Product</h4>
+            <ul className="hn-footer-links">
+              <li><button onClick={() => navigate("/live")} className="hn-footer-link">Live Auctions</button></li>
+              <li><button onClick={() => navigate("/upcoming")} className="hn-footer-link">Upcoming Auctions</button></li>
+              <li><button onClick={() => navigate("/past")} className="hn-footer-link">Past Auctions</button></li>
+              <li><button onClick={() => navigate("/create-auction")} className="hn-footer-link">Create Auction</button></li>
+            </ul>
+          </div>
+
+          <div className="hn-footer-col">
+            <h4 className="hn-footer-col-title">Contact</h4>
+            <ul className="hn-footer-links">
+              <li>
+                <a href="mailto:support@auctionx.com" className="hn-footer-link hn-footer-link-email">
+                  <Mail size={14} />
+                  support@auctionx.com
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="hn-footer-bottom">
+          <p>© {new Date().getFullYear()} AuctionX Orchestration. All rights reserved.</p>
+          <div className="hn-footer-socials">
+            {["Twitter", "Discord", "GitHub"].map(s => (
+              <a key={s} href="#" className="hn-footer-link">{s}</a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+// ──────────────────────────────────────────────
+// ROOT
+// ──────────────────────────────────────────────
+export default function Home() {
+  const navigate = useNavigate();
+  return (
     <PageTransition>
-      <div style={styles.container} className="home-container stagger-1">
-
-        {/* Background Glow Orbs */}
-        <div style={styles.glowOrbRight} />
-        <div style={styles.glowOrbLeft} />
-
-        {/* Hero Section */}
-        <div style={styles.hero} className="stagger-1">
-          <div style={styles.badge} className="pulse-glow">
-            <Sparkles size={14} style={{ marginRight: '6px' }} />
-            AuctionX 2.0 is Live
-          </div>
-
-          <h1 className="home-title" style={styles.title}>
-            The Ultimate <br />
-            <span className="text-gradient">Auction Orchestration</span> Platform
-          </h1>
-
-          {/* SOLD stamp effect */}
-          {showStamp && (
-            <div className={`hero-sold-stamp ${stampFade ? "stamp-fade-out" : ""}`} style={{ zIndex: 10 }}>
-              <span style={{ fontSize: '1.2rem', display: 'block', letterSpacing: '4px' }}>OFFICIALLY</span>
-              SOLD!
-            </div>
-          )}
-
-          <p style={styles.subtitle}>
-            Seamlessly manage your players, teams, and live bids with our state-of-the-art interactive dashboard. Built for organizers, trusted by viewers.
-          </p>
-
-          <div style={styles.btnRow}>
-            <button className="btn-premium" style={{ padding: "18px 40px", fontSize: "1.2rem" }} onClick={() => navigate("/create-auction")}>
-              Organise an Auction ✨
-            </button>
-            <button className="btn-glass" style={{ padding: "18px 40px", fontSize: "1.2rem" }} onClick={() => navigate("/live")}>
-              Join as Viewer →
-            </button>
-          </div>
-        </div>
-
-        {/* Stats Row */}
-        <div className="home-stats-row stagger-2" style={styles.statsRow}>
-          <BorderGlow className="glass-card feature-card-hover" style={styles.statItem} animated={true} backgroundColor="transparent" fillOpacity={0} borderRadius={24}>
-            <ShieldCheck size={32} color="#10b981" />
-            <span style={styles.statNumber}>Dual</span>
-            <span style={styles.statLabel}>Bidding Modes</span>
-          </BorderGlow>
-          <BorderGlow className="glass-card feature-card-hover" style={styles.statItem} animated={true} backgroundColor="transparent" fillOpacity={0} borderRadius={24}>
-            <Zap size={32} color="#eab308" />
-            <span style={styles.statNumber}>10ms</span>
-            <span style={styles.statLabel}>WebSocket Sync Rate</span>
-          </BorderGlow>
-          <BorderGlow className="glass-card feature-card-hover" style={styles.statItem} animated={true} backgroundColor="transparent" fillOpacity={0} borderRadius={24}>
-            <Users size={32} color="#3b82f6" />
-            <span style={styles.statNumber}>Multi</span>
-            <span style={styles.statLabel}>Organizer Access</span>
-          </BorderGlow>
-        </div>
-
-        {/* Services Provided Section */}
-        <div className="stagger-3" style={{ textAlign: "center", marginTop: "60px" }}>
-          <h2 style={{ fontSize: "2.8rem", fontWeight: 900, marginBottom: "15px", letterSpacing: "-1px" }}>Professional Services</h2>
-          <p style={{ color: "#94a3b8", fontSize: "1.15rem", maxWidth: "650px", margin: "0 auto 50px", lineHeight: "1.6" }}>
-            Everything you need to host a broadcast-quality auction event, packed into an intuitive platform for organizers and bidders alike.
-          </p>
-
-          <div className="home-features-grid" style={styles.featuresGrid}>
-            {/* Card 1 */}
-            <BorderGlow className="glass-card feature-card-hover" style={styles.featureCard} animated={false} backgroundColor="transparent" fillOpacity={0} borderRadius={24}>
-              <div style={styles.iconBox}><Activity size={24} color="#3b82f6" /></div>
-              <h3 style={styles.cardTitle}>Live Economic Analytics</h3>
-              <p style={styles.cardText}>Track team budgets, see real-time player data, and manage your economy effortlessly as the auction progresses.</p>
-            </BorderGlow>
-
-            {/* Card 2 */}
-            <BorderGlow className="glass-card feature-card-hover" style={styles.featureCard} animated={false} backgroundColor="transparent" fillOpacity={0} borderRadius={24}>
-              <div style={styles.iconBox}><Zap size={24} color="#eab308" /></div>
-              <h3 style={styles.cardTitle}>Remote Online Bidding</h3>
-              <p style={styles.cardText}>Allow teams to bid directly from their mobile devices with zero latency. Fast, secure, and globally synced over WebSockets.</p>
-            </BorderGlow>
-
-            {/* Card 3 */}
-            <BorderGlow className="glass-card feature-card-hover" style={styles.featureCard} animated={false} backgroundColor="transparent" fillOpacity={0} borderRadius={24}>
-              <div style={styles.iconBox}><Trophy size={24} color="#10b981" /></div>
-              <h3 style={styles.cardTitle}>Co-Organizer Delegation</h3>
-              <p style={styles.cardText}>Invite trusted members to manage the board with you. Our real-time locking system ensures only one admin edits the podium at a time.</p>
-            </BorderGlow>
-
-            {/* Card 4 */}
-            <BorderGlow className="glass-card feature-card-hover" style={styles.featureCard} animated={false} backgroundColor="transparent" fillOpacity={0} borderRadius={24}>
-              <div style={styles.iconBox}><DollarSign size={24} color="#ec4899" /></div>
-              <h3 style={styles.cardTitle}>Automated Failsafes</h3>
-              <p style={styles.cardText}>Smart constraints actively monitor team purses, automatically blocking bids that exceed maximum allowed budgets instantly.</p>
-            </BorderGlow>
-
-            {/* Card 5 */}
-            <BorderGlow className="glass-card feature-card-hover" style={styles.featureCard} animated={false} backgroundColor="transparent" fillOpacity={0} borderRadius={24}>
-              <div style={styles.iconBox}><Server size={24} color="#8b5cf6" /></div>
-              <h3 style={styles.cardTitle}>Persistent Cloud Data</h3>
-              <p style={styles.cardText}>Powered by MongoDB, your auction state is continuously saved. Accidental server restarts or browser crashes? Recover instantly.</p>
-            </BorderGlow>
-
-            {/* Card 6 */}
-            <BorderGlow className="glass-card feature-card-hover" style={styles.featureCard} animated={false} backgroundColor="transparent" fillOpacity={0} borderRadius={24}>
-              <div style={styles.iconBox}><PlayCircle size={24} color="#f97316" /></div>
-              <h3 style={styles.cardTitle}>Broadcast-Ready Interface</h3>
-              <p style={styles.cardText}>Dedicated spectator views ensure audiences and managers receive beautiful, distraction-free visual updates as the action unfolds.</p>
-            </BorderGlow>
-          </div>
-        </div>
-
-        {/* How it works Section */}
-        <div className="stagger-4 glass-panel home-how-it-works" style={styles.howItWorksBox}>
-          <div style={{ textAlign: "center", marginBottom: "50px" }}>
-            <h2 style={{ fontSize: "2.8rem", fontWeight: 900, marginBottom: "15px", letterSpacing: "-1px" }}>From Setup to <span className="text-gradient-success">Sold</span></h2>
-            <p style={{ color: "#94a3b8", fontSize: "1.15rem", maxWidth: "600px", margin: "0 auto", lineHeight: "1.6" }}>
-              A fast overview of how the auction orchestrates from start to finish, empowering organizers with maximum control.
-            </p>
-          </div>
-
-          <div className="home-timeline-grid" style={styles.timelineGrid}>
-            {/* Step 1 */}
-            <div style={styles.stepCard} className="glass-card feature-card-hover">
-              <div style={styles.stepNumber}>1</div>
-              <Settings size={36} color="#3b82f6" style={{ marginBottom: "20px" }} />
-              <h4 style={styles.stepTitle}>Configure Rules</h4>
-              <p style={styles.stepDesc}>The organizer sets the number of teams, maximum starting budgets, and decides between Manual or Online bidding.</p>
-            </div>
-            {/* Step 2 */}
-            <div style={styles.stepCard} className="glass-card feature-card-hover">
-              <div style={styles.stepNumber}>2</div>
-              <FileText size={36} color="#8b5cf6" style={{ marginBottom: "20px" }} />
-              <h4 style={styles.stepTitle}>Build Roster</h4>
-              <p style={styles.stepDesc}>Populate the player pool effortlessly. Upload names and base prices directly into the upcoming platform queue.</p>
-            </div>
-            {/* Step 3 */}
-            <div style={styles.stepCard} className="glass-card feature-card-hover">
-              <div style={styles.stepNumber}>3</div>
-              <Zap size={36} color="#eab308" style={{ marginBottom: "20px" }} />
-              <h4 style={styles.stepTitle}>Run the Podium</h4>
-              <p style={styles.stepDesc}>Go Live! A player is brought up. Teams aggressively bid using connected devices until the highest bid is legally locked.</p>
-            </div>
-            {/* Step 4 */}
-            <div style={styles.stepCard} className="glass-card feature-card-hover">
-              <div style={styles.stepNumber}>4</div>
-              <CheckCircle size={36} color="#10b981" style={{ marginBottom: "20px" }} />
-              <h4 style={styles.stepTitle}>Transfer & Archive</h4>
-              <p style={styles.stepDesc}>The organizer drops the hammer. The player is marked SOLD, budget is safely deducted, and real-time ledgers are instantly archived.</p>
-            </div>
-          </div>
-        </div>
-
-        {/* About & Contact Section */}
-        <div className="stagger-4 glass-card home-footer-layout" style={styles.footerLayout}>
-          <div style={styles.footerSection}>
-            <h3 style={{ fontSize: "1.5rem", color: "#fff", display: "flex", alignItems: "center", gap: "10px", fontWeight: "900", marginBottom: "20px" }}>
-              <Sparkles size={22} color="#3b82f6" /> About AuctionX
-            </h3>
-            <p style={{ color: "#94a3b8", lineHeight: "1.7", fontSize: "1.05rem" }}>
-              AuctionX is crafted for tech enthusiasts and event managers seeking to revolutionize how sports drafts, corporate bidding, and professional auctions are hosted. We blend broadcast-quality design with ultra-low latency technology to guarantee an unforgettable experience.
-            </p>
-          </div>
-
-          <div style={styles.footerSection}>
-            <h3 style={{ fontSize: "1.5rem", color: "#fff", display: "flex", alignItems: "center", gap: "10px", fontWeight: "900", marginBottom: "20px" }}>
-              <MessageSquare size={22} color="#10b981" /> Contact & Support
-            </h3>
-            <p style={{ color: "#94a3b8", lineHeight: "1.7", fontSize: "1.05rem", marginBottom: "20px" }}>
-              Need help configuring a custom event or facing access issues? Contact our engineering team.
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <a href="mailto:support@auctionx.com" style={styles.contactLink}><Mail size={18} /> support@auctionx.com</a>
-            </div>
-          </div>
-        </div>
-
-        {/* Absolute Bottom Footer text */}
-        <div style={{ textAlign: "center", color: "#475569", padding: "30px 0 10px", marginTop: "30px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-          <p style={{ fontWeight: 600 }}>&copy; {new Date().getFullYear()} AuctionX Orchestration. All rights reserved.</p>
-        </div>
-
+      <div className="hn-root">
+        <HeroSection navigate={navigate} />
+        <LiveAuctionSection />
+        <FeaturesSection />
+        <HowItWorksSection />
+        <FooterSection navigate={navigate} />
       </div>
     </PageTransition>
   );
 }
-
-const styles = {
-  container: {
-    padding: "60px 40px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "80px",
-    position: "relative",
-    overflow: "hidden",
-    minHeight: "calc(100vh - 60px)",
-    maxWidth: "1400px",
-    margin: "0 auto"
-  },
-  glowOrbRight: {
-    position: "absolute",
-    right: "-10%",
-    top: "20%",
-    width: "500px",
-    height: "500px",
-    background: "radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, rgba(0,0,0,0) 70%)",
-    zIndex: -1,
-    animation: "float 6s ease-in-out infinite"
-  },
-  glowOrbLeft: {
-    position: "absolute",
-    left: "-10%",
-    bottom: "20%",
-    width: "500px",
-    height: "500px",
-    background: "radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(0,0,0,0) 70%)",
-    zIndex: -1,
-    animation: "float 8s ease-in-out infinite reverse"
-  },
-  hero: {
-    textAlign: "center",
-    maxWidth: "900px",
-    margin: "0 auto",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: "24px",
-    position: "relative"
-  },
-  badge: {
-    display: "inline-flex",
-    alignItems: "center",
-    background: "rgba(59, 130, 246, 0.15)",
-    color: "#60a5fa",
-    padding: "8px 20px",
-    borderRadius: "30px",
-    fontWeight: "bold",
-    fontSize: "0.95rem",
-    border: "1px solid rgba(59, 130, 246, 0.3)",
-    backdropFilter: "blur(4px)"
-  },
-  title: {
-    fontSize: "4.8rem",
-    lineHeight: "1.1",
-    fontWeight: "900",
-    margin: 0,
-    letterSpacing: "-1.5px"
-  },
-  subtitle: {
-    fontSize: "1.3rem",
-    color: "#94a3b8",
-    lineHeight: "1.6",
-    maxWidth: "750px",
-    marginTop: "10px"
-  },
-  btnRow: {
-    display: "flex",
-    gap: "20px",
-    marginTop: "30px",
-    flexWrap: "wrap",
-    justifyContent: "center"
-  },
-  statsRow: {
-    display: "flex",
-    justifyContent: "center",
-    gap: "30px",
-    flexWrap: "wrap",
-    marginTop: "20px"
-  },
-  statItem: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: "10px",
-    padding: "30px",
-    minWidth: "220px",
-    textAlign: "center"
-  },
-  statNumber: {
-    fontSize: "2.5rem",
-    fontWeight: 900,
-    color: "white"
-  },
-  statLabel: {
-    color: "#9ca3af",
-    fontSize: "0.95rem",
-    fontWeight: 700,
-    textTransform: "uppercase",
-    letterSpacing: "1px"
-  },
-  featuresGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(350px, 1fr))",
-    gap: "30px",
-    width: "100%"
-  },
-  featureCard: {
-    padding: "40px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "15px",
-    textAlign: "left"
-  },
-  iconBox: {
-    width: "60px",
-    height: "60px",
-    borderRadius: "16px",
-    background: "rgba(255,255,255,0.05)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: "15px",
-    border: "1px solid rgba(255,255,255,0.1)",
-    boxShadow: "inset 0 0 15px rgba(255,255,255,0.02)"
-  },
-  cardTitle: {
-    fontSize: "1.5rem",
-    margin: 0,
-    fontWeight: "800",
-    color: "white"
-  },
-  cardText: {
-    color: "#94a3b8",
-    lineHeight: "1.7",
-    margin: 0,
-    fontSize: "1.05rem"
-  },
-  howItWorksBox: {
-    background: "rgba(15, 23, 42, 0.4)",
-    borderRadius: "32px",
-    padding: "80px 60px",
-    border: "1px solid rgba(255,255,255,0.05)",
-    boxShadow: "0 20px 40px rgba(0,0,0,0.2)"
-  },
-  timelineGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-    gap: "25px",
-    position: "relative"
-  },
-  stepCard: {
-    padding: "40px 30px",
-    position: "relative",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    textAlign: "center",
-    overflow: "hidden"
-  },
-  stepNumber: {
-    position: "absolute",
-    top: "-20px",
-    right: "-10px",
-    fontSize: "8rem",
-    fontWeight: 900,
-    color: "rgba(255,255,255,0.03)",
-    lineHeight: 1,
-    zIndex: 0
-  },
-  stepTitle: {
-    fontSize: "1.4rem",
-    fontWeight: 800,
-    color: "#fff",
-    margin: "0 0 15px",
-    zIndex: 1
-  },
-  stepDesc: {
-    color: "#94a3b8",
-    lineHeight: "1.6",
-    fontSize: "1rem",
-    margin: 0,
-    zIndex: 1
-  },
-  footerLayout: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-    gap: "50px",
-    background: "rgba(17, 24, 39, 0.3)",
-    padding: "60px",
-    borderRadius: "24px",
-    border: "1px solid rgba(255,255,255,0.05)"
-  },
-  footerSection: {
-    display: "flex",
-    flexDirection: "column"
-  },
-  contactLink: {
-    color: "#3b82f6",
-    textDecoration: "none",
-    fontWeight: 600,
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    transition: "color 0.2s",
-    padding: "10px 15px",
-    background: "rgba(59, 130, 246, 0.1)",
-    borderRadius: "8px",
-    width: "fit-content"
-  }
-};
-
-export default Home;

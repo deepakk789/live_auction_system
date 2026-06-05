@@ -71,7 +71,7 @@ function ProfileDropdown() {
           transition: "background 0.2s"
         }}
       >
-        <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold" }}>
+        <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "linear-gradient(135deg, #059669, #10b981)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", color: "#fff" }}>
           {user.username.charAt(0).toUpperCase()}
         </div>
         <span style={{ fontWeight: 600, fontSize: "0.95rem" }}>{user.username}</span>
@@ -95,7 +95,7 @@ function ProfileDropdown() {
               zIndex: 100,
               boxShadow: "20px 0 40px rgba(0,0,0,0.8)",
               border: "1px solid rgba(255,255,255,0.1)",
-              background: "#0f172a",
+              background: "rgba(15, 23, 36, 0.98)",
               backdropFilter: "blur(20px)",
               WebkitBackdropFilter: "blur(20px)"
             }}

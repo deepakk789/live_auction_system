@@ -331,8 +331,8 @@ function OrganizerOnlineView() {
         )}
 
         {auctionState === "RESUMING" && (
-          <motion.div className="glass-panel" style={{ padding: "16px 24px", marginBottom: "24px", border: "2px solid #3b82f6", background: "rgba(59, 130, 246, 0.1)" }} initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-            <h3 style={{ color: "#60a5fa", margin: "0 0 5px" }}>⏳ Resuming in {resumeSeconds}s...</h3>
+          <motion.div className="glass-panel" style={{ padding: "16px 24px", marginBottom: "24px", border: "2px solid #10b981", background: "rgba(59, 130, 246, 0.1)" }} initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
+            <h3 style={{ color: "#34d399", margin: "0 0 5px" }}>⏳ Resuming in {resumeSeconds}s...</h3>
             <p style={{ margin: 0, color: "#93c5fd" }}>All representatives are connected. The auction is about to automatically resume.</p>
           </motion.div>
         )}
@@ -401,7 +401,7 @@ function OrganizerOnlineView() {
                     {/* Countdown */}
                     <div style={{ flex: 1, background: "rgba(0,0,0,0.3)", padding: "20px", borderRadius: "16px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
                       <div style={{ fontSize: "0.9rem", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "15px" }}>Timer</div>
-                      <div style={{ width: "80px", height: "80px", borderRadius: "50%", border: `6px solid ${countdown !== null && countdown <= 3 ? "#ef4444" : "#3b82f6"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2rem", fontWeight: 900, background: "rgba(0,0,0,0.2)" }}>
+                      <div style={{ width: "80px", height: "80px", borderRadius: "50%", border: `6px solid ${countdown !== null && countdown <= 3 ? "#ef4444" : "#10b981"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2rem", fontWeight: 900, background: "rgba(0,0,0,0.2)" }}>
                         {countdown !== null ? countdown : "--"}
                       </div>
                     </div>
@@ -435,15 +435,15 @@ function OrganizerOnlineView() {
                   {filteredPlayers.map((p, idx) => (
                     <div key={idx} style={{ 
                       background: "rgba(255,255,255,0.03)", 
-                      border: p.status === "LIVE" ? "1px solid #3b82f6" : "1px solid transparent",
+                      border: p.status === "LIVE" ? "1px solid #10b981" : "1px solid transparent",
                       padding: "10px", borderRadius: "8px", display: "flex", flexDirection: "column", gap: "8px" 
                     }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontWeight: 600, fontSize: "0.95rem", color: p.status === "LIVE" ? "#3b82f6" : "white" }}>{p.name}</span>
+                        <span style={{ fontWeight: 600, fontSize: "0.95rem", color: p.status === "LIVE" ? "#10b981" : "white" }}>{p.name}</span>
                         <span style={{ 
                           fontSize: "0.7rem", padding: "2px 6px", borderRadius: "4px", fontWeight: "bold",
                           background: p.status === "SOLD" ? "rgba(16,185,129,0.1)" : p.status === "UNSOLD" ? "rgba(239,68,68,0.1)" : p.status === "LIVE" ? "rgba(59,130,246,0.1)" : "rgba(255,255,255,0.05)",
-                          color: p.status === "SOLD" ? "#10b981" : p.status === "UNSOLD" ? "#ef4444" : p.status === "LIVE" ? "#60a5fa" : "#9ca3af"
+                          color: p.status === "SOLD" ? "#10b981" : p.status === "UNSOLD" ? "#ef4444" : p.status === "LIVE" ? "#34d399" : "#9ca3af"
                         }}>
                           {p.status}
                         </span>
@@ -469,7 +469,7 @@ function OrganizerOnlineView() {
               {teams.map((team, idx) => {
                 const isConnected = managerStatuses[team.name] === "Connected";
                 return (
-                  <div key={team.name} className="glass-card" style={{ padding: "16px", borderLeft: `3px solid #3b82f6` }}>
+                  <div key={team.name} className="glass-card" style={{ padding: "16px", borderLeft: `3px solid #10b981` }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
                       <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 800 }}>{team.name}</h3>
                       <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>

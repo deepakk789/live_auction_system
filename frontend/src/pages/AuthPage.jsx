@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { BACKEND_URL } from "../services/socket";
 import { useAuth } from "../context/AuthContext";
 import { Shield, Mail, ArrowLeft, LogIn, UserPlus, Eye, EyeOff, Home } from "lucide-react";
+import BorderGlow from "../components/BorderGlow";
+import { AUTH_GLOW_PROPS } from "../components/borderGlowTheme";
 import "../styles/design-system.css";
 
 function AuthPage() {
@@ -62,12 +64,18 @@ function AuthPage() {
     setForgotMsg(null);
     setForgotLoading(true);
 
+    // Abort the request after 15 seconds so the button never spins forever
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
     try {
       const res = await fetch(`${BACKEND_URL}/api/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: forgotEmail })
+        body: JSON.stringify({ email: forgotEmail }),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
       const data = await res.json();
 
       if (!res.ok) {
@@ -77,7 +85,12 @@ function AuthPage() {
       // In dev mode the backend returns devResetUrl when SMTP is not configured
       setForgotMsg({ type: "success", text: data.message, devUrl: data.devResetUrl || null });
     } catch (err) {
-      setForgotMsg({ type: "error", text: err.stack ? "Backend unavailable" : err.message });
+      clearTimeout(timeoutId);
+      if (err.name === "AbortError") {
+        setForgotMsg({ type: "error", text: "Request timed out — backend may be slow or unreachable. Please try again." });
+      } else {
+        setForgotMsg({ type: "error", text: err.message === "Failed to fetch" ? "Backend unavailable" : err.message });
+      }
     } finally {
       setForgotLoading(false);
     }
@@ -91,11 +104,11 @@ function AuthPage() {
   if (showForgotPassword) {
     return (
       <div style={styles.pageContainer} className="animate-fade-in">
-        <div className="glass-panel stagger-1" style={styles.authCard}>
+        <BorderGlow {...AUTH_GLOW_PROPS} className="stagger-1" style={styles.authCard}>
           
           <div style={{ textAlign: "center", marginBottom: "30px" }}>
             <div style={styles.iconCircle}>
-              <Mail size={32} color="#3b82f6" />
+              <Mail size={32} color="#10b981" />
             </div>
             <h1 style={styles.heading}>Reset Password</h1>
             <p style={styles.subtext}>Enter your email to receive a reset link</p>
@@ -112,7 +125,7 @@ function AuthPage() {
                   <strong>🔗 Dev Reset Link:</strong>{" "}
                   <a
                     href={forgotMsg.devUrl}
-                    style={{ color: "#60a5fa", textDecoration: "underline" }}
+                    style={{ color: "#34d399", textDecoration: "underline" }}
                   >
                     Click here to reset password
                   </a>
@@ -141,7 +154,7 @@ function AuthPage() {
           <button className="btn-glass" style={{ width: "100%", marginTop: "20px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }} onClick={() => setShowForgotPassword(false)}>
             <ArrowLeft size={16} /> Back to Sign In
           </button>
-        </div>
+        </BorderGlow>
       </div>
     );
   }
@@ -149,11 +162,11 @@ function AuthPage() {
   // --- Login / Register View ---
   return (
     <div style={styles.pageContainer} className="animate-fade-in">
-      <div className="glass-panel stagger-1" style={styles.authCard}>
+      <BorderGlow {...AUTH_GLOW_PROPS} className="stagger-1" style={styles.authCard}>
         
         <div style={{ textAlign: "center", marginBottom: "30px" }}>
           <div style={styles.iconCircle}>
-            <Shield size={32} color="#8b5cf6" />
+            <Shield size={32} color="#10b981" />
           </div>
           <h1 style={styles.heading}>{isRegister ? "Create Account" : "Welcome Back"}</h1>
           <p style={styles.subtext}>
@@ -197,7 +210,7 @@ function AuthPage() {
               <label style={styles.label}>Password</label>
               {!isRegister && (
                 <span 
-                  style={{ color: "#3b82f6", fontSize: "0.85rem", cursor: "pointer" }}
+                  style={{ color: "#10b981", fontSize: "0.85rem", cursor: "pointer" }}
                   onClick={() => setShowForgotPassword(true)}
                   className="hover-underline"
                 >
@@ -262,7 +275,7 @@ function AuthPage() {
           <p style={{ color: "#9ca3af" }}>
             {isRegister ? "Already have an account?" : "Don't have an account?"}
             <span
-              style={{ color: "#60a5fa", fontWeight: "bold", marginLeft: "8px", cursor: "pointer" }}
+              style={{ color: "#34d399", fontWeight: "bold", marginLeft: "8px", cursor: "pointer" }}
               onClick={() => {
                 setIsRegister(!isRegister);
                 setError(null);
@@ -284,7 +297,7 @@ function AuthPage() {
         >
           <Home size={18} /> Back to Home
         </button>
-      </div>
+      </BorderGlow>
     </div>
   );
 }

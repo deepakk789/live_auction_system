@@ -254,7 +254,7 @@ function TeamRepDashboard() {
       <PageTransition>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "80vh", padding: "40px", textAlign: "center", color: "white" }}>
           <div className="glass-panel" style={{ padding: "50px", maxWidth: "500px" }}>
-            <Activity size={48} color="#3b82f6" style={{ marginBottom: "20px" }} />
+            <Activity size={48} color="#10b981" style={{ marginBottom: "20px" }} />
             <h2 style={{ fontSize: "1.8rem", marginBottom: "12px" }}>Waiting for Organizer</h2>
             <p style={{ color: "#9ca3af", marginBottom: "20px" }}>
               You are connected as the manager for <strong style={{ color: "#10b981" }}>{representingTeam}</strong>. The auction will start when the organizer opens the lobby.
@@ -276,8 +276,8 @@ function TeamRepDashboard() {
             </motion.div>
           )}
           {auctionState === "RESUMING" && (
-            <motion.div className="glass-panel" style={{ padding: "20px 30px", border: "2px solid #3b82f6", marginBottom: "30px", textAlign: "center" }} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
-              <h2 style={{ color: "#60a5fa", margin: "0 0 10px" }}>⏳ Resuming in {resumeSeconds}s...</h2>
+            <motion.div className="glass-panel" style={{ padding: "20px 30px", border: "2px solid #10b981", marginBottom: "30px", textAlign: "center" }} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+              <h2 style={{ color: "#34d399", margin: "0 0 10px" }}>⏳ Resuming in {resumeSeconds}s...</h2>
               <p style={{ color: "#9ca3af", margin: 0 }}>All representatives are connected. Get ready!</p>
             </motion.div>
           )}
@@ -311,7 +311,7 @@ function TeamRepDashboard() {
           <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
             <div style={{ textAlign: "right" }}>
               <div style={{ fontSize: "0.8rem", color: "#9ca3af", textTransform: "uppercase" }}>Representing</div>
-              <div style={{ fontWeight: 800, fontSize: "1.2rem", color: "#3b82f6" }}>{representingTeam}</div>
+              <div style={{ fontWeight: 800, fontSize: "1.2rem", color: "#10b981" }}>{representingTeam}</div>
             </div>
             <div style={{ width: "2px", height: "30px", background: "rgba(255,255,255,0.1)" }}></div>
             <div style={{ textAlign: "right" }}>
@@ -391,11 +391,11 @@ function TeamRepDashboard() {
               {/* Countdown Timer */}
               <div className="glass-panel" style={{ padding: "30px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
                 <h3 style={{ margin: "0 0 15px", color: "#9ca3af" }}>Time Remaining</h3>
-                <div style={{ width: "120px", height: "120px", borderRadius: "50%", border: `8px solid ${countdown !== null && countdown <= 3 ? "#ef4444" : "#3b82f6"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "3rem", fontWeight: 900, background: "rgba(0,0,0,0.2)", transition: "border-color 0.3s" }}>
+                <div style={{ width: "120px", height: "120px", borderRadius: "50%", border: `8px solid ${countdown !== null && countdown <= 3 ? "#ef4444" : "#10b981"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "3rem", fontWeight: 900, background: "rgba(0,0,0,0.2)", transition: "border-color 0.3s" }}>
                   {countdown !== null ? countdown : "--"}
                 </div>
                 {countdown !== null && (
-                  <div style={{ marginTop: "15px", color: countdown <= 3 ? "#ef4444" : "#60a5fa", fontWeight: 700, animation: countdown <= 3 ? "pulse 1s infinite" : "none" }}>
+                  <div style={{ marginTop: "15px", color: countdown <= 3 ? "#ef4444" : "#34d399", fontWeight: 700, animation: countdown <= 3 ? "pulse 1s infinite" : "none" }}>
                     Going {countdown <= 3 ? (countdown === 1 ? "once..." : "twice...") : "..."}
                   </div>
                 )}

@@ -175,27 +175,36 @@ router.post("/forgot-password", async (req, res, next) => {
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
     await user.save();
 
-    // Attempt to send email — capture whether it was actually sent
-    let emailSent = false;
+    const frontendUrl = (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/$/, "");
+    const devResetUrl = `${frontendUrl}/reset-password/${resetToken}`;
+    const isDev = process.env.NODE_ENV !== "production";
+
+    let emailResult = { sent: false, reason: "unknown" };
     try {
-      await sendResetEmail(user.email, resetToken);
-      emailSent = true;
+      emailResult = await sendResetEmail(user.email, resetToken);
     } catch (emailErr) {
-      // SMTP authentication or network failure — log clearly but don't crash
       console.error("❌ SMTP send failure:", emailErr.message);
-      console.error("   Make sure EMAIL_USER/EMAIL_PASS in .env are real Gmail credentials with an App Password.");
+      console.error("   Use Gmail App Password on port 587. Set EMAIL_USER, EMAIL_PASS, EMAIL_HOST, EMAIL_PORT in Render.");
+      emailResult = { sent: false, reason: "smtp_error" };
     }
 
-    // In development (email not configured), expose the reset URL in the response
-    // so developers can test the full flow without needing a mail server.
-    const isDev = process.env.NODE_ENV !== "production";
-    if (isDev && !emailSent) {
-      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-      const devResetUrl = `${frontendUrl}/reset-password/${resetToken}`;
-      console.warn(`\n🔗 [DEV] Use this link to reset password for ${user.email}:\n   ${devResetUrl}\n`);
+    // Email not configured — dev gets the link in the API response; prod returns 503
+    if (!emailResult.sent && emailResult.reason === "not_configured") {
+      if (isDev) {
+        return res.json({
+          message: "Email not configured — use the devResetUrl below to test the reset flow.",
+          devResetUrl,
+        });
+      }
+      return res.status(503).json({
+        error: "Password reset email is unavailable. The server email service is not configured.",
+      });
+    }
+
+    // SMTP failed despite credentials — don't reveal account details
+    if (!emailResult.sent) {
       return res.json({
-        message: "Email not configured — use the devResetUrl below to test the reset flow.",
-        devResetUrl
+        message: "If an account with that email exists, a reset link has been sent.",
       });
     }
 

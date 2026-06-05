@@ -9,8 +9,8 @@ import PageTransition from "../components/PageTransition";
 
 /* ── Team accent colors ── */
 const TEAM_COLORS = [
-  { accent: "#3b82f6", glow: "rgba(59,130,246,0.15)", border: "rgba(59,130,246,0.3)" },
-  { accent: "#8b5cf6", glow: "rgba(139,92,246,0.15)", border: "rgba(139,92,246,0.3)" },
+  { accent: "#10b981", glow: "rgba(16,185,129,0.15)", border: "rgba(16,185,129,0.3)" },
+  { accent: "#34d399", glow: "rgba(52,211,153,0.15)", border: "rgba(52,211,153,0.3)" },
   { accent: "#10b981", glow: "rgba(16,185,129,0.15)", border: "rgba(16,185,129,0.3)" },
   { accent: "#f59e0b", glow: "rgba(245,158,11,0.15)", border: "rgba(245,158,11,0.3)" },
   { accent: "#ef4444", glow: "rgba(239,68,68,0.15)",  border: "rgba(239,68,68,0.3)" },
@@ -172,7 +172,7 @@ function DrinksBreak({ readOnly = false }) {
           transition={{ delay: 0.2, duration: 0.5 }}
         >
           <div className="glass-card" style={styles.statChip}>
-            <Users size={20} color="#3b82f6" />
+            <Users size={20} color="#10b981" />
             <div style={styles.statChipInner}>
               <span style={styles.statLabel}>Teams</span>
               <AnimatedCounter value={teams.length} fontSize="1.6rem" fontWeight="900" color="#f8fafc" highlight />

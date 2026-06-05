@@ -9,20 +9,10 @@ import "../styles/design-system.css";
 
 const LogoIcon = () => (
   <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", height: "100%" }}>
-    <defs>
-      <linearGradient id="grad1" x1="0%" y1="100%" x2="100%" y2="0%">
-        <stop offset="0%" stopColor="#3b82f6" />
-        <stop offset="100%" stopColor="#0284c7" />
-      </linearGradient>
-      <linearGradient id="grad2" x1="0%" y1="100%" x2="100%" y2="0%">
-        <stop offset="0%" stopColor="#2563eb" />
-        <stop offset="100%" stopColor="#0369a1" />
-      </linearGradient>
-    </defs>
     <polygon points="15,20 40,20 85,85 60,85" fill="#ffffff" />
     <polygon points="85,20 60,20 15,85 40,85" fill="#ffffff" />
-    <polygon points="5,75 70,10 85,10 20,85" fill="url(#grad1)" stroke="#0b132b" strokeWidth="5" strokeLinejoin="round" />
-    <polygon points="20,95 85,30 100,30 35,105" fill="url(#grad2)" stroke="#0b132b" strokeWidth="5" strokeLinejoin="round" />
+    <polygon points="5,75 70,10 85,10 20,85" fill="#10b981" stroke="#0b1120" strokeWidth="5" strokeLinejoin="round" />
+    <polygon points="20,95 85,30 100,30 35,105" fill="#059669" stroke="#0b1120" strokeWidth="5" strokeLinejoin="round" />
   </svg>
 );
 
@@ -77,7 +67,7 @@ function Layout() {
           </button>
           {!isHomePage && (
             <button className="sidebar-toggle-btn home-shortcut-btn" onClick={() => navigate("/")} title="Go to Home" style={{ padding: "8px", background: "rgba(17,24,39,0.8)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Home size={22} color="#60a5fa" />
+              <Home size={22} color="#10b981" />
             </button>
           )}
         </div>
@@ -108,7 +98,7 @@ function Layout() {
             </div>
             <div style={{ fontSize: "1.45rem", fontWeight: 900, letterSpacing: "1.5px", display: "flex", gap: "6px", fontFamily: "'Inter', system-ui, sans-serif", marginTop: "2px" }}>
               <span style={{ color: "#ffffff", transition: "color 0.2s" }}>AUCTION</span>
-              <span style={{ color: "#3b82f6" }}>X</span>
+              <span style={{ color: "#10b981" }}>X</span>
             </div>
           </div>
         </div>
@@ -130,7 +120,7 @@ function Layout() {
             <Calendar size={20} />
             <span>Upcoming Auctions</span>
             {upcomingAuctionCount > 0 && (
-              <span className="live-badge" style={{background: "rgba(59,130,246,0.2)", color: "#3b82f6"}}>{upcomingAuctionCount}</span>
+              <span className="live-badge upcoming-badge">{upcomingAuctionCount}</span>
             )}
           </NavLink>
 
@@ -181,7 +171,7 @@ function Layout() {
       <div className="main-content">
 
         {/* INJECTED PAGE */}
-        <main className="content-area" style={{ paddingTop: "20px" }}>
+        <main className={`content-area${isHomePage ? " content-area--home" : ""}`} style={{ paddingTop: isHomePage ? 0 : "20px" }}>
           <Outlet />
         </main>
       </div>

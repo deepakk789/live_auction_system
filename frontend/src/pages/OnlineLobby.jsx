@@ -182,7 +182,7 @@ function OnlineLobby() {
                     <div>
                       <div style={{ fontWeight: 700, fontSize: "1.1rem", color: "white" }}>{team.name}</div>
                       <div style={{ color: "#9ca3af", fontSize: "0.85rem", marginTop: "4px" }}>
-                        Rep: <span style={{ color: team.managerUsername ? "#60a5fa" : "#ef4444", fontWeight: 600 }}>
+                        Rep: <span style={{ color: team.managerUsername ? "#34d399" : "#ef4444", fontWeight: 600 }}>
                           {team.managerUsername || "Unassigned"}
                         </span>
                       </div>

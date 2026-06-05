@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { BACKEND_URL } from "../services/socket";
-import { Lock, CheckCircle, ShieldCheck, Home } from "lucide-react";
+import { Lock, CheckCircle, Home } from "lucide-react";
+import BorderGlow from "../components/BorderGlow";
+import { AUTH_GLOW_PROPS } from "../components/borderGlowTheme";
 import "../styles/design-system.css";
 
 function ResetPassword() {
@@ -64,7 +66,7 @@ function ResetPassword() {
   if (success) {
     return (
       <div style={page} className="animate-fade-in">
-        <div className="glass-panel" style={card}>
+        <BorderGlow {...AUTH_GLOW_PROPS} style={card}>
           <CheckCircle size={60} color="#10b981" style={{ marginBottom: "20px" }} />
           <h1 style={heading}>Password Reset!</h1>
           <p style={subtext}>
@@ -76,17 +78,17 @@ function ResetPassword() {
           <button onClick={() => navigate("/")} className="btn-glass" style={{ width: "100%", marginTop: "12px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
             <Home size={18} /> Back to Home
           </button>
-        </div>
+        </BorderGlow>
       </div>
     );
   }
 
   return (
     <div style={page} className="animate-fade-in">
-      <div className="glass-panel stagger-1" style={card}>
+      <BorderGlow {...AUTH_GLOW_PROPS} className="stagger-1" style={card}>
         <div style={{ textAlign: "center", marginBottom: "20px" }}>
           <div style={iconCircle}>
-            <Lock size={32} color="#3b82f6" />
+            <Lock size={32} color="#10b981" />
           </div>
           <h1 style={heading}>Set New Password</h1>
           <p style={subtext}>
@@ -149,7 +151,7 @@ function ResetPassword() {
         <button onClick={() => navigate("/")} className="btn-glass" style={{ width: "100%", marginTop: "15px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
           <Home size={18} /> Back to Home
         </button>
-      </div>
+      </BorderGlow>
     </div>
   );
 }

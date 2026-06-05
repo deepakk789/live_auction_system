@@ -6,6 +6,7 @@ import { BACKEND_URL } from "../services/socket";
 import PageTransition from "../components/PageTransition";
 import SkeletonLoader from "../components/SkeletonLoader";
 import BorderGlow from "../components/BorderGlow";
+import { CARD_GLOW_PROPS } from "../components/borderGlowTheme";
 
 function PastAuctions() {
   const navigate = useNavigate();
@@ -81,13 +82,13 @@ function PastAuctions() {
       <div style={styles.header}>
         <div>
           <h1 style={styles.title}>
-            <Archive size={28} color="#8b5cf6" style={{ marginRight: "12px", verticalAlign: "middle" }} />
+            <Archive size={28} color="#10b981" style={{ marginRight: "12px", verticalAlign: "middle" }} />
             Past Auctions
           </h1>
           <p style={styles.subtitle}>Browse completed auctions and explore their full analytics.</p>
         </div>
         <div style={styles.totalCount}>
-          <Trophy size={16} color="#8b5cf6" />
+          <Trophy size={16} color="#10b981" />
           <span style={{ fontWeight: 700, fontSize: "0.9rem" }}>
             {filteredAuctions.length} Completed
           </span>
@@ -246,7 +247,7 @@ function PastAuctionCard({ auction, rank, onClick }) {
     : new Date(auction.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 
   return (
-    <BorderGlow style={styles.card} className="past-auction-card" onClick={onClick} id={`past-card-${auction._id}`} animated={false}>
+    <BorderGlow {...CARD_GLOW_PROPS} style={styles.card} className="past-auction-card" onClick={onClick} id={`past-card-${auction._id}`}>
       <div style={styles.cardHeader}>
         <span style={styles.endedBadge}>✓ ENDED</span>
         <span style={styles.dateText}>{endDate}</span>
@@ -322,7 +323,7 @@ const styles = {
     border: "1px solid rgba(139,92,246,0.3)",
     padding: "8px 16px",
     borderRadius: "50px",
-    color: "#8b5cf6"
+    color: "#10b981"
   },
   controlBar: {
     display: "flex",
@@ -431,7 +432,7 @@ const styles = {
   },
   filterChipActive: {
     background: "rgba(139,92,246,0.15)",
-    border: "1px solid #8b5cf6",
+    border: "1px solid #10b981",
     color: "#a78bfa"
   },
   dateInput: {
@@ -456,7 +457,7 @@ const styles = {
     width: "44px",
     height: "44px",
     border: "3px solid rgba(255,255,255,0.1)",
-    borderTopColor: "#8b5cf6",
+    borderTopColor: "#10b981",
     borderRadius: "50%",
     margin: "0 auto",
     animation: "spin 0.8s linear infinite"
@@ -468,16 +469,12 @@ const styles = {
     marginTop: "28px"
   },
   card: {
-    background: "rgba(17,24,39,0.7)",
-    border: "1px solid rgba(255,255,255,0.08)",
-    borderRadius: "16px",
     padding: "24px",
     cursor: "pointer",
-    transition: "all 0.25s ease",
-    backdropFilter: "blur(10px)",
-    boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
+    transition: "transform 0.25s ease",
     display: "flex",
-    flexDirection: "column"
+    flexDirection: "column",
+    height: "100%",
   },
   cardHeader: {
     display: "flex",
@@ -493,7 +490,7 @@ const styles = {
     letterSpacing: "0.5px",
     background: "rgba(139,92,246,0.15)",
     color: "#a78bfa",
-    border: "1px solid #8b5cf6"
+    border: "1px solid #10b981"
   },
   dateText: {
     color: "#6b7280",
@@ -523,7 +520,7 @@ const styles = {
     marginTop: "auto"
   },
   analyticsBtn: {
-    background: "linear-gradient(135deg, #7c3aed, #8b5cf6)",
+    background: "linear-gradient(135deg, #059669, #10b981)",
     color: "white",
     border: "none",
     padding: "10px 20px",

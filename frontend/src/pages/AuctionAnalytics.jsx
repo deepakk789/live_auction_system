@@ -7,7 +7,7 @@ import {
 } from "recharts";
 import { ArrowLeft, Trophy, Users, Wallet, Activity, Archive, Home } from "lucide-react";
 
-const COLORS = ["#16a34a", "#f97316", "#3b82f6", "#eab308", "#8b5cf6", "#ec4899"];
+const COLORS = ["#16a34a", "#f97316", "#10b981", "#eab308", "#34d399", "#ec4899"];
 
 function AuctionAnalytics() {
   const { auctionId } = useParams();
@@ -103,7 +103,7 @@ function AuctionAnalytics() {
 
       {/* ── KPI Cards ── */}
       <div style={S.kpiRow}>
-        <KpiCard icon={<Users size={22} color="#3b82f6"/>} label="Teams" value={teams.length} accent="#3b82f6" />
+        <KpiCard icon={<Users size={22} color="#10b981"/>} label="Teams" value={teams.length} accent="#10b981" />
         <KpiCard icon={<Activity size={22} color="#10b981"/>} label="Players Sold" value={soldCount} accent="#10b981" />
         <KpiCard icon={<Activity size={22} color="#f97316"/>} label="Players Unsold" value={unsoldCount} accent="#f97316" />
         <KpiCard icon={<Wallet size={22} color="#eab308"/>} label="Total Spend" value={`₹${totalSpend.toLocaleString()}`} accent="#eab308" />
@@ -254,7 +254,7 @@ const S = {
   spinner: {
     width:"44px", height:"44px",
     border:"3px solid rgba(255,255,255,0.1)",
-    borderTopColor:"#8b5cf6",
+    borderTopColor:"#34d399",
     borderRadius:"50%", margin:"0 auto",
     animation:"spin 0.8s linear infinite"
   },
@@ -273,7 +273,7 @@ const S = {
   endedBadge: {
     padding:"6px 16px", borderRadius:"50px", fontSize:"0.85rem",
     fontWeight:700, background:"rgba(139,92,246,0.15)",
-    color:"#a78bfa", border:"1px solid #8b5cf6", alignSelf:"flex-start"
+    color:"#34d399", border:"1px solid #34d399", alignSelf:"flex-start"
   },
   kpiRow: {
     display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(200px, 1fr))",

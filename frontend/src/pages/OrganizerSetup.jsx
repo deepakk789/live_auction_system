@@ -250,9 +250,9 @@ function OrganizerSetup() {
               <div style={{...styles.progressFill, width: `${((step - 1) / 2) * 100}%`}}></div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px' }}>
-              <span style={{ color: step >= 1 ? '#3b82f6' : '#64748b' }}>Basics</span>
-              <span style={{ color: step >= 2 ? '#3b82f6' : '#64748b' }}>Teams</span>
-              <span style={{ color: step >= 3 ? '#3b82f6' : '#64748b' }}>Budget</span>
+              <span style={{ color: step >= 1 ? '#10b981' : '#64748b' }}>Basics</span>
+              <span style={{ color: step >= 2 ? '#10b981' : '#64748b' }}>Teams</span>
+              <span style={{ color: step >= 3 ? '#10b981' : '#64748b' }}>Budget</span>
             </div>
           </div>
         )}
@@ -281,7 +281,7 @@ function OrganizerSetup() {
                 style={{...styles.modeCard, ...(biddingMode === "OFFLINE" ? styles.modeCardActive : {})}}
                 onClick={() => setBiddingMode("OFFLINE")}
               >
-                <Shield size={32} color={biddingMode === "OFFLINE" ? "#3b82f6" : "#64748b"} />
+                <Shield size={32} color={biddingMode === "OFFLINE" ? "#10b981" : "#64748b"} />
                 <h3 style={{ margin: "10px 0 5px" }}>Offline / Manual</h3>
                 <p style={{ fontSize: "0.85rem", color: "#94a3b8", margin: 0 }}>You control the board and input all bids manually.</p>
                 {biddingMode === "OFFLINE" && <div style={styles.activeCheck}><Check size={14}/></div>}
@@ -292,7 +292,7 @@ function OrganizerSetup() {
                 style={{...styles.modeCard, ...(biddingMode === "ONLINE" ? styles.modeCardActive : {})}}
                 onClick={() => setBiddingMode("ONLINE")}
               >
-                <Globe size={32} color={biddingMode === "ONLINE" ? "#3b82f6" : "#64748b"} />
+                <Globe size={32} color={biddingMode === "ONLINE" ? "#10b981" : "#64748b"} />
                 <h3 style={{ margin: "10px 0 5px" }}>Online / Remote</h3>
                 <p style={{ fontSize: "0.85rem", color: "#94a3b8", margin: 0 }}>Teams join via devices and submit realistic live bids.</p>
                 {biddingMode === "ONLINE" && <div style={styles.activeCheck}><Check size={14}/></div>}
@@ -321,7 +321,7 @@ function OrganizerSetup() {
                 min="2" max="15" 
                 value={teamCount} 
                 onChange={handleTeamCountChange} 
-                style={{ width: "100%", accentColor: "#3b82f6" }}
+                style={{ width: "100%", accentColor: "#10b981" }}
               />
             </div>
 
@@ -391,7 +391,7 @@ function OrganizerSetup() {
                 min="1" max="6" 
                 value={bidSteps.length} 
                 onChange={handleNumBidOptionsChange} 
-                style={{ width: "100%", accentColor: "#3b82f6", marginBottom: "15px" }}
+                style={{ width: "100%", accentColor: "#10b981", marginBottom: "15px" }}
               />
               
               <label style={styles.label}>Set Bid Increments</label>
@@ -458,7 +458,7 @@ function OrganizerSetup() {
             {/* Co-Organizers */}
             <div className="glass-card" style={styles.coOrgSection}>
               <h3 style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", margin: "0 0 5px" }}>
-                <Users size={20} color="#3b82f6" /> Co-Organizers
+                <Users size={20} color="#10b981" /> Co-Organizers
               </h3>
               <p style={{ fontSize: "0.82rem", color: "#64748b", textAlign: "center", marginBottom: "18px" }}>
                 {coOrganizersList.length}/3 slots used · Only one organizer can control the board at a time
@@ -548,7 +548,7 @@ function OrganizerSetup() {
                     style={{...styles.modeCard, cursor: "pointer"}}
                     onClick={() => setAuctionAction("schedule")}
                   >
-                    <CalendarDays size={36} color="#3b82f6" />
+                    <CalendarDays size={36} color="#10b981" />
                     <h3 style={{ margin: "10px 0 5px" }}>Schedule Auction</h3>
                     <p style={{ fontSize: "0.85rem", color: "#94a3b8", margin: 0 }}>Set a future date and time for this auction.</p>
                   </div>
@@ -641,7 +641,7 @@ function OrganizerSetup() {
                 <p style={{ color: "#94a3b8", marginBottom: "8px" }}>
                   Your auction <strong style={{ color: "#fff" }}>"{createdAuction.auctionName}"</strong> is scheduled for:
                 </p>
-                <p style={{ fontSize: "1.3rem", color: "#60a5fa", fontWeight: 700 }}>
+                <p style={{ fontSize: "1.3rem", color: "#34d399", fontWeight: 700 }}>
                   {new Date(scheduledDate).toLocaleString("en-IN", { dateStyle: "full", timeStyle: "short" })}
                 </p>
                 <p style={{ color: "#64748b", fontSize: "0.85rem", marginTop: "10px" }}>
@@ -699,7 +699,7 @@ const styles = {
   },
   progressFill: {
     height: "100%",
-    background: "linear-gradient(90deg, #3b82f6, #8b5cf6)",
+    background: "linear-gradient(90deg, #059669, #10b981)",
     transition: "width 0.4s ease-out"
   },
   stepTitle: {
@@ -737,14 +737,14 @@ const styles = {
   },
   modeCardActive: {
     background: "rgba(59, 130, 246, 0.1)",
-    borderColor: "#3b82f6",
+    borderColor: "#10b981",
     boxShadow: "0 4px 20px rgba(59, 130, 246, 0.2)"
   },
   activeCheck: {
     position: "absolute",
     top: "-10px",
     right: "-10px",
-    background: "#3b82f6",
+    background: "#10b981",
     color: "white",
     width: "24px",
     height: "24px",
@@ -809,7 +809,7 @@ const styles = {
     fontSize: "3rem",
     fontWeight: 900,
     letterSpacing: "6px",
-    color: "#60a5fa",
+    color: "#34d399",
     fontFamily: "monospace"
   },
   copyBtn: {
