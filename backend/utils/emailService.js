@@ -15,30 +15,48 @@ function isPlaceholder(value) {
   );
 }
 
+// function createTransporter() {
+//   const emailUser = process.env.EMAIL_USER;
+//   const emailPass = process.env.EMAIL_PASS;
+
+//   if (isPlaceholder(emailUser) || isPlaceholder(emailPass)) {
+//     console.warn("⚠️  Email service not configured — set EMAIL_USER and EMAIL_PASS in environment variables");
+//     return null;
+//   }
+
+//   // Render.com blocks port 465 (SSL) but allows port 587 (STARTTLS).
+//   return nodemailer.createTransport({
+//     host: process.env.EMAIL_HOST || "smtp.gmail.com",
+//     port: parseInt(process.env.EMAIL_PORT || "587", 10),
+//     secure: false,
+//     auth: {
+//       user: emailUser,
+//       pass: emailPass,
+//     },
+//     tls: {
+//       rejectUnauthorized: false,
+//     },
+//     connectionTimeout: 10000,
+//     greetingTimeout: 10000,
+//     socketTimeout: 15000,
+//   });
+// }
+
 function createTransporter() {
   const emailUser = process.env.EMAIL_USER;
   const emailPass = process.env.EMAIL_PASS;
 
   if (isPlaceholder(emailUser) || isPlaceholder(emailPass)) {
-    console.warn("⚠️  Email service not configured — set EMAIL_USER and EMAIL_PASS in environment variables");
+    console.warn("⚠️ Email service not configured");
     return null;
   }
 
-  // Render.com blocks port 465 (SSL) but allows port 587 (STARTTLS).
   return nodemailer.createTransport({
-    host: process.env.EMAIL_HOST || "smtp.gmail.com",
-    port: parseInt(process.env.EMAIL_PORT || "587", 10),
-    secure: false,
+    service: "gmail",
     auth: {
       user: emailUser,
       pass: emailPass,
     },
-    tls: {
-      rejectUnauthorized: false,
-    },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
   });
 }
 
