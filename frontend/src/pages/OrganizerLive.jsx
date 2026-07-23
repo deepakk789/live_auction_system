@@ -291,6 +291,7 @@ function OrganizerLive() {
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
           body: JSON.stringify({ auctionId })
         });
+        navigate("/");
       } catch (err) { console.error(err); }
     }
   };

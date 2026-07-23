@@ -220,6 +220,7 @@ function OrganizerOnlineView() {
           body: JSON.stringify({ auctionId })
         });
         socket.emit("auction_state", { auctionId, state: "ENDED" });
+        navigate("/");
       } catch (err) {
         console.error(err);
       }

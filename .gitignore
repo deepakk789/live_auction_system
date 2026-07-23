@@ -43,3 +43,4 @@ uploads/
 .parcel-cache/
 *.local
 script.js
+revision/

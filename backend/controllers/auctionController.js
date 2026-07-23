@@ -3,6 +3,7 @@ const Auction = require("../models/Auction");
 const Team = require("../models/Team");
 const User = require("../models/User");
 const logger = require("../utils/logger");
+const { uploadImageFromUrl } = require("../utils/cloudinaryService");
 
 /**
  * Set auction mode: RANDOM or MANUAL
@@ -226,12 +227,24 @@ exports.uploadPlayers = async (req, res) => {
     // Delete old players for THIS auction only
     await Player.deleteMany({ auctionId });
 
+    // Process photos (upload to Cloudinary if they are URLs)
+    const processedPlayers = await Promise.all(
+      players.map(async (p, i) => {
+        let photoUrl = p.photo;
+        if (photoUrl && typeof photoUrl === 'string' && photoUrl.trim() !== '') {
+           photoUrl = await uploadImageFromUrl(photoUrl);
+        }
+        return {
+          ...p,
+          photo: photoUrl,
+          index: p.id !== undefined ? p.id : i,
+          auctionId
+        };
+      })
+    );
+
     // Insert players scoped to this auction
-    const createdPlayers = await Player.insertMany(players.map((p, i) => ({
-      ...p,
-      index: p.id !== undefined ? p.id : i,
-      auctionId
-    })));
+    const createdPlayers = await Player.insertMany(processedPlayers);
 
     // Update Auction with config
     const auction = await Auction.findById(auctionId);
