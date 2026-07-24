@@ -1,0 +1,55 @@
+name: AuctionX CI — Run Tests
+
+# Trigger: Run this pipeline on every push or pull request to the main branch
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    name: Run Backend Tests
+    runs-on: ubuntu-latest
+
+    # GitHub will spin up a temporary MongoDB instance alongside your app
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        # Wait until MongoDB is healthy before starting the tests
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      # Step 1: Check out your repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      # Step 3: Install backend dependencies
+      - name: Install dependencies
+        run: npm ci
+        working-directory: backend
+
+      # Step 4: Run Jest tests
+      # Environment variables are injected here — no .env file needed on GitHub
+      - name: Run Jest Tests
+        run: npm test
+        working-directory: backend
+        env:
+          NODE_ENV: test
+          MONGO_URI: mongodb://localhost:27017/auctionx_test
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          FRONTEND_URL: http://localhost:5173

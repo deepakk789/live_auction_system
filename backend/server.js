@@ -96,12 +96,14 @@ app.use((err, req, res, next) => {
 
 // Start Server
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  logger.info(`🚀 Server running on http://localhost:${PORT}`);
-  logger.info(`   Health: http://localhost:${PORT}/api/health`);
-  logger.info(`   Environment: ${process.env.NODE_ENV || "development"}`);
-  logger.info(`   CORS allowed origin: ${allowedOrigin}`);
-});
+if (process.env.NODE_ENV !== "test") {
+  server.listen(PORT, () => {
+    logger.info(`🚀 Server running on http://localhost:${PORT}`);
+    logger.info(`   Health: http://localhost:${PORT}/api/health`);
+    logger.info(`   Environment: ${process.env.NODE_ENV || "development"}`);
+    logger.info(`   CORS allowed origin: ${allowedOrigin}`);
+  });
+}
 
 server.on("error", (err) => {
   if (err.code === "EADDRINUSE") {

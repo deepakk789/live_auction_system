@@ -76,7 +76,7 @@ exports.nextPlayer = async (req, res) => {
     auction.isLive = true;
     await auction.save();
 
-    // 🔴 SOCKET EMIT: new live player
+    //  SOCKET EMIT: new live player
     const io = req.app.get("io");
     io.to(`auction_${auctionId}`).emit("player_live", player);
 
@@ -115,19 +115,34 @@ exports.updateBid = async (req, res) => {
       return res.status(400).json({ message: "Player not live" });
     }
 
-    if (amount <= player.currentBid) {
-      return res.status(400).json({ message: "Bid must be higher than current bid" });
+    const updatedPlayer = await Player.findOneAndUpdate(
+      {
+        _id: playerId,
+        status: "LIVE",
+        $or: [
+          { currentBid: { $lt: amount } },
+          { currentBid: { $exists: false } },
+          { currentBid: null }
+        ]
+      },
+      {
+        $set: {
+          currentBid: amount,
+          currentBidder: bidder
+        }
+      },
+      { new: true }
+    );
+
+    if (!updatedPlayer) {
+      return res.status(400).json({ message: "Bid rejected. A higher or equal bid was already placed." });
     }
 
-    player.currentBid = amount;
-    player.currentBidder = bidder;
-    await player.save();
-
-    // 🔴 SOCKET EMIT: bid updated
+    // SOCKET EMIT: bid updated
     const io = req.app.get("io");
-    io.to(`auction_${player.auctionId}`).emit("bid_update", player);
+    io.to(`auction_${updatedPlayer.auctionId}`).emit("bid_update", updatedPlayer);
 
-    res.json(player);
+    res.json(updatedPlayer);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -149,7 +164,7 @@ exports.markSold = async (req, res) => {
     player.status = "SOLD";
     await player.save();
 
-    // 🔴 SOCKET EMIT: player sold
+    // SOCKET EMIT: player sold
     const io = req.app.get("io");
     io.to(`auction_${player.auctionId}`).emit("player_sold", player);
 

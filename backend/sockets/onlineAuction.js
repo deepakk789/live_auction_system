@@ -73,16 +73,33 @@ const registerOnlineAuctionEvents = (io, socket) => {
       const team = await Team.findOne({ auctionId, name: teamName });
       if (!team || team.budget < amount) return;
 
-      currentPlayer.currentBid = amount;
-      currentPlayer.currentBidder = teamName;
-      currentPlayer.status = "LIVE";
-      await currentPlayer.save();
+      // ATOMIC UPDATE to prevent race conditions
+      const updatedPlayer = await Player.findOneAndUpdate(
+        { 
+          _id: currentPlayer._id, 
+          $or: [
+            { currentBid: { $lt: amount } },
+            { currentBid: { $exists: false } },
+            { currentBid: null }
+          ]
+        },
+        { 
+          $set: { 
+            currentBid: amount, 
+            currentBidder: teamName,
+            status: "LIVE"
+          } 
+        },
+        { new: true }
+      );
+
+      if (!updatedPlayer) return;
 
       io.to(`auction_${auctionId}`).emit("bid_accepted", {
         playerIndex: auction.currentPlayerIndex,
         amount,
         teamName,
-        playerName: currentPlayer.name,
+        playerName: updatedPlayer.name,
       });
 
       startOnlineTimer(auctionId, 10, io);

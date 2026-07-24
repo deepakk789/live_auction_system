@@ -40,6 +40,11 @@ const playerSchema = new mongoose.Schema(
       default: 0
     },
 
+    currentBidder: {
+      type: String,
+      default: null
+    },
+
     soldTo: {
       type: String,
       default: null

@@ -38,16 +38,34 @@ const startOnlineTimer = (auctionId, initialSeconds, io) => {
           const winningTeam = currentPlayer.currentBidder;
           const soldPrice = currentPlayer.currentBid;
 
-          currentPlayer.status = "SOLD";
-          currentPlayer.soldTo = winningTeam;
-          currentPlayer.soldPrice = soldPrice;
-          await currentPlayer.save();
+          // Atomic check and update to ensure no late bids are overwritten
+          const updatedPlayer = await Player.findOneAndUpdate(
+            {
+              _id: currentPlayer._id,
+              status: "LIVE",
+              currentBid: soldPrice,
+              currentBidder: winningTeam
+            },
+            {
+              $set: {
+                status: "SOLD",
+                soldTo: winningTeam,
+                soldPrice: soldPrice
+              }
+            },
+            { new: true }
+          );
+
+          if (!updatedPlayer) {
+            logger.warn(`Auto-sell aborted for player ${currentPlayer.name}: bid or status changed in the last millisecond.`);
+            return;
+          }
 
           await Team.updateOne(
             { auctionId, name: winningTeam },
             {
               $inc: { budget: -soldPrice },
-              $push: { players: { name: currentPlayer.name, price: soldPrice } },
+              $push: { players: { name: updatedPlayer.name, price: soldPrice } },
             }
           );
 
@@ -55,18 +73,47 @@ const startOnlineTimer = (auctionId, initialSeconds, io) => {
           io.to(`auction_${auctionId}`).emit("teams_update", freshTeams.map(t => ({ name: t.name, budget: t.budget, players: t.players })));
           io.to(`auction_${auctionId}`).emit("player_sold_auto", {
             playerIndex: auction.currentPlayerIndex,
-            playerName: currentPlayer.name,
+            playerName: updatedPlayer.name,
             soldTo: winningTeam,
             soldPrice,
           });
         } else {
           // AUTO-UNSOLD
-          currentPlayer.status = "UNSOLD";
-          await currentPlayer.save();
+          // Atomic check and update to ensure no late bids are overwritten
+          const updatedPlayer = await Player.findOneAndUpdate(
+            {
+              _id: currentPlayer._id,
+              status: "LIVE",
+              $and: [
+                {
+                  $or: [
+                    { currentBid: 0 },
+                    { currentBid: { $exists: false } },
+                    { currentBid: null }
+                  ]
+                },
+                {
+                  $or: [
+                    { currentBidder: null },
+                    { currentBidder: { $exists: false } }
+                  ]
+                }
+              ]
+            },
+            {
+              $set: { status: "UNSOLD" }
+            },
+            { new: true }
+          );
+
+          if (!updatedPlayer) {
+            logger.warn(`Auto-unsold aborted for player ${currentPlayer.name}: a bid was placed in the last millisecond.`);
+            return;
+          }
 
           io.to(`auction_${auctionId}`).emit("player_skipped", {
             playerIndex: auction.currentPlayerIndex,
-            playerName: currentPlayer.name,
+            playerName: updatedPlayer.name,
           });
         }
 
