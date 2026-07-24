@@ -52,4 +52,5 @@ jobs:
           NODE_ENV: test
           MONGO_URI: mongodb://localhost:27017/auctionx_test
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           FRONTEND_URL: http://localhost:5173

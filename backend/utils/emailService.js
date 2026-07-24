@@ -141,7 +141,13 @@
 // trial Resend
 const { Resend } = require("resend");
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialization — client is created only when sendResetEmail is called.
+// This prevents a crash at import time when RESEND_API_KEY is not set (e.g., in CI/test environments).
+function getResendClient() {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) return null;
+  return new Resend(key);
+}
 
 /**
  * Send a password reset email.
@@ -153,6 +159,14 @@ async function sendResetEmail(toEmail, resetToken) {
   ).replace(/\/$/, "");
 
   const resetLink = `${frontendUrl}/reset-password/${resetToken}`;
+
+  const resend = getResendClient();
+
+  // If no API key is configured (e.g. in test/CI), skip sending silently
+  if (!resend) {
+    console.warn(`📧 [SKIP] RESEND_API_KEY not set — skipping email to ${toEmail}`);
+    return { sent: false, reason: "not_configured" };
+  }
 
   try {
     const response = await resend.emails.send({
