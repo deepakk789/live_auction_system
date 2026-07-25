@@ -5,6 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Copy, Check, Lock, Unlock, Trophy, User, Wallet, TrendingUp } from "lucide-react";
 import AnimatedCounter from "../components/AnimatedCounter";
 import SkeletonLoader from "../components/SkeletonLoader";
+import ShuffleLoader from "../components/ShuffleLoader";
 import PageTransition from "../components/PageTransition";
 
 /* ── Sidebar accent colours ── */
@@ -25,6 +26,7 @@ function OrganizerLive() {
   const [maxBid, setMaxBid] = useState(null);
   const [biddingMode, setBiddingMode] = useState("OFFLINE");
   const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [showShuffle, setShowShuffle] = useState(false);
 
   // Lock System
   const [hasLock, setHasLock] = useState(false);
@@ -35,6 +37,7 @@ function OrganizerLive() {
 
   const navigate = useNavigate();
   const stateRef = useRef({ prevIndex: 0 });
+  const navDirectionRef = useRef("next");
   const fallbackPhoto = "https://cdn-icons-png.flaticon.com/512/861/861512.png";
 
   const getBasePrice = (details) => {
@@ -298,21 +301,32 @@ function OrganizerLive() {
 
   const goNext = () => {
     if (!playersState) return;
-    setPlayersState((prev) => {
-      const nextIndex = Math.min(prev.currentIndex + 1, prev.players.length - 1);
-      const updated = { ...prev, currentIndex: nextIndex };
-      socket.emit("auction_update", { ...updated, auctionId });
-      return updated;
-    });
+    navDirectionRef.current = "next";
+    setShowShuffle(true);
   };
 
   const goPrev = () => {
     if (!playersState) return;
-    setPlayersState((prev) => {
-      const updated = { ...prev, currentIndex: Math.max(prev.currentIndex - 1, 0) };
-      socket.emit("auction_update", { ...updated, auctionId });
-      return updated;
-    });
+    navDirectionRef.current = "prev";
+    setShowShuffle(true);
+  };
+
+  const handleShuffleComplete = () => {
+    setShowShuffle(false);
+    if (navDirectionRef.current === "next") {
+      setPlayersState((prev) => {
+        const nextIndex = Math.min(prev.currentIndex + 1, prev.players.length - 1);
+        const updated = { ...prev, currentIndex: nextIndex };
+        socket.emit("auction_update", { ...updated, auctionId });
+        return updated;
+      });
+    } else {
+      setPlayersState((prev) => {
+        const updated = { ...prev, currentIndex: Math.max(prev.currentIndex - 1, 0) };
+        socket.emit("auction_update", { ...updated, auctionId });
+        return updated;
+      });
+    }
   };
 
   const increaseBid = (amt) => {
@@ -625,62 +639,70 @@ function OrganizerLive() {
 
             {/* Player Card */}
             <AnimatePresence mode="wait">
-              <motion.div
-                key={currentIndex}
-                className="glass-panel"
-                style={styles.playerCard}
-                initial={{ opacity: 0, y: 30, scale: 0.97 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -20, scale: 0.97 }}
-                transition={{ type: "spring", damping: 22, stiffness: 200 }}
-              >
+              {showShuffle ? (
+                <ShuffleLoader
+                  key="shuffle"
+                  onComplete={handleShuffleComplete}
+                  targetImageUrl={getPlayerPhoto(currentPlayer.details) || fallbackPhoto}
+                />
+              ) : (
                 <motion.div
-                  style={styles.imageWrapper}
-                  initial={{ scale: 0.8 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.1, type: "spring" }}
+                  key={currentIndex}
+                  className="glass-panel"
+                  style={styles.playerCard}
+                  initial={{ opacity: 0, y: 30, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -20, scale: 0.97 }}
+                  transition={{ type: "spring", damping: 22, stiffness: 200 }}
                 >
-                  <img src={getPlayerPhoto(currentPlayer.details) || fallbackPhoto} alt="Player" style={styles.photo} />
-                  <AnimatePresence>
-                    {currentPlayer.status === "SOLD" && (
-                      <motion.div className="stamp-overlay stamp-sold" initial={{ scale: 3, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", damping: 12 }}>
-                        <h2>SOLD</h2>
-                      </motion.div>
-                    )}
-                    {currentPlayer.status === "UNSOLD" && (
-                      <motion.div className="stamp-overlay stamp-unsold" initial={{ scale: 3, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", damping: 12 }}>
-                        <h2>UNSOLD</h2>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
+                  <motion.div
+                    style={styles.imageWrapper}
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.1, type: "spring" }}
+                  >
+                    <img src={getPlayerPhoto(currentPlayer.details) || fallbackPhoto} alt="Player" style={styles.photo} />
+                    <AnimatePresence>
+                      {currentPlayer.status === "SOLD" && (
+                        <motion.div className="stamp-overlay stamp-sold" initial={{ scale: 3, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", damping: 12 }}>
+                          <h2>SOLD</h2>
+                        </motion.div>
+                      )}
+                      {currentPlayer.status === "UNSOLD" && (
+                        <motion.div className="stamp-overlay stamp-unsold" initial={{ scale: 3, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", damping: 12 }}>
+                          <h2>UNSOLD</h2>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
 
-                <motion.h2 style={{ fontSize: "2.5rem", margin: "20px 0 10px", fontWeight: 900 }} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-                  {currentPlayer.name}
-                </motion.h2>
+                  <motion.h2 style={{ fontSize: "2.5rem", margin: "20px 0 10px", fontWeight: 900 }} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+                    {currentPlayer.name}
+                  </motion.h2>
 
-                <motion.div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "10px", marginBottom: "20px" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }}>
-                  {auctionConfig.selectedFields.map(f => {
-                     if (currentPlayer.details[f]) {
-                       return <span key={f} style={styles.badge}>{f.toUpperCase()}: {currentPlayer.details[f]}</span>;
-                     }
-                     return null;
-                  })}
-                </motion.div>
+                  <motion.div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "10px", marginBottom: "20px" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }}>
+                    {auctionConfig.selectedFields.map(f => {
+                       if (currentPlayer.details[f]) {
+                         return <span key={f} style={styles.badge}>{f.toUpperCase()}: {currentPlayer.details[f]}</span>;
+                       }
+                       return null;
+                    })}
+                  </motion.div>
 
-                <motion.div className="glass-card" style={styles.bidDisplay} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }}>
-                  <span style={{ fontSize: "1rem", color: "#9ca3af" }}>CURRENT BID</span>
-                  <AnimatedCounter
-                    value={currentPlayer.currentBid || getBasePrice(currentPlayer.details)}
-                    prefix="₹"
-                    fontSize="4rem"
-                    fontWeight="900"
-                    highlight
-                    className="text-gradient"
-                    style={{ lineHeight: 1 }}
-                  />
+                  <motion.div className="glass-card" style={styles.bidDisplay} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }}>
+                    <span style={{ fontSize: "1rem", color: "#9ca3af" }}>CURRENT BID</span>
+                    <AnimatedCounter
+                      value={currentPlayer.currentBid || getBasePrice(currentPlayer.details)}
+                      prefix="₹"
+                      fontSize="4rem"
+                      fontWeight="900"
+                      highlight
+                      className="text-gradient"
+                      style={{ lineHeight: 1 }}
+                    />
+                  </motion.div>
                 </motion.div>
-              </motion.div>
+              )}
             </AnimatePresence>
 
             {/* BIDDING CONTROLS */}
@@ -734,9 +756,9 @@ function OrganizerLive() {
               </div>
 
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: "10px" }}>
-                <motion.button className="btn-glass" onClick={goPrev} disabled={!hasLock || currentIndex === 0} whileHover={{ x: -3 }} whileTap={{ scale: 0.95 }}>← Prev</motion.button>
+                <motion.button className="btn-glass" onClick={goPrev} disabled={!hasLock || currentIndex === 0 || showShuffle} whileHover={{ x: -3 }} whileTap={{ scale: 0.95 }}>← Prev</motion.button>
                 <span style={{ color: "#94a3b8", alignSelf: "center", fontWeight: "bold" }}>{currentIndex + 1} / {players.length}</span>
-                <motion.button className="btn-glass" onClick={goNext} disabled={!hasLock || currentIndex === players.length - 1} whileHover={{ x: 3 }} whileTap={{ scale: 0.95 }}>Next →</motion.button>
+                <motion.button className="btn-glass" onClick={goNext} disabled={!hasLock || currentIndex === players.length - 1 || showShuffle} whileHover={{ x: 3 }} whileTap={{ scale: 0.95 }}>Next →</motion.button>
               </div>
             </motion.div>
           </div>

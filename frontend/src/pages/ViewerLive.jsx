@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Copy, Check, Users, Activity, ExternalLink, Zap, Wallet, TrendingUp, Trophy } from "lucide-react";
 import socket, { BACKEND_URL } from "../services/socket";
 import AnimatedCounter from "../components/AnimatedCounter";
 import SkeletonLoader from "../components/SkeletonLoader";
+import ShuffleLoader from "../components/ShuffleLoader";
 import PageTransition from "../components/PageTransition";
 import DrinksBreak from "./DrinksBreak";
 
@@ -33,6 +34,8 @@ function ViewerLive() {
   const [representingTeam, setRepresentingTeam] = useState("");
   const [loading, setLoading] = useState(true);
   const [expandedTeam, setExpandedTeam] = useState(null);
+  const [showShuffle, setShowShuffle] = useState(false);
+  const pendingPlayersState = useRef(null);
 
   const getBasePrice = (details) => {
     const value = Object.values(details).find((v) => {
@@ -103,7 +106,17 @@ function ViewerLive() {
     };
     fetchData();
 
-    socket.on("auction_update", (data) => setPlayersState(data));
+    socket.on("auction_update", (data) => {
+      // If the player index changed, show shuffle animation before revealing new player.
+      setPlayersState(prev => {
+        if (prev && data.currentIndex !== prev.currentIndex) {
+          pendingPlayersState.current = data;
+          setShowShuffle(true);
+          return prev; // keep old state visible until animation completes
+        }
+        return data; // same player — just update bid, no animation needed
+      });
+    });
     socket.on("teams_update", (data) => setTeams(data));
     socket.on("auction_state", (state) => setAuctionState(state));
     socket.on("auction_config", (cfg) => {
@@ -122,6 +135,14 @@ function ViewerLive() {
       socket.off("resume_countdown_tick");
     };
   }, [auctionId]);
+
+  const handleShuffleComplete = () => {
+    setShowShuffle(false);
+    if (pendingPlayersState.current) {
+      setPlayersState(pendingPlayersState.current);
+      pendingPlayersState.current = null;
+    }
+  };
 
   useEffect(() => {
     if (representingTeam && biddingMode === "ONLINE") {
@@ -279,86 +300,94 @@ function ViewerLive() {
           {/* PLAYER DISPLAY */}
           <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
             <AnimatePresence mode="wait">
-              <motion.div
-                key={currentIndex}
-                className="glass-panel"
-                style={styles.playerCard}
-                initial={{ opacity: 0, y: 30, scale: 0.97 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -20, scale: 0.97 }}
-                transition={{ type: "spring", damping: 22, stiffness: 200 }}
-              >
-                {/* Player image */}
+              {showShuffle ? (
+                <ShuffleLoader
+                  key="shuffle"
+                  onComplete={handleShuffleComplete}
+                  targetImageUrl={getPlayerPhoto(currentPlayer.details) || fallbackPhoto}
+                />
+              ) : (
                 <motion.div
-                  style={styles.imageWrapper}
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.15, type: "spring" }}
+                  key={currentIndex}
+                  className="glass-panel"
+                  style={styles.playerCard}
+                  initial={{ opacity: 0, y: 30, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -20, scale: 0.97 }}
+                  transition={{ type: "spring", damping: 22, stiffness: 200 }}
                 >
-                  <img src={getPlayerPhoto(currentPlayer.details) || fallbackPhoto} alt="Player" style={styles.photo} />
-                  <AnimatePresence>
-                    {currentPlayer.status === "SOLD" && (
-                      <motion.div className="stamp-overlay stamp-sold" initial={{ scale: 3, opacity: 0, rotate: -30 }} animate={{ scale: 1, opacity: 1, rotate: -15 }} transition={{ type: "spring", damping: 12 }}>
-                        <h2>SOLD!</h2>
-                        <p>to {currentPlayer.soldTo}</p>
-                      </motion.div>
-                    )}
-                    {currentPlayer.status === "UNSOLD" && (
-                      <motion.div className="stamp-overlay stamp-unsold" initial={{ scale: 3, opacity: 0, rotate: -30 }} animate={{ scale: 1, opacity: 1, rotate: -15 }} transition={{ type: "spring", damping: 12 }}>
-                        <h2>UNSOLD</h2>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
+                  {/* Player image */}
+                  <motion.div
+                    style={styles.imageWrapper}
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.15, type: "spring" }}
+                  >
+                    <img src={getPlayerPhoto(currentPlayer.details) || fallbackPhoto} alt="Player" style={styles.photo} />
+                    <AnimatePresence>
+                      {currentPlayer.status === "SOLD" && (
+                        <motion.div className="stamp-overlay stamp-sold" initial={{ scale: 3, opacity: 0, rotate: -30 }} animate={{ scale: 1, opacity: 1, rotate: -15 }} transition={{ type: "spring", damping: 12 }}>
+                          <h2>SOLD!</h2>
+                          <p>to {currentPlayer.soldTo}</p>
+                        </motion.div>
+                      )}
+                      {currentPlayer.status === "UNSOLD" && (
+                        <motion.div className="stamp-overlay stamp-unsold" initial={{ scale: 3, opacity: 0, rotate: -30 }} animate={{ scale: 1, opacity: 1, rotate: -15 }} transition={{ type: "spring", damping: 12 }}>
+                          <h2>UNSOLD</h2>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
 
-                <motion.h1
-                  style={{ fontSize: "3rem", fontWeight: 900, margin: "20px 0 10px", lineHeight: 1.1 }}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  {currentPlayer.name}
-                </motion.h1>
+                  <motion.h1
+                    style={{ fontSize: "3rem", fontWeight: 900, margin: "20px 0 10px", lineHeight: 1.1 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    {currentPlayer.name}
+                  </motion.h1>
 
-                <motion.div
-                  style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "10px", marginBottom: "30px" }}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  {selectedFields.map(f => {
-                    if (currentPlayer.details[f]) {
-                      return <span key={f} style={styles.badge}>{f.toUpperCase()}: {currentPlayer.details[f]}</span>;
-                    }
-                    return null;
-                  })}
-                </motion.div>
+                  <motion.div
+                    style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "10px", marginBottom: "30px" }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    {selectedFields.map(f => {
+                      if (currentPlayer.details[f]) {
+                        return <span key={f} style={styles.badge}>{f.toUpperCase()}: {currentPlayer.details[f]}</span>;
+                      }
+                      return null;
+                    })}
+                  </motion.div>
 
-                {/* Bid Display */}
-                <motion.div
-                  className="glass-card"
-                  style={styles.bidDisplay}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.35 }}
-                >
-                  <span style={{ fontSize: "1.2rem", color: "#9ca3af", letterSpacing: "2px" }}>CURRENT BID</span>
-                  <AnimatedCounter
-                    value={currentBid}
-                    prefix="₹"
-                    fontSize="5rem"
-                    fontWeight="900"
-                    highlight
-                    className="text-gradient"
-                    style={{ lineHeight: 1 }}
-                  />
-                </motion.div>
+                  {/* Bid Display */}
+                  <motion.div
+                    className="glass-card"
+                    style={styles.bidDisplay}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.35 }}
+                  >
+                    <span style={{ fontSize: "1.2rem", color: "#9ca3af", letterSpacing: "2px" }}>CURRENT BID</span>
+                    <AnimatedCounter
+                      value={currentBid}
+                      prefix="₹"
+                      fontSize="5rem"
+                      fontWeight="900"
+                      highlight
+                      className="text-gradient"
+                      style={{ lineHeight: 1 }}
+                    />
+                  </motion.div>
 
-                {/* Player progress */}
-                <motion.div style={{ color: "#64748b", fontSize: "0.9rem", marginTop: "10px" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
-                  Player {currentIndex + 1} of {players.length}
+                  {/* Player progress */}
+                  <motion.div style={{ color: "#64748b", fontSize: "0.9rem", marginTop: "10px" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
+                    Player {currentIndex + 1} of {players.length}
+                  </motion.div>
                 </motion.div>
-              </motion.div>
+              )}
             </AnimatePresence>
 
             {/* ONLINE BIDDING PANEL */}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Zap, Activity, Users, Wallet } from "lucide-react";
@@ -6,6 +6,7 @@ import socket, { BACKEND_URL } from "../services/socket";
 import PageTransition from "../components/PageTransition";
 import AnimatedCounter from "../components/AnimatedCounter";
 import SkeletonLoader from "../components/SkeletonLoader";
+import ShuffleLoader from "../components/ShuffleLoader";
 import DrinksBreak from "./DrinksBreak";
 
 function TeamRepDashboard() {
@@ -25,6 +26,8 @@ function TeamRepDashboard() {
   const [countdown, setCountdown] = useState(null);
   const [myTeamData, setMyTeamData] = useState(null);
   const [resumeSeconds, setResumeSeconds] = useState(null);
+  const [showShuffle, setShowShuffle] = useState(false);
+  const pendingNextPlayer = useRef(null);
 
   const fallbackPhoto = "https://cdn-icons-png.flaticon.com/512/861/861512.png";
 
@@ -152,14 +155,10 @@ function TeamRepDashboard() {
 
     socket.on("online_next_player", ({ playerIndex, player, teams }) => {
       setCountdown(null);
-      setPlayersState(prev => {
-        if (!prev) return prev;
-        const copy = { ...prev };
-        copy.currentIndex = playerIndex;
-        copy.players[playerIndex] = player;
-        return copy;
-      });
-      setTeams(teams);
+      // Store incoming data and show the shuffle animation.
+      // The actual state update happens in handleShuffleComplete.
+      pendingNextPlayer.current = { playerIndex, player, teams };
+      setShowShuffle(true);
     });
 
     socket.on("player_skipped", ({ playerIndex, playerName }) => {
@@ -198,6 +197,22 @@ function TeamRepDashboard() {
       socket.off("resume_countdown_tick");
     };
   }, [auctionId, navigate, representingTeam]);
+
+  const handleShuffleComplete = () => {
+    setShowShuffle(false);
+    if (pendingNextPlayer.current) {
+      const { playerIndex, player, teams } = pendingNextPlayer.current;
+      pendingNextPlayer.current = null;
+      setPlayersState(prev => {
+        if (!prev) return prev;
+        const copy = { ...prev };
+        copy.currentIndex = playerIndex;
+        copy.players[playerIndex] = player;
+        return copy;
+      });
+      setTeams(teams);
+    }
+  };
 
   useEffect(() => {
     if (representingTeam) {
@@ -332,56 +347,64 @@ function TeamRepDashboard() {
             {/* Left: Player + Bid Display */}
             <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
               <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentIndex}
-                  className="glass-panel"
-                  style={{ padding: "40px", flex: 1, display: "flex", flexDirection: "column", alignItems: "center", position: "relative", overflow: "hidden" }}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                >
-                  <div style={{ width: "220px", height: "220px", borderRadius: "20px", overflow: "hidden", border: "4px solid rgba(255,255,255,0.1)", marginBottom: "20px", position: "relative" }}>
-                    <img src={getPlayerPhoto(currentPlayer.details) || fallbackPhoto} alt="Player" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    <AnimatePresence>
-                      {currentPlayer.status === "SOLD" && (
-                        <motion.div className="stamp-overlay stamp-sold" initial={{ scale: 3, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ padding: "5px", fontSize: "1.5rem" }}>
-                          <h2 style={{ margin: 0 }}>SOLD</h2>
-                          <div style={{ fontSize: "0.8rem" }}>to {currentPlayer.soldTo}</div>
-                        </motion.div>
-                      )}
-                      {currentPlayer.status === "UNSOLD" && (
-                        <motion.div className="stamp-overlay stamp-unsold" initial={{ scale: 3, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ padding: "5px", fontSize: "1.5rem" }}>
-                          <h2 style={{ margin: 0 }}>UNSOLD</h2>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                  
-                  <h1 style={{ fontSize: "2.5rem", margin: "0 0 10px", fontWeight: 900 }}>{currentPlayer.name}</h1>
-                  
-                  <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "8px", marginBottom: "30px" }}>
-                    {auctionConfig?.selectedFields?.map(f => {
-                      if (currentPlayer.details[f]) {
-                        return <span key={f} style={{ background: "rgba(255,255,255,0.05)", padding: "4px 12px", borderRadius: "20px", fontSize: "0.8rem", color: "#9ca3af" }}>{f.toUpperCase()}: {currentPlayer.details[f]}</span>;
-                      }
-                      return null;
-                    })}
-                  </div>
-
-                  {/* Bid State */}
-                  <div style={{ background: "rgba(0,0,0,0.3)", width: "100%", padding: "30px", borderRadius: "16px", textAlign: "center", position: "relative", border: isLeading ? "2px solid #10b981" : "2px solid transparent" }}>
-                    <div style={{ fontSize: "1rem", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "10px" }}>Current Bid</div>
-                    <AnimatedCounter value={currentBid} prefix="₹" fontSize="4.5rem" fontWeight="900" highlight className="text-gradient" />
+                {showShuffle ? (
+                  <ShuffleLoader
+                    key="shuffle"
+                    onComplete={handleShuffleComplete}
+                    targetImageUrl={getPlayerPhoto(currentPlayer.details) || fallbackPhoto}
+                  />
+                ) : (
+                  <motion.div
+                    key={currentIndex}
+                    className="glass-panel"
+                    style={{ padding: "40px", flex: 1, display: "flex", flexDirection: "column", alignItems: "center", position: "relative", overflow: "hidden" }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                  >
+                    <div style={{ width: "220px", height: "220px", borderRadius: "20px", overflow: "hidden", border: "4px solid rgba(255,255,255,0.1)", marginBottom: "20px", position: "relative" }}>
+                      <img src={getPlayerPhoto(currentPlayer.details) || fallbackPhoto} alt="Player" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      <AnimatePresence>
+                        {currentPlayer.status === "SOLD" && (
+                          <motion.div className="stamp-overlay stamp-sold" initial={{ scale: 3, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ padding: "5px", fontSize: "1.5rem" }}>
+                            <h2 style={{ margin: 0 }}>SOLD</h2>
+                            <div style={{ fontSize: "0.8rem" }}>to {currentPlayer.soldTo}</div>
+                          </motion.div>
+                        )}
+                        {currentPlayer.status === "UNSOLD" && (
+                          <motion.div className="stamp-overlay stamp-unsold" initial={{ scale: 3, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ padding: "5px", fontSize: "1.5rem" }}>
+                            <h2 style={{ margin: 0 }}>UNSOLD</h2>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                     
-                    {currentPlayer.currentBidder ? (
-                      <div style={{ marginTop: "15px", fontSize: "1.1rem", fontWeight: 600, color: isLeading ? "#10b981" : "#facc15" }}>
-                        Highest Bidder: {isLeading ? "YOU" : currentPlayer.currentBidder}
-                      </div>
-                    ) : (
-                      <div style={{ marginTop: "15px", fontSize: "1.1rem", color: "#64748b" }}>Waiting for opening bid... (Base: ₹{base})</div>
-                    )}
-                  </div>
-                </motion.div>
+                    <h1 style={{ fontSize: "2.5rem", margin: "0 0 10px", fontWeight: 900 }}>{currentPlayer.name}</h1>
+                    
+                    <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "8px", marginBottom: "30px" }}>
+                      {auctionConfig?.selectedFields?.map(f => {
+                        if (currentPlayer.details[f]) {
+                          return <span key={f} style={{ background: "rgba(255,255,255,0.05)", padding: "4px 12px", borderRadius: "20px", fontSize: "0.8rem", color: "#9ca3af" }}>{f.toUpperCase()}: {currentPlayer.details[f]}</span>;
+                        }
+                        return null;
+                      })}
+                    </div>
+
+                    {/* Bid State */}
+                    <div style={{ background: "rgba(0,0,0,0.3)", width: "100%", padding: "30px", borderRadius: "16px", textAlign: "center", position: "relative", border: isLeading ? "2px solid #10b981" : "2px solid transparent" }}>
+                      <div style={{ fontSize: "1rem", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "10px" }}>Current Bid</div>
+                      <AnimatedCounter value={currentBid} prefix="₹" fontSize="4.5rem" fontWeight="900" highlight className="text-gradient" />
+                      
+                      {currentPlayer.currentBidder ? (
+                        <div style={{ marginTop: "15px", fontSize: "1.1rem", fontWeight: 600, color: isLeading ? "#10b981" : "#facc15" }}>
+                          Highest Bidder: {isLeading ? "YOU" : currentPlayer.currentBidder}
+                        </div>
+                      ) : (
+                        <div style={{ marginTop: "15px", fontSize: "1.1rem", color: "#64748b" }}>Waiting for opening bid... (Base: ₹{base})</div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
               </AnimatePresence>
             </div>
 
