@@ -54,3 +54,8 @@ jobs:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           FRONTEND_URL: http://localhost:5173
+
+      # Step 5: Trigger Render Deployment (Only runs if tests pass!)
+      - name: Trigger Render Deployment
+        if: success()
+        run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
