@@ -14,8 +14,9 @@
 
 | Service | URL |
 |---|---|
-|  Frontend | *(Add your Vercel URL here)* |
-|  Backend API | *(Add your Render URL here)* |
+| Frontend | *[Vercel Deployment](https://live-auction-system.vercel.app/)* |
+| Backend API | *[Render API](https://live-auction-system-hslw.onrender.com/)* |
+
 
 ---
 
